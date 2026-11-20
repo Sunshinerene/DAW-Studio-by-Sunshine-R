@@ -1,0 +1,51 @@
+/* ===== Sunshine@R · Effekte (Rand & vollflächig) – Optionen → Effekte ===== */
+@property --fx-angle{syntax:'<angle>';inherits:false;initial-value:0deg}
+html{--fx-rgb:var(--daw-accent);--fx-rgb2:124 61 255;--fx-rgb3:25 195 255;--fx-k:.5}
+html[data-theme="aurora"]{--fx-rgb2:124 61 255;--fx-rgb3:25 195 255}
+html[data-theme="neon"]{--fx-rgb2:255 47 160;--fx-rgb3:138 61 255}
+html[data-theme="liquid"]{--fx-rgb2:176 160 255;--fx-rgb3:150 226 205}
+html[data-theme="studio"]{--fx-rgb2:255 210 120;--fx-rgb3:255 140 40}
+html[data-theme="classic"]{--fx-rgb2:139 92 246;--fx-rgb3:16 185 129}
+
+/* --- Rand-Effekte: Panels (nicht scrollend) bekommen einen Ring/Glühen über ::after --- */
+.fx-rel{position:relative}
+html[data-fx="on"]:not([data-fx-edge="off"]) .fx-edge::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:3}
+/* Glühen: weicher, atmender Innenschein */
+html[data-fx="on"][data-fx-edge="glow"] .fx-edge::after{box-shadow:inset 0 0 0 1px rgb(var(--fx-rgb)/.85),inset 0 0 28px rgb(var(--fx-rgb)/.55),inset 0 0 70px rgb(var(--fx-rgb2)/.22);opacity:calc(.28 + .5*var(--fx-k));animation:fx-breathe 4.4s ease-in-out infinite}
+@keyframes fx-breathe{0%,100%{opacity:calc(.18 + .38*var(--fx-k))}50%{opacity:calc(.4 + .6*var(--fx-k))}}
+/* Lichtstrahl: ein Lichtpunkt läuft um den Rand */
+html[data-fx="on"][data-fx-edge="beam"] .fx-edge::after{padding:1.5px;background:conic-gradient(from var(--fx-angle),transparent 0 58%,rgb(var(--fx-rgb2)/.9) 76%,rgb(var(--fx-rgb)) 90%,transparent 100%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude;opacity:calc(.4 + .6*var(--fx-k));animation:fx-spin 7s linear infinite}
+@keyframes fx-spin{to{--fx-angle:360deg}}
+/* Linie: schmale Lichtlinie wandert am oberen Rand (bei Kopfleiste unten) */
+html[data-fx="on"][data-fx-edge="line"] .fx-edge::after{inset:0 0 auto 0;height:2px;border-radius:0;background:linear-gradient(90deg,transparent,rgb(var(--fx-rgb)),rgb(var(--fx-rgb2)),transparent) -60% 0/55% 100% no-repeat;opacity:calc(.45 + .55*var(--fx-k));animation:fx-sweep 3.6s linear infinite}
+html[data-fx="on"][data-fx-edge="line"] header.fx-edge::after,html[data-fx="on"][data-fx-edge="line"] #bottom-nav.fx-edge::after{top:auto;bottom:0}
+@keyframes fx-sweep{to{background-position:165% 0}}
+
+/* --- Fenster (Dialoge, scrollend): Schein über box-shadow --- */
+html[data-fx="on"]:not([data-fx-edge="off"]) .fx-win{animation:fx-win 4.4s ease-in-out infinite}
+html[data-fx="on"][data-fx-edge="beam"] .fx-win{animation-name:fx-win-beam;animation-duration:7s}
+html[data-fx="on"][data-fx-edge="line"] .fx-win{box-shadow:inset 0 2px 0 rgb(var(--fx-rgb)/calc(.5 + .5*var(--fx-k))),0 24px 60px rgba(0,0,0,.55)!important;animation:none}
+@keyframes fx-win{0%,100%{box-shadow:0 0 0 1px rgb(var(--fx-rgb)/.35),0 0 18px rgb(var(--fx-rgb)/.18),0 24px 60px rgba(0,0,0,.55)}50%{box-shadow:0 0 0 1px rgb(var(--fx-rgb)/.8),0 0 40px rgb(var(--fx-rgb)/.5),0 24px 60px rgba(0,0,0,.55)}}
+@keyframes fx-win-beam{0%,100%{box-shadow:0 0 0 1px rgb(var(--fx-rgb)/.7),0 0 34px rgb(var(--fx-rgb)/.45),0 24px 60px rgba(0,0,0,.55)}50%{box-shadow:0 0 0 1px rgb(var(--fx-rgb2)/.7),0 0 34px rgb(var(--fx-rgb2)/.45),0 24px 60px rgba(0,0,0,.55)}}
+
+/* --- Flächen-Effekte: nur große Bereiche (Kopfleiste, Spuren, Editor-Fenster, Navigation) – kein Overlay über der ganzen App --- */
+html{--fx-m:1}
+html[data-fx-live="1"]{--fx-m:.55}
+html[data-fx="on"]:not([data-fx-full="off"]) .fx-edge::before{content:"";position:absolute;left:0;right:0;top:0;height:min(100%,var(--fx-h,190px));border-radius:inherit;pointer-events:none;z-index:2;opacity:calc(.22 + .6*var(--fx-k));-webkit-mask-image:linear-gradient(#000 45%,transparent);mask-image:linear-gradient(#000 45%,transparent)}
+html[data-fx="on"] header.fx-edge,html[data-fx="on"] #bottom-nav.fx-edge{--fx-h:100%}
+/* Aurora: weiche Farbwolken driften quer durch die Fläche */
+html[data-fx="on"][data-fx-full="aurora"] .fx-edge::before{background:radial-gradient(60% 130% at 30% 0,rgb(var(--fx-rgb)/.75),transparent 70%),radial-gradient(55% 130% at 70% 0,rgb(var(--fx-rgb2)/.7),transparent 70%),radial-gradient(50% 120% at 50% 0,rgb(var(--fx-rgb3)/.55),transparent 70%);background-size:220% 100%,180% 100%,260% 100%;background-repeat:no-repeat;animation:fx-drift calc(20s*var(--fx-m)) ease-in-out infinite alternate}
+@keyframes fx-drift{from{background-position:0% 0,100% 0,50% 0}to{background-position:100% 0,0% 0,0% 0}}
+/* Equalizer: schmale Lichtbalken hängen von der Oberkante und wippen */
+html[data-fx="on"][data-fx-full="eq"] .fx-edge::before{--fx-h:100px;height:min(100%,100px);opacity:calc(.1 + .36*var(--fx-k));background:linear-gradient(90deg,rgb(var(--fx-rgb)/.9) 0 30%,transparent 30%) 0 0/14px 30% repeat-x,linear-gradient(90deg,rgb(var(--fx-rgb2)/.85) 0 22%,transparent 22%) 5px 0/21px 55% repeat-x,linear-gradient(90deg,rgb(var(--fx-rgb3)/.8) 0 18%,transparent 18%) 9px 0/29px 40% repeat-x;animation:fx-eq calc(2.6s*var(--fx-m)) ease-in-out infinite}
+html[data-fx="on"][data-fx-full="eq"] header.fx-edge::before,html[data-fx="on"][data-fx-full="eq"] #bottom-nav.fx-edge::before{--fx-h:80px;height:80px}
+@keyframes fx-eq{0%,100%{background-size:14px 22%,21px 62%,29px 36%}25%{background-size:14px 72%,21px 26%,29px 66%}50%{background-size:14px 40%,21px 82%,29px 22%}75%{background-size:14px 86%,21px 36%,29px 56%}}
+/* Funken: kleine Lichtpunkte steigen auf */
+html[data-fx="on"][data-fx-full="sparks"] .fx-edge::before{background:radial-gradient(circle,rgb(var(--fx-rgb)) 0 1.3px,transparent 2.4px) 0 0/46px 70px,radial-gradient(circle,rgb(var(--fx-rgb2)) 0 1px,transparent 2.2px) 17px 31px/61px 90px,radial-gradient(circle,rgb(var(--fx-rgb3)) 0 1.5px,transparent 2.6px) 9px 12px/83px 110px;animation:fx-rise calc(9s*var(--fx-m)) linear infinite}
+@keyframes fx-rise{from{background-position:0 0,17px 31px,9px 12px}to{background-position:0 -70px,17px -59px,9px -98px}}
+/* Wellen: ein weicher Wellensaum läuft über die Oberkante */
+html[data-fx="on"][data-fx-full="waves"] .fx-edge::before{--fx-h:46px;height:46px;opacity:calc(.14 + .45*var(--fx-k));background:linear-gradient(90deg,rgb(var(--fx-rgb)),rgb(var(--fx-rgb2)),rgb(var(--fx-rgb3)));-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='46'%3E%3Cpath d='M0 20Q45 2 90 20T180 20V0H0Z' fill='%23000'/%3E%3C/svg%3E") 0 0/180px 46px repeat-x;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='46'%3E%3Cpath d='M0 20Q45 2 90 20T180 20V0H0Z' fill='%23000'/%3E%3C/svg%3E") 0 0/180px 46px repeat-x;animation:fx-wave calc(7s*var(--fx-m)) linear infinite}
+@keyframes fx-wave{to{-webkit-mask-position:180px 0;mask-position:180px 0}}
+html[data-fx="on"][data-fx-full="waves"] header.fx-edge::before,html[data-fx="on"][data-fx-full="waves"] #bottom-nav.fx-edge::before{--fx-h:46px}
+@media (prefers-reduced-motion:reduce){.fx-edge::before,.fx-edge::after,.fx-win{animation:none!important}}
+html[data-fx-pause="1"] .fx-edge::before,html[data-fx-pause="1"] .fx-edge::after{animation-play-state:paused}
