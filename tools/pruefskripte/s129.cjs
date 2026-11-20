@@ -1,0 +1,15 @@
+const http=require('http'),fs=require('fs'),path=require('path');const {chromium}=require('playwright');
+const WORK='../../dist';const SH=process.env.SHOTS;
+const srv=http.createServer((q,r)=>{const u=new URL(q.url,'http://x');const f=path.join(WORK,decodeURIComponent(u.pathname).replace(/^\//,''));fs.readFile(f,(e,d)=>{if(e){r.writeHead(404);r.end();return;}r.writeHead(200,{'content-type':/\.html$/.test(f)?'text/html':/\.js$/.test(f)?'application/javascript':'application/octet-stream'});r.end(d)})});
+(async()=>{await new Promise(r=>srv.listen(0,'127.0.0.1',r));const port=srv.address().port;const b=await chromium.launch();
+const ctx=await b.newContext({viewport:{width:393,height:852},isMobile:true,hasTouch:true,deviceScaleFactor:2});const pg=await ctx.newPage();pg.on('pageerror',e=>console.log('ERR',e.message));
+await pg.route(/^https?:\/\/(?!127\.0\.0\.1)/,r=>r.abort());
+await pg.addInitScript(()=>{try{if(!sessionStorage.__i){sessionStorage.__i=1;localStorage.setItem('sunshine.home','off');localStorage.setItem('sunshine.news','{"seen":"1.29"}');}}catch(_){}});
+await pg.goto(`http://127.0.0.1:${port}/index_ueberarbeitet.html`,{waitUntil:'load'});await pg.waitForTimeout(1500);
+const th=process.env.TH||'aurora';await pg.evaluate(t=>document.documentElement.setAttribute('data-theme',t),th);
+const kind=process.env.KIND;if(kind)await pg.evaluate(k=>TpDock.setKind(k),kind);if(process.env.ICONS)await pg.evaluate(()=>TpDock.setIcons(true));
+await pg.waitForTimeout(400);await pg.screenshot({path:SH+'/d_tp.png',clip:{x:0,y:692,width:393,height:160}});
+await pg.evaluate(()=>TpDock.go('tabs',true));await pg.waitForTimeout(400);await pg.screenshot({path:SH+'/d_tabs.png',clip:{x:0,y:692,width:393,height:160}});
+await pg.evaluate(()=>TpDock.go('pl',true));await pg.waitForTimeout(400);await pg.screenshot({path:SH+'/d_pl.png',clip:{x:0,y:692,width:393,height:160}});
+const info=await pg.evaluate(()=>({h:document.getElementById('bottom-nav').getBoundingClientRect().height,top:document.getElementById('bottom-nav').getBoundingClientRect().top,pane:TpDock.state().pane,panes:HmDock.panes()}));console.log(JSON.stringify(info));
+await b.close();srv.close()})();

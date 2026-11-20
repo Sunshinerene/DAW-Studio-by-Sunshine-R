@@ -1,0 +1,22 @@
+const http=require('http'),fs=require('fs'),path=require('path');const {chromium}=require('playwright');
+const WORK='../../dist';const TW=fs.readFileSync(path.join(__dirname,'../../tests/fixtures/tailwind.js'));
+const srv=http.createServer((q,r)=>{const f=path.join(__dirname,WORK,decodeURIComponent(q.url.split('?')[0]).replace(/^\//,''));fs.readFile(f,(e,d)=>{if(e){r.writeHead(404);r.end();return;}r.writeHead(200,{'content-type':f.endsWith('.html')?'text/html':'application/octet-stream'});r.end(d)})});
+(async()=>{await new Promise(r=>srv.listen(0,'127.0.0.1',r));const port=srv.address().port;const b=await chromium.launch();
+const ctx=await b.newContext({viewport:{width:393,height:852},isMobile:true,hasTouch:true,deviceScaleFactor:2});const pg=await ctx.newPage();
+await pg.route(/cdn\.tailwindcss\.com/,r=>r.fulfill({status:200,contentType:'application/javascript',body:TW}));
+await pg.route(/^https?:\/\/(?!127\.0\.0\.1|cdn\.tailwindcss\.com)/,r=>r.abort());
+await pg.addInitScript(()=>{window.__a={iv:[],to:0,raf:0,mo:0,ael:{},tm:[]};const si=setInterval;window.setInterval=function(f,ms,...a){window.__a.iv.push({ms,src:(new Error().stack||'').split('\n')[2]?.trim().slice(-90)});return si.call(this,f,ms,...a)};
+const MO=window.MutationObserver;window.MutationObserver=function(cb){window.__a.mo++;return new MO(cb)};window.MutationObserver.prototype=MO.prototype;
+const ae=EventTarget.prototype.addEventListener;EventTarget.prototype.addEventListener=function(t,...r){const k=(this===window?'window':this===document?'document':this.nodeType?'el':'other')+':'+t;window.__a.ael[k]=(window.__a.ael[k]||0)+1;return ae.call(this,t,...r)};
+window.__lt=[];try{new PerformanceObserver(l=>l.getEntries().forEach(e=>window.__lt.push([Math.round(e.startTime),Math.round(e.duration)]))).observe({entryTypes:['longtask']})}catch(_){}
+try{localStorage.setItem('sunshine.home','off');localStorage.setItem('sunshine.news','{"seen":"1.30"}')}catch(_){}});
+const cdp=await ctx.newCDPSession(pg);await cdp.send('Performance.enable');
+const t0=Date.now();await pg.goto(`http://127.0.0.1:${port}/index_ueberarbeitet.html`,{waitUntil:'load'});const tl=Date.now()-t0;
+await pg.waitForTimeout(2500);
+const nav=await pg.evaluate(()=>{const n=performance.getEntriesByType('navigation')[0];const p=performance.getEntriesByType('paint').map(x=>[x.name,Math.round(x.startTime)]);return {dcl:Math.round(n.domContentLoadedEventEnd),load:Math.round(n.loadEventEnd),paint:p,lt:window.__lt}});
+const m0=await cdp.send('Performance.getMetrics');const g=(m,n)=>m.metrics.find(x=>x.name===n).value;
+await pg.waitForTimeout(5000);const m1=await cdp.send('Performance.getMetrics');
+const idleTask=(g(m1,'TaskDuration')-g(m0,'TaskDuration'))/5, idleScript=(g(m1,'ScriptDuration')-g(m0,'ScriptDuration'))/5, idleLayout=(g(m1,'LayoutDuration')-g(m0,'LayoutDuration'))/5, idleStyle=(g(m1,'RecalcStyleDuration')-g(m0,'RecalcStyleDuration'))/5;
+const st=await pg.evaluate(()=>({nodes:document.getElementsByTagName('*').length,iv:window.__a.iv,mo:window.__a.mo,ael:window.__a.ael,heap:performance.memory&&Math.round(performance.memory.usedJSHeapSize/1e6),scripts:document.scripts.length,styles:document.querySelectorAll('style').length,css:[...document.styleSheets].reduce((a,s)=>{try{return a+s.cssRules.length}catch(_){return a}},0)}));
+console.log(JSON.stringify({loadMs:tl,nav,idle_cpu_s_per_s:{task:+idleTask.toFixed(4),script:+idleScript.toFixed(4),layout:+idleLayout.toFixed(4),style:+idleStyle.toFixed(4)},st},null,1));
+await b.close();srv.close()})();
