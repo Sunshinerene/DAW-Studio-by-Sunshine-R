@@ -2,6 +2,12 @@
 <!-- Pflege: Ganz oben einen neuen Abschnitt „## Version · Datum · Titel“ anlegen, darunter die Neuerungen als Stichpunkte.
      Der oberste Abschnitt wird (1) in die App eingebaut („Was ist neu“) und (2) bei GitHub als Release-Text veröffentlicht. -->
 
+## 1.32 · 2026-11-20 · Aufräumen, Teil 2: Ruhe im Leerlauf
+- Besser: Die App ist im Leerlauf deutlich ruhiger. Die Oberfläche zeichnet nicht mehr ununterbrochen 60-mal pro Sekunde, sondern nur noch, wenn wirklich etwas passiert (Wiedergabe, Aufnahme, Mixer offen oder eine Berührung). Alle wiederkehrenden Kleinaufgaben (Anzeige-Abgleich, Autosave-Wächter, Startseite, Player, Selbstcheck …) laufen über einen gemeinsamen Takt und schlafen im Hintergrund. Das spart Akku und hält das Gerät kühler.
+- Besser: Die Optionsmenü-Abschnitte werden von einem gemeinsamen Beobachter bestückt statt von elf einzelnen – weniger Arbeit beim Öffnen und im Betrieb.
+- Besser: Der Cover-Effekt (Leuchten/Ring) lief nach dem Stoppen der Musik weiter im Hintergrund; jetzt klingt er aus und hält an.
+- Hinweis: Sichtbar ändert sich nichts außer einem etwas sparsameren Verhalten. Die Anzeige der Wiedergabezeit im Transport wird im Leerlauf in einem 0,5-Sekunden-Raster nachgeführt; beim Abspielen bleibt alles flüssig wie bisher. Projekte, Einstellungen und Autosave bleiben unverändert.
+
 ## 1.31 · 2026-11-20 · Aufräumen, Teil 1: gemeinsame Bausteine
 - Besser: Aufgeräumt unter der Haube – Hilfsfunktionen, das Speichern der Einstellungen und alle Datenbank-Zugriffe (Projekte, Autosave, SoundFonts, Player, Startseite) laufen jetzt über je einen gemeinsamen Baustein statt über viele einzelne Kopien. Etwas kleiner, weniger Fehlerquellen, leichter zu erweitern.
 - Besser: Ein ungenutzter Doppelgänger des Design-Auswahl-Codes ist entfernt; die Seite ist dadurch etwas kleiner.

@@ -4,7 +4,7 @@
      Gruppen: „Kommt definitiv“ (Kommt) · „Zum Testen“ (Zum Testen) · „Ideen“ (Idee). Datei leer lassen = keine Vorschau.
      Wichtig: Nennt der Titel keine NEUERE Version als die installierte App, ignoriert die App diese Datei und zeigt den eingebauten Text. -->
 
-## Version 1.32 – in Arbeit
+## Version 1.33 – in Arbeit
 
 ### Kommt definitiv
 - Feinschliff nach deinem Test der Android-Funktionen (Ordner-Dialog, Benachrichtigung) und der neuen DAW-Leiste
@@ -18,6 +18,7 @@
 - Klang-Vorauswahl auf der zweiten Seite der Player-Dockbar
 - Klang-Voreinstellungen bei gesperrtem Bildschirm in der Android-App
 - Nach dem Aufräumen (1.31): Projekte öffnen, Autosave-Wiederherstellung, SoundFonts und Player-Verlauf – alles wie vorher da?
+- Ruhe im Leerlauf (1.32): Wirkt die App beim Stehenlassen sparsamer (Akku, Wärme)? Laufen Wiedergabe, Aufnahme, Mixer-Pegel und das Cover-Leuchten weiterhin flüssig?
 
 ### Ideen
 - Titel aus dem Player direkt als Spur ins Projekt übernehmen
