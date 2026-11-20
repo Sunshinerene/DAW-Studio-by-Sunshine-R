@@ -2,6 +2,11 @@
 <!-- Pflege: Ganz oben einen neuen Abschnitt „## Version · Datum · Titel“ anlegen, darunter die Neuerungen als Stichpunkte.
      Der oberste Abschnitt wird (1) in die App eingebaut („Was ist neu“) und (2) bei GitHub als Release-Text veröffentlicht. -->
 
+## 1.31 · 2026-11-20 · Aufräumen, Teil 1: gemeinsame Bausteine
+- Besser: Aufgeräumt unter der Haube – Hilfsfunktionen, das Speichern der Einstellungen und alle Datenbank-Zugriffe (Projekte, Autosave, SoundFonts, Player, Startseite) laufen jetzt über je einen gemeinsamen Baustein statt über viele einzelne Kopien. Etwas kleiner, weniger Fehlerquellen, leichter zu erweitern.
+- Besser: Ein ungenutzter Doppelgänger des Design-Auswahl-Codes ist entfernt; die Seite ist dadurch etwas kleiner.
+- Hinweis: Sichtbar ändert sich nichts. Deine Projekte, Einstellungen, Autosave-Stände und SoundFonts bleiben unverändert und werden wie bisher gefunden – Namen und Aufbau der Speicher sind gleich geblieben.
+
 ## 1.30 · 2026-11-20 · Neue Startseite, niedrigere Dockbar, Klang in der Player-Dockbar
 - Neu: Die Startseite passt jetzt ohne Scrollen auf den Bildschirm – sie verdichtet sich bei Bedarf selbst (Logo, Abstände, Kacheln). Cover und Equalizer sitzen weiter unten direkt über der Dockbar, der Titel steht darunter.
 - Neu: Die Startseite zeigt nur die **letzten 3 Projekte**. „Alle …“ öffnet ein großes, schwebendes Fenster mit Abstand zur Startseite: alle Projekte, Suche und Sortierung. Wischen am Griff, ✕ oder Zurück schließt es.
