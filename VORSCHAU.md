@@ -4,7 +4,7 @@
      Gruppen: „Kommt definitiv“ (Kommt) · „Zum Testen“ (Zum Testen) · „Ideen“ (Idee). Datei leer lassen = keine Vorschau.
      Wichtig: Nennt der Titel keine NEUERE Version als die installierte App, ignoriert die App diese Datei und zeigt den eingebauten Text. -->
 
-## Version 1.35 – in Arbeit
+## Version 1.36 – in Arbeit
 
 ### Kommt definitiv
 - Feinschliff nach deinem Test der Android-Funktionen (Ordner-Dialog, Benachrichtigung) und der neuen DAW-Leiste
@@ -18,6 +18,7 @@
 - Klang-Vorauswahl auf der zweiten Seite der Player-Dockbar
 - Klang-Voreinstellungen bei gesperrtem Bildschirm in der Android-App
 - Nach dem Aufräumen (1.31): Projekte öffnen, Autosave-Wiederherstellung, SoundFonts und Player-Verlauf – alles wie vorher da?
+- Player mit langen Titeln (1.35): Startet ein 200-MB-MP3 aus dem Ordner-Dialog schnell, lässt sich spulen und bleibt die Bedienung flüssig? (Neue APK nötig für den direkten Weg.)
 - Fenster und Leisten (1.34): Liegt alles weiterhin in der richtigen Reihenfolge übereinander (Hilfe über Player, Feedback, Meldungen, Intro)?
 - ZIP-Import, Export und Sicherung (1.33): Alles wie vorher, auch direkt nach dem App-Start?
 - Ruhe im Leerlauf (1.32): Wirkt die App beim Stehenlassen sparsamer (Akku, Wärme)? Laufen Wiedergabe, Aufnahme, Mixer-Pegel und das Cover-Leuchten weiterhin flüssig?
