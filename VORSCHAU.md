@@ -4,14 +4,16 @@
      Gruppen: „Kommt definitiv“ (Kommt) · „Zum Testen“ (Zum Testen) · „Ideen“ (Idee). Datei leer lassen = keine Vorschau.
      Wichtig: Nennt der Titel keine NEUERE Version als die installierte App, ignoriert die App diese Datei und zeigt den eingebauten Text. -->
 
-## Version 1.38 – in Arbeit
+## Version 1.39 – in Arbeit
 
 ### Kommt definitiv
-- Eigene Effekte für Dockbars und Fensterränder mit Voreinstellungen (animiert, zur Musik, starr), mehr Einstellungen bei den Cover-Effekten
 - Eine gemeinsame Dockbar für DAW, Player und Startseite (auch im Player wischbar) mit Navigation – und die Wahl, welche Ansicht beim Start geladen wird
 - Feinschliff nach deinem Test der Android-Funktionen (Ordner-Dialog, Benachrichtigung) und der neuen DAW-Leiste
 
 ### Zum Testen
+- Dockbar-Effekt (1.38): Optionen → Effekte & Anzeige → „Dockbar-Effekt“ einschalten – sieht er an der DAW-, Player- und Startseiten-Leiste gut aus, und bleibt die Bedienung flüssig?
+- Rand-Voreinstellungen (1.38): Probiere „Club“, „Aurora“ und „Still“ sowie die Bewegung „Zur Musik“ – ruckelt etwas, und wie wirkt es auf Startseite und Player?
+- Cover-Effekte (1.38): Neue Regler für Tempo, Linienstärke, Farbe und Bewegung – passen die Wertebereiche?
 - Rundung und Icons (1.37): Mit „Eckig“ in den Optionen – sind Startseite, Player, Dockbars, Feedback und Hilfe jetzt wirklich überall eckig, und stehen die Linien-Icons überall?
 - Feedback im Player (1.36): Knopf oben im Player und aus den Optionen – ist das Fenster sichtbar, steht „Player“ bei „Betrifft“?
 - Effekt-Vorschau (1.36): Beim Umstellen der Effekte und beim Ziehen der Design-Regler bleibt nur die bediente Zeile sichtbar – wirkt es jetzt ruhiger?

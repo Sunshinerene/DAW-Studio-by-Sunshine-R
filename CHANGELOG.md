@@ -2,6 +2,14 @@
 <!-- Pflege: Ganz oben einen neuen Abschnitt „## Version · Datum · Titel“ anlegen, darunter die Neuerungen als Stichpunkte.
      Der oberste Abschnitt wird (1) in die App eingebaut („Was ist neu“) und (2) bei GitHub als Release-Text veröffentlicht. -->
 
+## 1.38 · 2026-11-20 · Effekte für Dockbars, Ränder und Cover
+- Neu: Eigener Effekt für die Dockbars (DAW, Player, Startseite). Es ist derselbe Musik-Effekt wie am Cover, aber um die ganze Leiste, und er wird getrennt vom Cover eingestellt: Optionen → Effekte & Anzeige → „Dockbar-Effekt“. Du kannst unter 14 Effekten wählen und Stärke, Bewegung, Farbe, Größe, Helligkeit, Transparenz, Tempo und Linienstärke einstellen. Mit Häkchen bestimmst du, an welchen Leisten er läuft. Standard: aus.
+- Neu: Rand-Effekte haben jetzt Voreinstellungen (Ruhig, Club, Aurora, Neon-Linie, Regenbogen, Im Takt, Lauflicht, Still), vier neue Stile (Doppelstrahl, Regenbogen, Lauflinien, Rahmen) und die Bewegung „Animiert“, „Zur Musik“ oder „Starr“. Dazu kommt ein Tempo-Regler. „Zur Musik“ ruht ohne Musik und folgt dem Bass, wenn Musik läuft.
+- Neu: Die Rand-Effekte wirken jetzt auch in Startseite (Karten, Knöpfe, Hinweise) und Player (Kopfzeile, Klang-Bereich), nicht nur in der DAW. Unter „Wo anzeigen“ kannst du DAW, Player und Startseite einzeln abschalten. Hat die DAW-Leiste einen eigenen Dock-Effekt, weicht ihr Rand-Effekt, damit nichts doppelt leuchtet.
+- Neu: Die Cover-Effekte haben vier weitere Einstellungen: Tempo, Linienstärke, Farbe (Design, Akzent, Zweitfarbe, Regenbogen) und Bewegung (Zur Musik, Animiert, Starr).
+- Besser: Die Rand-Animationen laufen in Stufen von etwa 24 Bildern pro Sekunde statt bei jedem Bild neu zu zeichnen. Das soll Rechenzeit sparen. In meinem Server-Test (ohne echte Grafikkarte) war der Unterschied nicht eindeutig messbar, ob es auf deinem Handy ruhiger läuft, musst du beurteilen. Neu ist: Es wird immer nur die Ansicht animiert, die gerade sichtbar ist (Startseite, Player oder DAW).
+- Hinweis: Alle neuen Effekte sind standardmäßig aus. Wer sie nicht einschaltet, sieht dasselbe wie in 1.37. Wie flüssig es auf deinem Handy läuft, kann ich nicht messen: Ich teste nur in einem Server-Browser. Wenn etwas ruckelt, sag mir bitte, welcher Effekt und welcher Modus.
+
 ## 1.37 · 2026-11-20 · Design und Icons überall gleich
 - Besser: Die Einstellung „Rundung“ (Eckig / Normal / Extra rund) gilt jetzt durchgängig. Bisher hat sie nur die Standard-Elemente der DAW verändert. Player, Startseite, Dockbars, Hilfe, Feedback, „Was ist neu“ und die Cover hatten feste Rundungen im Code. Jetzt folgen sie alle derselben Einstellung. „Eckig“ macht auch die Pillen, Karten, Tasten und runden Play-Knöpfe eckig, „Extra rund“ macht sie weicher.
 - Besser: Im Modus „Normal“ sieht alles aus wie bisher. Geprüft mit einem Pixelvergleich von 14 Ansichten in allen 5 Designs gegen 1.36.
