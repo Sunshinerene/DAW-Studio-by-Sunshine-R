@@ -1,0 +1,105 @@
+/* ===== Transport in der unteren Leiste (Handy) ===== */
+@media (max-width:760px){
+  #bottom-nav.td-on{padding:6px 6px 10px;gap:0}
+  #bottom-nav .td-scroll{flex:1 1 auto;min-width:0;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  #bottom-nav .td-scroll::-webkit-scrollbar{display:none}
+  #bottom-nav .td-pane{flex:0 0 100%;min-width:0;display:flex;gap:4px;align-items:stretch;scroll-snap-align:start;scroll-snap-stop:always}
+  #bottom-nav .td-tabs>button:not(.td-sw){flex:1 1 0;min-width:0;min-height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:4px 2px;border-radius:22px;font-size:10.5px;line-height:1.1;text-align:center}
+  /* Transport-Seite */
+  #bottom-nav .td-tp>div:not(.td-sw){flex:1 1 0;min-width:0;display:flex;align-items:stretch;gap:5px;background:transparent!important;border:0!important;padding:0!important;border-radius:0!important;box-shadow:none!important}
+  /* Tasten wie im Player: runde Zeichen, Play als große Scheibe in der Mitte (Reihenfolge: Loop · Stopp · Play · Klick) */
+  #bottom-nav .td-tp>div:not(.td-sw){align-items:center;justify-content:space-between;gap:2px}
+  html[data-theme] body #bottom-nav .td-tp :is(#btn-play,#btn-stop,#btn-loop,#btn-metronome){flex:none!important;position:relative!important;display:grid!important;place-items:center!important;width:44px!important;height:44px!important;min-width:0!important;min-height:0!important;padding:0!important;border-radius:50%!important;border:0!important;background:none!important;box-shadow:none!important;color:#eef1ff!important;font-size:0!important;line-height:0!important}
+  html[data-theme] body #bottom-nav .td-tp #btn-loop{order:1}html[data-theme] body #bottom-nav .td-tp #btn-stop{order:2}html[data-theme] body #bottom-nav .td-tp #btn-play{order:3}html[data-theme] body #bottom-nav .td-tp #btn-metronome{order:4}
+  #bottom-nav .td-tp #btn-stop>span,#bottom-nav .td-tp #lbl-play{display:none!important}
+  html[data-theme] body #bottom-nav .td-tp #btn-stop svg{width:22px!important;height:22px!important}
+  html[data-theme] body #bottom-nav .td-tp #btn-play{width:50px!important;height:50px!important;background:var(--td-dot,rgb(var(--daw-accent)))!important;color:#10131c!important;box-shadow:0 4px 16px var(--td-glow,rgb(var(--daw-accent)/.4))!important}
+  html[data-theme] body #bottom-nav .td-tp #btn-play svg{width:24px!important;height:24px!important}
+  #bottom-nav .td-tp :is(#btn-loop,#btn-metronome)::before{content:"";display:block;width:22px;height:22px;background:currentColor;-webkit-mask:var(--tdic-repeat) center/contain no-repeat;mask:var(--tdic-repeat) center/contain no-repeat}
+  #bottom-nav .td-tp #btn-metronome::before{-webkit-mask-image:var(--tdic-metro);mask-image:var(--tdic-metro)}
+  html[data-theme] body #bottom-nav .td-tp :is(#btn-loop,#btn-metronome)[aria-pressed=true]{color:var(--td-dot,rgb(var(--daw-accent)))!important;background:rgb(var(--daw-accent)/.16)!important}
+  html[data-theme=studio] body #bottom-nav .td-tp #btn-play{border-radius:14px!important}
+  html[data-theme=studio] body #bottom-nav .td-tp :is(#btn-stop,#btn-loop,#btn-metronome){border-radius:10px!important}
+  html[data-theme=neon] body #bottom-nav .td-tp #btn-play{background:linear-gradient(135deg,#8a3dff,#19c3ff)!important;color:#fff!important}
+  html[data-theme=liquid] body #bottom-nav .td-tp #btn-play{background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,.18))!important;color:#fff!important;border:1px solid rgba(255,255,255,.4)!important}
+  html[data-radius="sharp"] body #bottom-nav .td-tp :is(#btn-play,#btn-stop,#btn-loop,#btn-metronome){border-radius:8px!important}
+  /* Player-Seite */
+  #bottom-nav .td-tabs{align-items:center}
+  #bottom-nav .td-pl{gap:4px;align-items:stretch}
+  #bottom-nav .td-plh{flex:1 1 0;min-width:0;display:flex}
+  #bottom-nav .td-sw-r{margin-left:auto}
+  /* Mini-Leiste des Players überflüssig, wenn die Player-Seite in der unteren Leiste da ist */
+  html.tp-dock #pl-mini{display:none!important}
+  /* Umschalter */
+  #bottom-nav .td-sw{flex:0 0 32px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border-radius:18px;color:#94a3b8;background:transparent;border:0;padding:0;min-height:54px}
+  #bottom-nav .td-sw:active{background:rgba(255,255,255,.08)}
+  #bottom-nav .td-dots{display:flex;gap:4px}
+  #bottom-nav .td-dots i{display:block;width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.35}
+  #bottom-nav .td-dots i.on{opacity:1;background:rgb(var(--daw-accent))}
+  #bottom-nav.td-live #btn-td-tp{color:rgb(var(--daw-accent))}
+  #bottom-nav.td-live #btn-td-tp svg{animation:td-pulse 1.1s ease-in-out infinite}
+  @keyframes td-pulse{50%{transform:translateX(-3px);opacity:.55}}
+  /* Kopfbereich: der Platz der Transport-Zeile fällt weg → Titelzeile so hoch wie das Cover */
+  @media (max-width:639px){html.tp-dock.cv-show .td-brand{min-height:calc(var(--cv,52px) + 4px)}}
+}
+@media (prefers-reduced-motion:reduce){#bottom-nav.td-live #btn-td-tp svg{animation:none}}
+
+/* ===== Untere Leiste im Stil des gewählten Designs ===== */
+html{--td-line:rgb(var(--daw-accent) / .42);--td-glow:rgb(var(--daw-accent) / .20);--td-dot:rgb(var(--daw-accent))}
+html[data-accent="1"]{--td-line:rgba(var(--acc-rgb),.5);--td-glow:rgba(var(--acc-rgb),.24);--td-dot:rgb(var(--acc-rgb))}
+@media (max-width:760px){
+  #bottom-nav .td-dots i.on{background:var(--td-dot)}
+  #bottom-nav.td-live #btn-td-tp{color:var(--td-dot)}
+  #bottom-nav.td-on{border:1px solid var(--td-line)!important;box-shadow:0 12px 30px rgba(0,0,0,.45),0 0 24px var(--td-glow),inset 0 1px 0 rgba(255,255,255,.12)}
+  html[data-glow="off"] #bottom-nav.td-on{box-shadow:0 8px 22px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.1)}
+  /* Aurora: Glas mit warmem Rand */
+  html[data-theme="aurora"] #bottom-nav.td-on{border-radius:30px;background:linear-gradient(180deg,rgba(52,44,112,.88),rgba(14,12,40,.95))!important}
+  /* Studio: flaches, hartes Metall mit Akzentlinie oben */
+  html[data-theme="studio"] #bottom-nav.td-on{border-radius:18px;background:linear-gradient(#262A32,#181B21)!important;border-color:#363B45!important;border-top-color:var(--td-line)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 2px 0 #0E1013,0 12px 26px rgba(0,0,0,.5)}
+  html[data-theme="studio"] #bottom-nav .td-tabs>button:not(.td-sw){border-radius:8px}
+  /* Neon: dunkel mit Farbverlauf-Rand */
+  html[data-theme="neon"] #bottom-nav.td-on{border-radius:28px;background:linear-gradient(180deg,rgba(26,12,58,.92),rgba(8,6,26,.96))!important;border-color:rgba(138,61,255,.6)!important;box-shadow:0 0 0 1px rgba(25,195,255,.22),0 0 28px rgba(138,61,255,.38),0 12px 30px rgba(0,0,0,.5)}
+  /* Liquid: milchiges Glas, sehr rund */
+  html[data-theme="liquid"] #bottom-nav.td-on{border-radius:36px;background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.06)),rgba(22,18,48,.72)!important;-webkit-backdrop-filter:blur(22px) saturate(1.3);backdrop-filter:blur(22px) saturate(1.3);border-color:rgba(255,255,255,.2)!important;box-shadow:0 14px 36px rgba(6,6,16,.42),inset 0 1px 0 rgba(255,255,255,.18)}
+  /* Klassik: schlicht mit Akzentrand */
+  html[data-theme="classic"] #bottom-nav.td-on{border-radius:22px}
+  html[data-radius="round"] #bottom-nav.td-on{border-radius:38px}
+  html[data-radius="sharp"] #bottom-nav.td-on{border-radius:12px!important}
+  html[data-radius="sharp"] #bottom-nav .td-tabs>button:not(.td-sw){border-radius:8px}
+  #bottom-nav .td-sw{color:rgb(255 255 255 / .55)}
+}
+
+/* ===== Dockbar des Players (und der Startseite): gleiche Gestaltung wie die untere Leiste der DAW ===== */
+:is(.pl-dock,.hm-dock){border:1px solid var(--td-line);box-shadow:0 12px 30px rgba(0,0,0,.45),0 0 24px var(--td-glow),inset 0 1px 0 rgba(255,255,255,.12);border-radius:24px;background:rgba(20,22,36,.92)}
+html[data-glow="off"] :is(.pl-dock,.hm-dock){box-shadow:0 8px 22px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.1)}
+html[data-theme="aurora"] :is(.pl-dock,.hm-dock){border-radius:30px;background:linear-gradient(180deg,rgba(52,44,112,.88),rgba(14,12,40,.95))}
+html[data-theme="studio"] :is(.pl-dock,.hm-dock){border-radius:18px;background:linear-gradient(#262A32,#181B21);border-color:#363B45;border-top-color:var(--td-line);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 2px 0 #0E1013,0 12px 26px rgba(0,0,0,.5)}
+html[data-theme="neon"] :is(.pl-dock,.hm-dock){border-radius:28px;background:linear-gradient(180deg,rgba(26,12,58,.92),rgba(8,6,26,.96));border-color:rgba(138,61,255,.6);box-shadow:0 0 0 1px rgba(25,195,255,.22),0 0 28px rgba(138,61,255,.38),0 12px 30px rgba(0,0,0,.5)}
+html[data-theme="liquid"] :is(.pl-dock,.hm-dock){border-radius:36px;background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.06)),rgba(22,18,48,.72);-webkit-backdrop-filter:blur(22px) saturate(1.3);backdrop-filter:blur(22px) saturate(1.3);border-color:rgba(255,255,255,.2);box-shadow:0 14px 36px rgba(6,6,16,.42),inset 0 1px 0 rgba(255,255,255,.18)}
+html[data-theme="classic"] :is(.pl-dock,.hm-dock){border-radius:22px}
+html[data-radius="round"] :is(.pl-dock,.hm-dock){border-radius:38px}
+html[data-radius="sharp"] :is(.pl-dock,.hm-dock){border-radius:12px!important}
+
+/* ===== Leistenstile (Optionen → Untere Leiste): gelten für DAW-Leiste, Player-Dockbar und Startseiten-Dockbar ===== */
+html[data-dock="glass"] :is(#bottom-nav.td-on,.pl-dock,.hm-dock){background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.05)),rgba(20,24,46,.5)!important;-webkit-backdrop-filter:blur(26px) saturate(1.5);backdrop-filter:blur(26px) saturate(1.5);border:1px solid rgba(255,255,255,.26)!important;border-radius:32px!important;box-shadow:0 12px 32px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.3)!important}
+html[data-dock="flat"] :is(#bottom-nav.td-on,.pl-dock,.hm-dock){background:rgb(var(--daw-bg))!important;border:1px solid rgba(255,255,255,.08)!important;border-top:2px solid var(--td-dot)!important;border-radius:10px!important;box-shadow:0 -2px 14px rgba(0,0,0,.35)!important;-webkit-backdrop-filter:none;backdrop-filter:none}
+html[data-dock="neon"] :is(#bottom-nav.td-on,.pl-dock,.hm-dock){background:rgb(8,8,20)!important;border:1.5px solid var(--td-dot)!important;border-radius:26px!important;box-shadow:0 0 0 1px var(--td-glow),0 0 26px var(--td-glow),0 0 8px var(--td-line),0 12px 30px rgba(0,0,0,.55)!important;-webkit-backdrop-filter:none;backdrop-filter:none}
+html[data-dock="plain"] :is(#bottom-nav.td-on,.pl-dock,.hm-dock){background:rgba(18,20,30,.94)!important;border:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 6px 18px rgba(0,0,0,.35)!important;-webkit-backdrop-filter:none;backdrop-filter:none}
+html[data-dock="flat"][data-radius="round"] :is(#bottom-nav.td-on,.pl-dock,.hm-dock){border-radius:18px!important}
+
+/* ===== 1.29: Scrollbalken überall ausgeblendet (Optionen → Untere Leiste: „Scrollbalken anzeigen“) ===== */
+html:not([data-sb="show"]) *{scrollbar-width:none}
+html:not([data-sb="show"]) *::-webkit-scrollbar{width:0;height:0;display:none;background:transparent}
+
+/* ===== 1.29: Tasten passend zum Leistenstil (Optionen → Untere Leiste → „Tasten passend zum Leistenstil“) =====
+   Gilt für Player-Dockbar, Startseite, Player-Seite und DAW-Transport. Ohne gewählten Stil („Wie das Design“) bleibt alles wie gehabt. */
+html[data-dock="glass"]{--di-r:50%;--di-bg:rgba(255,255,255,.10);--di-bd:1px solid rgba(255,255,255,.24);--di-sh:inset 0 1px 0 rgba(255,255,255,.28);--di-pbg:linear-gradient(180deg,rgba(255,255,255,.58),rgba(255,255,255,.22));--di-pfg:#fff;--di-pr:50%;--di-pbd:1px solid rgba(255,255,255,.5);--di-psh:0 6px 18px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.6)}
+html[data-dock="flat"]{--di-r:8px;--di-bg:rgba(255,255,255,.07);--di-bd:0 solid transparent;--di-sh:none;--di-pbg:var(--td-dot);--di-pfg:#10131c;--di-pr:10px;--di-pbd:0 solid transparent;--di-psh:none}
+html[data-dock="neon"]{--di-r:50%;--di-bg:transparent;--di-bd:1.5px solid var(--td-line);--di-sh:0 0 10px var(--td-glow);--di-pbg:rgba(8,8,20,.9);--di-pfg:var(--td-dot);--di-pr:50%;--di-pbd:2px solid var(--td-dot);--di-psh:0 0 18px var(--td-glow),0 0 6px var(--td-dot),inset 0 0 10px var(--td-glow)}
+html[data-dock="plain"]{--di-r:12px;--di-bg:transparent;--di-bd:0 solid transparent;--di-sh:none;--di-pbg:transparent;--di-pfg:var(--td-dot);--di-pr:50%;--di-pbd:2px solid var(--td-dot);--di-psh:none}
+html[data-dockicons="on"]:is([data-dock="glass"],[data-dock="flat"],[data-dock="neon"],[data-dock="plain"]) :is(#pl-root .pl-dock .pl-ic,.hd .hd-ic,body #bottom-nav .td-tp :is(#btn-stop,#btn-loop,#btn-metronome)){border-radius:var(--di-r)!important;background:var(--di-bg)!important;border:var(--di-bd)!important;box-shadow:var(--di-sh)!important}
+html[data-dockicons="on"]:is([data-dock="glass"],[data-dock="flat"],[data-dock="neon"],[data-dock="plain"]) :is(#pl-root .pl-dock .pl-play,.hd .hd-play,body #bottom-nav .td-tp #btn-play){border-radius:var(--di-pr)!important;background:var(--di-pbg)!important;color:var(--di-pfg)!important;border:var(--di-pbd)!important;box-shadow:var(--di-psh)!important}
+html[data-dockicons="on"]:is([data-dock="glass"],[data-dock="flat"],[data-dock="neon"],[data-dock="plain"]) :is(#pl-root .pl-dock .pl-ic[aria-pressed=true],.hd .hd-ic[aria-pressed=true],body #bottom-nav .td-tp :is(#btn-loop,#btn-metronome)[aria-pressed=true]){color:var(--td-dot)!important;background:rgb(var(--daw-accent)/.2)!important}
+html[data-dockicons="on"][data-dock="neon"] :is(#pl-root .pl-dock .pl-ic svg,.hd .hd-ic svg){filter:drop-shadow(0 0 4px var(--td-glow))}
+html[data-dockicons="on"][data-dock="flat"] #bottom-nav .td-tabs>button:not(.td-sw){border-radius:8px!important}
+html[data-dockicons="on"][data-dock="plain"] #bottom-nav .td-tabs>button:not(.td-sw){border-radius:12px!important}

@@ -1,0 +1,51 @@
+/* ===== Großansicht-Fenster ===== */
+html[data-dock="big"] .bw-dock{display:none!important}
+#bw-launch[hidden]{display:none}
+#bw-launch .bw-lcard{border:1px solid rgba(255,255,255,.12);border-radius:20px;background:rgba(255,255,255,.04);padding:12px}
+#bw-launch .bw-lhead{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#94a3b8;margin:0 2px 8px}
+#bw-launch .bw-lhead small{font-weight:600;letter-spacing:0;text-transform:none;margin-left:6px;color:#64748b}
+#bw-launch .bw-lgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+@media(min-width:900px){#bw-launch .bw-lgrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+#bw-launch .bw-lbtn{display:flex;align-items:center;gap:10px;min-height:58px;padding:8px 12px;border-radius:16px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:#e2e8f0;text-align:left;cursor:pointer}
+#bw-launch .bw-lbtn:hover{background:rgba(255,255,255,.1)}
+#bw-launch .bw-lbtn[aria-pressed="true"]{border-color:rgba(192,132,252,.7);background:rgba(192,132,252,.18)}
+#bw-launch .bw-lic{font-size:22px;line-height:1}
+#bw-launch .bw-ltx{display:flex;flex-direction:column;min-width:0}
+#bw-launch .bw-ltx b{font-size:14px;font-weight:800}
+#bw-launch .bw-ltx small{font-size:10.5px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bw-root{position:fixed;left:0;right:0;bottom:0;top:64px;z-index:42;display:flex;flex-direction:column;background:rgb(var(--daw-bg,9 12 18))}
+#bw-root[hidden]{display:none}
+#bw-root .bw-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.12);background:linear-gradient(rgba(255,255,255,.07),rgba(255,255,255,.07)),rgb(var(--daw-bg,9 12 18));color:#f1f5f9}
+#bw-root .bw-title{display:flex;align-items:center;gap:8px;min-width:0;font-size:14px;color:#f8fafc}
+#bw-root .bw-title b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bw-root .bw-ic{font-size:20px}
+#bw-root .bw-chips{display:none;gap:6px;margin-left:8px}
+@media(min-width:900px){#bw-root .bw-chips{display:flex}}
+#bw-root .bw-chip{min-height:34px;padding:0 12px;border-radius:12px;border:1px solid transparent;background:transparent;color:#cbd5e1;font-size:12px;font-weight:700;cursor:pointer}
+#bw-root .bw-chip:hover{background:rgba(255,255,255,.07)}
+#bw-root .bw-chip[aria-current="true"]{background:rgba(192,132,252,.22);border-color:rgba(192,132,252,.55);color:#f3e8ff}
+#bw-root .bw-extra{order:3;flex:1 1 100%;display:flex;align-items:center}
+#bw-root .bw-extra:empty{display:none}
+@media(min-width:900px){#bw-root .bw-extra{order:0;flex:0 0 auto;margin-left:auto}}
+#bw-root .bw-x{margin-left:auto;display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 14px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#f1f5f9;font-size:13px;font-weight:800;cursor:pointer}
+#bw-root .bw-body{flex:1 1 auto;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding-bottom:20px}
+#bw-root .bw-body>.dock-tab-panel{display:flex!important}
+/* Vocal und Mixer sind Raster-Fenster (12 Spalten) – als Flex würden die Spalten nur so breit wie ihr Inhalt und ließen rechts eine Lücke */
+#bw-root .bw-body>#tab-panel-vocals,#bw-root .bw-body>#tab-panel-mixer{display:grid!important;width:100%;box-sizing:border-box}
+#bw-root .bw-body>#tab-panel-vocals>*,#bw-root .bw-body>#tab-panel-mixer>*{min-width:0}
+@media(max-width:760px){#bw-root .bw-body{padding-bottom:96px}#bw-root .bw-x span{display:none}#bw-root .bw-title{flex:1}}
+html.bw-open{--bw-open:1}
+/* ===== MIDI-Editor: Werkzeug-Gruppen ===== */
+#tab-panel-midi .mt-seg{display:flex;gap:6px;overflow-x:auto;padding:2px 0;-webkit-overflow-scrolling:touch}
+#tab-panel-midi .mt-seg button{flex:0 0 auto;min-height:38px;padding:0 14px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);color:#cbd5e1;font-size:12px;font-weight:700;cursor:pointer}
+#tab-panel-midi .mt-seg button[aria-selected="true"]{background:rgba(192,132,252,.25);border-color:rgba(192,132,252,.65);color:#f5e9ff}
+#tab-panel-midi .mt-tool{display:block}
+#tab-panel-midi[data-mseg] .mt-l>[data-mg],#tab-panel-midi[data-mseg] .mt-syn{display:none}
+#tab-panel-midi[data-mseg="1"] .mt-l>[data-mg="1"],#tab-panel-midi[data-mseg="2"] .mt-l>[data-mg="2"],#tab-panel-midi[data-mseg="3"] .mt-l>[data-mg="3"]{display:flex}
+#tab-panel-midi[data-mseg="4"] .mt-l,#tab-panel-midi[data-mseg="5"] .mt-tool{display:none}
+#tab-panel-midi[data-mseg]:not([data-mseg="4"]) .mt-r{display:none}
+#tab-panel-midi[data-mseg="5"] .mt-syn{display:flex}
+#tab-panel-midi[data-mseg="5"] .mt-mid,#tab-panel-midi .mt-mid{display:grid}
+#tab-panel-midi[data-mseg]:not([data-mseg="5"]) .mt-pr,#tab-panel-midi .mt-pr{grid-column:1/-1}
+#tab-panel-midi[data-mseg="5"] .mt-pr{grid-column:auto}
+@media(min-width:1024px){#tab-panel-midi[data-mseg="5"] .mt-pr{grid-column:span 9}#tab-panel-midi[data-mseg="5"] .mt-syn{grid-column:span 3}}
