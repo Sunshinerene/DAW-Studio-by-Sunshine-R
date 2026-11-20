@@ -4,12 +4,16 @@
      Gruppen: „Kommt definitiv“ (Kommt) · „Zum Testen“ (Zum Testen) · „Ideen“ (Idee). Datei leer lassen = keine Vorschau.
      Wichtig: Nennt der Titel keine NEUERE Version als die installierte App, ignoriert die App diese Datei und zeigt den eingebauten Text. -->
 
-## Version 1.36 – in Arbeit
+## Version 1.37 – in Arbeit
 
 ### Kommt definitiv
+- Design und eckige Icons überall gleich (DAW, Player, Startseite, Optionen), eigene Effekte für Dockbars und Fensterränder mit Voreinstellungen (animiert, zur Musik, starr)
+- Eine gemeinsame Dockbar für DAW, Player und Startseite (auch im Player wischbar) mit Navigation – und die Wahl, welche Ansicht beim Start geladen wird
 - Feinschliff nach deinem Test der Android-Funktionen (Ordner-Dialog, Benachrichtigung) und der neuen DAW-Leiste
 
 ### Zum Testen
+- Feedback im Player (1.36): Knopf oben im Player und aus den Optionen – ist das Fenster sichtbar, steht „Player“ bei „Betrifft“?
+- Effekt-Vorschau (1.36): Beim Umstellen der Effekte und beim Ziehen der Design-Regler bleibt nur die bediente Zeile sichtbar – wirkt es jetzt ruhiger?
 - Android: Ordner-Dialog und Zeit in der Benachrichtigung – bleibt der Ordner nach dem Neustart verbunden?
 - Startbildschirm-Dockbar mit Cover: Passen Größe und Platz?
 - Leistenstile (Glas, Flach, Leuchtend, Dezent) mit der Option „Tasten passend zum Leistenstil“ – welcher gefällt am besten?

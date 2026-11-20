@@ -2,6 +2,12 @@
 <!-- Pflege: Ganz oben einen neuen Abschnitt „## Version · Datum · Titel“ anlegen, darunter die Neuerungen als Stichpunkte.
      Der oberste Abschnitt wird (1) in die App eingebaut („Was ist neu“) und (2) bei GitHub als Release-Text veröffentlicht. -->
 
+## 1.36 · 2026-11-20 · Feedback im Player und ruhigere Effekt-Vorschau
+- Besser: Feedback ist jetzt auch im Player sichtbar. Es lag bisher eine Ebene unter dem Player, deshalb ging aus den Optionen im Player scheinbar nichts auf. Es liegt nun über Player und Optionen.
+- Neu: Im Player gibt es oben einen Feedback-Knopf. In „Betrifft“ gibt es die neue Kategorie „Player & Klang“; wer Feedback aus dem Player öffnet, bekommt sie automatisch. Der Bericht enthält dann nur technische Angaben: Listenlänge, Format und Größe des aktuellen Titels, wie er geladen wurde (direkt oder ganz), Wiedergabestatus, Klangprofil und der letzte Wiedergabefehler. Keine Titel, keine Dateinamen.
+- Besser: Beim Umstellen von Effekten und beim Ziehen der Design-Regler (Transparenz, Unschärfe …) wird das Optionsfenster nicht mehr halb durchsichtig. Dabei liefen Startseite und Optionen übereinander, wie auf deinen Bildern. Jetzt bleibt nur die bediente Zeile sichtbar, der Rest blendet aus und du siehst die echte Oberfläche ungestört.
+- Hinweis: Die Effekt-Animationen selbst (Glühen, Aurora …) sind unverändert. Ob das Umschalten auf deinem Handy jetzt rund wirkt, kann ich nicht messen: Ich teste nur in einem Server-Browser, nicht auf einem echten Gerät. Wenn es noch hängt, sag mir genau wann (Rand-Effekt, Flächen-Effekt oder Regler), dann gehe ich gezielt dran.
+
 ## 1.35 · 2026-11-20 · Player: lange Titel laden nicht mehr ewig
 - Besser: Große Titel (200 MB und mehr) aus dem Ordner-Dialog der App starten jetzt fast sofort. Mit der neuen App-Version kopiert die App die Datei selbst in den Zwischenspeicher und spielt direkt davon ab, es läuft nichts mehr stückweise über die App-Brücke und nichts liegt komplett im Arbeitsspeicher. Spulen geht sofort. Es bleiben höchstens zwei Titel im Zwischenspeicher, beim nächsten Start wird er geleert.
 - Besser: Auch ohne die neue App-Version (alter Weg) ist das Laden schneller und die Bedienung bleibt flüssiger: Das Umwandeln blockiert die Oberfläche nicht mehr, das nächste Stück wird schon angefragt, der Player zeigt „Lädt … x %“, und wer einen anderen Titel antippt, bricht das Laden des vorigen ab.
