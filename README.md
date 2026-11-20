@@ -4,7 +4,7 @@ Dieser Ordner ist die **Quelle** der App. Das Ergebnis des Baus ist eine einzige
 `dist/index_ueberarbeitet.html` – sie wird als `www/index.html` ins Android-Repo gelegt (Live-Update und APK-Bau
 bleiben unverändert, siehe `ANLEITUNG.md` im Android-Zusatzpaket).
 
-Stand: Version 1.32 (Aufräumen, Teil 2). Der Bau aus Stufe 1 war Byte für Byte gleich 1.30; ab 1.31 sind die gemeinsamen Bausteine (unten) eingebaut, ab 1.32 laufen Takt und Beobachter zentral und die App ruht im Leerlauf.
+Stand: Version 1.33 (Aufräumen, Teil 3). Der Bau aus Stufe 1 war Byte für Byte gleich 1.30; ab 1.31 sind die gemeinsamen Bausteine (unten) eingebaut, ab 1.32 laufen Takt und Beobachter zentral und die App ruht im Leerlauf.
 
 ## Bauen und testen
 
@@ -34,7 +34,7 @@ echten GitHub-Actions-Lauf sind sie nicht gelaufen.
 | `android/` | `patch-android.cjs` und `sw.js` als Referenzkopie. **Maßgeblich ist die Kopie im Android-Repo (`scripts/patch-android.cjs`)**; bei Änderung beides angleichen |
 | `patches/` | Bau-Skripte (siehe unten) |
 
-Außerhalb von `src/`: `assets/` (Logo, Icon, Intro, `vendor/jszip`), `tests/` (53 Testdateien + `fixtures/`), `tools/` (Prüfskripte, Spessa-Bau-Kit),
+Außerhalb von `src/`: `assets/` (Logo, Icon, Intro, `vendor/jszip`), `tests/` (54 Testdateien + `fixtures/`), `tools/` (Prüfskripte, Spessa-Bau-Kit),
 `CHANGELOG.md` (oberster Abschnitt = „Was ist neu“ in der App, die Version der App wird daraus gelesen), `VORSCHAU.md`, `feedback_to.txt`.
 
 ## Gemeinsame Bausteine (`src/kern/bausteine.js`, lädt vor allen anderen Modulen)
@@ -45,6 +45,7 @@ Außerhalb von `src/`: `assets/` (Logo, Icon, Intro, `vendor/jszip`), `tests/` (
 - **`SunIDB`**: alle IndexedDB-Datenbanken der App (`DEFS` = Name + Stores). `SunIDB.open('projects')`, `SunIDB.tx(schlüssel, stores, modus, fn)`, `SunIDB.req`, `SunIDB.done`. Neue Datenbanken nur hier eintragen. Ausnahme: Sicherung/Wiederherstellung in `hilfe/updater.js` öffnet Datenbanken bewusst generisch.
 
 - **`SunTick`**: EIN gemeinsamer Taktgeber (Raster 250 ms) statt vieler `setInterval`. `SunTick.every(ms, fn, {hidden})` (läuft im Vielfachen von 250 ms; ohne `hidden` pausiert die Aufgabe im Hintergrund und holt beim Zurückkehren nach), `SunTick.rate(handle, ms)` (Takt ändern, z. B. im Leerlauf langsamer), `SunTick.stop(handle)`. Ohne Aufgaben steht der Takt still. Neue wiederkehrende Aufgaben **nicht** mit `setInterval` bauen.
+- **`SunLazy`**: Bibliotheken erst bei Bedarf laden. `await SunLazy.zip()` liefert JSZip (lokale Kopie `assets/vendor/…`, sonst CDN, sonst Fehler; nach Fehlschlag ist ein neuer Versuch möglich). JSZip steht **nicht mehr** beim Start als `window.JSZip` bereit – Code muss `const JSZip = await SunLazy.zip();` aufrufen (im Leerlauf kurz nach dem Start wird sie ohnehin vorgeladen). Neue schwere Bibliotheken ebenso über `SunLazy.once(...)`. Messung: `tools/pruefskripte/audit_start.cjs <absoluter-dist-pfad> [drossel] [läufe]` (Startzeit je Skriptblock, CPU gedrosselt).
 - **`SunDOM`**: EIN Beobachter für „Element erscheint“. `SunDOM.mount(id, fn)` (je Element einmal, z. B. Optionsmenü-Abschnitte) und `SunDOM.on(selektor, fn)`.
 - **Leerlauf der Zeichenschleife** (`layout/animation_loop.js`): Die Oberfläche zeichnet nur bei Wiedergabe, Aufnahme oder offenem Mixer sowie nach Berührung/Taste; sonst ruht `requestAnimationFrame`. Wer künftig etwas Dauerhaftes animiert, muss dafür sorgen, dass es sich selbst beendet (Beispiel: Pulse im Cover-Effekt verfallen nach 0,7 s). `tests/takt_test.cjs` prüft Ruhe, Wiederanlauf und die Zahl der Timer/Beobachter; `tools/pruefskripte/audit_wakeups.cjs <absoluter-dist-pfad> [hidden|home]` misst Aufwachen pro Sekunde.
 
@@ -74,7 +75,7 @@ Schlüssel im Browser-Speicher (alle mit Präfix `sunshine.`): `ui`, `theme`, `t
 ## Regeln für die Weiterarbeit
 
 - Nur an den Dateien in `src/` ändern, nie an `dist/`. Danach `python3 build.py` und `tests/runall.sh`.
-- Pro Lieferung: Eintrag oben in `CHANGELOG.md` (`## 1.32 · 2026-11-20 · Titel`, dann `- Neu:` / `- Besser:` / `- Hinweis:`). Versionsangaben in versionsabhängigen Tests (`v114_test.cjs` u. a.) mitziehen.
+- Pro Lieferung: Eintrag oben in `CHANGELOG.md` (`## 1.33 · 2026-11-20 · Titel`, dann `- Neu:` / `- Besser:` / `- Hinweis:`). Versionsangaben in versionsabhängigen Tests (`v114_test.cjs` u. a.) mitziehen.
 - Änderungen nur an `index.html`, `CHANGELOG.md`, `VORSCHAU.md` → Live-Update genügt. Änderungen an `patch-android.cjs` oder `assets/` → neue APK nötig.
 - Neue Funktion gehört in genau einen Bereich. Querbezüge zwischen Bereichen laufen über die vorhandenen Schnittstellen (`window.Home`, `TpDock`, `Player`, `Saver`, `Autosave` …).
 

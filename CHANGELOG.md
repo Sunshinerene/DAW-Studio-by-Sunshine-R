@@ -2,6 +2,11 @@
 <!-- Pflege: Ganz oben einen neuen Abschnitt „## Version · Datum · Titel“ anlegen, darunter die Neuerungen als Stichpunkte.
      Der oberste Abschnitt wird (1) in die App eingebaut („Was ist neu“) und (2) bei GitHub als Release-Text veröffentlicht. -->
 
+## 1.33 · 2026-11-20 · Aufräumen, Teil 3: schlankerer Start
+- Besser: Die ZIP-Bibliothek (für Stem-Import, Export und Datensicherung) wird nicht mehr beim Start geladen, sondern erst bei der ersten Nutzung – und sicherheitshalber einmal im Leerlauf kurz nach dem Start, damit der erste Import nicht warten muss. Der Start ist dadurch spürbar, aber nicht dramatisch schneller (im Test ca. 10 %).
+- Besser: Ist die lokale Kopie der Bibliothek einmal nicht erreichbar, versucht die App es über das Netz und meldet sonst verständlich, dass das ZIP-Modul fehlt. Ein späterer Versuch ist jederzeit möglich.
+- Hinweis: Sichtbar ändert sich nichts. Import, Export und Sicherung funktionieren wie bisher, Projekte und Einstellungen bleiben unverändert.
+
 ## 1.32 · 2026-11-20 · Aufräumen, Teil 2: Ruhe im Leerlauf
 - Besser: Die App ist im Leerlauf deutlich ruhiger. Die Oberfläche zeichnet nicht mehr ununterbrochen 60-mal pro Sekunde, sondern nur noch, wenn wirklich etwas passiert (Wiedergabe, Aufnahme, Mixer offen oder eine Berührung). Alle wiederkehrenden Kleinaufgaben (Anzeige-Abgleich, Autosave-Wächter, Startseite, Player, Selbstcheck …) laufen über einen gemeinsamen Takt und schlafen im Hintergrund. Das spart Akku und hält das Gerät kühler.
 - Besser: Die Optionsmenü-Abschnitte werden von einem gemeinsamen Beobachter bestückt statt von elf einzelnen – weniger Arbeit beim Öffnen und im Betrieb.
