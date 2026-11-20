@@ -1,1 +1,131 @@
+name: Build Android APK
 
+on:
+  push:
+    branches: [ main ]
+    # Nur die Vorschau-Datei geändert → kein neuer Build nötig (die App liest sie direkt aus dem Repo)
+    paths-ignore: [ 'VORSCHAU.md' ]
+  workflow_dispatch:
+
+# Nötig, damit der Lauf eine "Release" mit der APK veröffentlichen darf (daraus holt sich die App ihre Updates)
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+
+      - name: Node.js einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Java 17 einrichten
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Build-Nummer, Repo und Live-Update-Daten in die App schreiben
+        run: |
+          found=0
+          for f in www/index.html dist/index.html public/index.html index.html; do
+            if [ -f "$f" ] && grep -q "__BUILD_N__" "$f"; then
+              WEB=$(dirname "$f")
+              # Prüfsumme der unveränderten Oberfläche (für das Live-Update) – VOR dem Ersetzen der Platzhalter
+              LIVE_H=$(sha256sum "$f" | cut -d' ' -f1)
+              LIVE_V=$(grep -o "SUNSHINE_BUILD={[^}]*}" "$f" | grep -o "v:'[^']*'" | head -1 | cut -d"'" -f2)
+              # „App-Hülle“: Wenn sich diese Dateien ändern, reicht ein Live-Update nicht – dann braucht es eine neue APK
+              NAT=$( { cat scripts/patch-android.cjs package.json capacitor.config.* 2>/dev/null; if [ "$WEB" != "." ]; then find "$WEB" -type f ! -name index.html ! -name build.json ! -name sw.js -print0 | sort -z | xargs -0 -r sha256sum; fi; } | sha256sum | cut -c1-12 )
+              sed -i "s#__BUILD_N__#${{ github.run_number }}#g; s#__BUILD_REPO__#${{ github.repository }}#g; s#__BUILD_TIME__#$(date -u +%F)#g; s#__BUILD_NATIVE__#${NAT}#g" "$f"
+              printf '{"n":"%s","nat":"%s","repo":"%s"}' "${{ github.run_number }}" "$NAT" "${{ github.repository }}" > "$WEB/build.json"
+              echo "LIVE_H=$LIVE_H" >> "$GITHUB_ENV"; echo "LIVE_V=$LIVE_V" >> "$GITHUB_ENV"; echo "LIVE_PATH=$f" >> "$GITHUB_ENV"; echo "LIVE_NAT=$NAT" >> "$GITHUB_ENV"
+              echo "Build ${{ github.run_number }} (Version $LIVE_V, Hülle $NAT) eingetragen in $f"; found=1
+            fi
+          done
+          if [ "$found" = "0" ]; then echo "::warning::Kein index.html mit Build-Platzhalter gefunden – die Update-Prüfung in der App bleibt aus."; fi
+
+      - name: Abhängigkeiten installieren & Android-Projekt erzeugen
+        run: |
+          npm install
+          npx cap add android
+
+      - name: Mikrofon- & USB-MIDI-Rechte ins Manifest eintragen
+        run: |
+          node -e '
+            const fs = require("fs");
+            const p = "android/app/src/main/AndroidManifest.xml";
+            let xml = fs.readFileSync(p, "utf8");
+            const perms = `
+              <uses-permission android:name="android.permission.RECORD_AUDIO" />
+              <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+              <uses-feature android:name="android.hardware.usb.host" android:required="false" />
+            `;
+            xml = xml.replace("<application", perms + "\n    <application");
+            fs.writeFileSync(p, xml);
+          '
+
+      - name: Signatur-Schlüssel bereitstellen
+        env:
+          KS_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+        run: |
+          mkdir -p signing
+          # Optional: eigener Schlüssel aus den Repo-Secrets (überschreibt die Datei im Repo)
+          if [ -n "$KS_B64" ]; then echo "$KS_B64" | base64 -d > signing/sunshine.p12; echo "Schlüssel aus Secret ANDROID_KEYSTORE_B64 verwendet."; fi
+          if [ ! -f signing/sunshine.p12 ]; then
+            echo "::error::signing/sunshine.p12 fehlt. Ohne feste Signatur kann die App nicht über die installierte Version aktualisiert werden (Daten gingen verloren)."
+            exit 1
+          fi
+
+      - name: Android-Feinschliff (Vollbild, Zurück-Taste, feste Signatur, Versionsnummer)
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+          SUNSHINE_KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+          SUNSHINE_KS_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: node scripts/patch-android.cjs
+
+      - name: Web-Assets synchronisieren & APK bauen
+        run: |
+          npx cap sync android
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Signatur anzeigen (muss bei jedem Build gleich sein)
+        run: |
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner 2>/dev/null | sort -V | tail -1)
+          if [ -n "$APKSIGNER" ]; then "$APKSIGNER" verify --print-certs android/app/build/outputs/apk/debug/app-debug.apk | head -4 || true; else echo "apksigner nicht gefunden – übersprungen."; fi
+
+      - name: APK benennen
+        run: |
+          mkdir -p release
+          cp android/app/build/outputs/apk/debug/app-debug.apk "release/Sunshine-R-DAW-v${{ github.run_number }}.apk"
+
+      - name: APK als Download-Artifact hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: Sunshine-R-Stem-DAW-apk
+          path: release/*.apk
+
+      - name: Release-Text aus CHANGELOG.md erzeugen
+        run: |
+          mkdir -p release
+          # oberster Abschnitt von CHANGELOG.md (ohne Überschrift) = „Was ist neu“
+          if [ -f CHANGELOG.md ]; then awk '/^## /{c++; if(c==1) next} c==1' CHANGELOG.md > release/notes.md; fi
+          if [ ! -s release/notes.md ]; then echo "- Automatischer Build ${{ github.run_number }}" > release/notes.md; fi
+          # maschinenlesbare Zeile für das Live-Update der Oberfläche (unsichtbar auf GitHub)
+          if [ -n "$LIVE_V" ]; then echo "<!-- sunshine:{\"v\":\"$LIVE_V\",\"sha\":\"${{ github.sha }}\",\"path\":\"$LIVE_PATH\",\"h\":\"$LIVE_H\",\"nat\":\"$LIVE_NAT\"} -->" >> release/notes.md; fi
+          cat release/notes.md
+
+      - name: Release veröffentlichen (daraus lädt die App ihre Updates)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "build-${{ github.run_number }}" release/*.apk \
+            --title "Sunshine@R Build ${{ github.run_number }}${LIVE_V:+ · Version $LIVE_V}" \
+            --notes-file release/notes.md \
+            --target "${{ github.sha }}" --latest
