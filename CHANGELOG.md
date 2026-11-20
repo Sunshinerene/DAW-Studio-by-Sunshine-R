@@ -2,6 +2,12 @@
 <!-- Pflege: Ganz oben einen neuen Abschnitt „## Version · Datum · Titel“ anlegen, darunter die Neuerungen als Stichpunkte.
      Der oberste Abschnitt wird (1) in die App eingebaut („Was ist neu“) und (2) bei GitHub als Release-Text veröffentlicht. -->
 
+## 1.37 · 2026-11-20 · Design und Icons überall gleich
+- Besser: Die Einstellung „Rundung“ (Eckig / Normal / Extra rund) gilt jetzt durchgängig. Bisher hat sie nur die Standard-Elemente der DAW verändert. Player, Startseite, Dockbars, Hilfe, Feedback, „Was ist neu“ und die Cover hatten feste Rundungen im Code. Jetzt folgen sie alle derselben Einstellung. „Eckig“ macht auch die Pillen, Karten, Tasten und runden Play-Knöpfe eckig, „Extra rund“ macht sie weicher.
+- Besser: Im Modus „Normal“ sieht alles aus wie bisher. Geprüft mit einem Pixelvergleich von 14 Ansichten in allen 5 Designs gegen 1.36.
+- Besser: Die Linien-Icons wirken jetzt auch an den Stellen, die vorher als Emoji stehen blieben: 👀 in „Bald in der App“, die Titel-Symbole der Großfenster (Editor, Drums, Vocal, Mixer), Feedback-Arten und -Knöpfe, „Optionen“-Titel. Pfeile und Häkchen mitten im Fließtext bleiben bewusst Zeichen.
+- Hinweis: Fest bleiben absichtlich Schalter, Farbpunkte, Pegel-Balken und die Randlinie der Kopfleiste (hat eine eigene Eckig-Regel). Wo dir noch etwas rund auffällt, sag mir die Ansicht, dann ziehe ich es nach.
+
 ## 1.36 · 2026-11-20 · Feedback im Player und ruhigere Effekt-Vorschau
 - Besser: Feedback ist jetzt auch im Player sichtbar. Es lag bisher eine Ebene unter dem Player, deshalb ging aus den Optionen im Player scheinbar nichts auf. Es liegt nun über Player und Optionen.
 - Neu: Im Player gibt es oben einen Feedback-Knopf. In „Betrifft“ gibt es die neue Kategorie „Player & Klang“; wer Feedback aus dem Player öffnet, bekommt sie automatisch. Der Bericht enthält dann nur technische Angaben: Listenlänge, Format und Größe des aktuellen Titels, wie er geladen wurde (direkt oder ganz), Wiedergabestatus, Klangprofil und der letzte Wiedergabefehler. Keine Titel, keine Dateinamen.
