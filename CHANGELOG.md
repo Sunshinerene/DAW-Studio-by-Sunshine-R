@@ -1,0 +1,185 @@
+# Änderungsprotokoll · Sunshine@R DAW Studio
+<!-- Pflege: Ganz oben einen neuen Abschnitt „## Version · Datum · Titel“ anlegen, darunter die Neuerungen als Stichpunkte.
+     Der oberste Abschnitt wird (1) in die App eingebaut („Was ist neu“) und (2) bei GitHub als Release-Text veröffentlicht. -->
+
+## 1.30 · 2026-11-20 · Neue Startseite, niedrigere Dockbar, Klang in der Player-Dockbar
+- Neu: Die Startseite passt jetzt ohne Scrollen auf den Bildschirm – sie verdichtet sich bei Bedarf selbst (Logo, Abstände, Kacheln). Cover und Equalizer sitzen weiter unten direkt über der Dockbar, der Titel steht darunter.
+- Neu: Die Startseite zeigt nur die **letzten 3 Projekte**. „Alle …“ öffnet ein großes, schwebendes Fenster mit Abstand zur Startseite: alle Projekte, Suche und Sortierung. Wischen am Griff, ✕ oder Zurück schließt es.
+- Neu: Die Startseite folgt dem gewählten Design (Aurora, Studio, Neon, Liquid, Klassik): Karten, Knöpfe und der große „Neues Projekt“-Knopf haben je Design Form, Farbe und Leuchten wie die untere Leiste. Hinweiskarten sind einzeilig und kompakter.
+- Neu: Im Player ist die **Klang-Vorauswahl** auf eine zweite Seite der Dockbar gewandert (nach links wischen oder Punkte antippen). Nur im Player – in der DAW und auf der Startseite bleibt die Leiste wie sie ist.
+- Besser: Die **Dockbar ist niedriger** (86 statt bis zu rund 120 px) und in Player, Startseite und DAW-Leiste gleich hoch. Der Titel der Startseiten-Dockbar steht unter dem Cover; die Player-Seite der DAW-Leiste zeigt „Player öffnen“, solange nichts geladen ist.
+- Besser: Im Player ist der Lautstärke-Regler entfernt (die Lautstärke bleibt wie zuletzt eingestellt; am Handy regelst du sie mit den Lautstärketasten). Die Klang-Karte ist dadurch kürzer.
+- Besser: Scrollbalken sind auch auf der Startseite und in der großen Projektansicht ausgeblendet.
+- Hinweis: Nur `www/index.html`, `CHANGELOG.md` und `VORSCHAU.md` ändern sich – Live-Update reicht, keine neue APK nötig.
+
+## 1.29 · 2026-11-20 · Eine Leiste für alles: Player in der DAW-Leiste, feste Player-Oberseite, ruhigere Oberfläche
+- Neu: Die untere Leiste der DAW hat eine dritte Seite mit der Player-Bedienung (Zufall, Zurück, Play/Pause, Weiter, Wiederholen, Zeitleiste) – wie in der Player-Dockbar. Wischen nach links/rechts wechselt zwischen Transport, Spuren (Editor, Drums, Vocal, Mixer …) und Player. Spielt der Player, springt die Leiste von selbst zur Player-Seite; startet die DAW, zurück zum Transport.
+- Neu: Die DAW-Tasten (Loop, Start, Play/Pause, Stopp, Metronom) sehen jetzt genauso aus wie die Player-Tasten – gleiche Symbole, gleiche Größen.
+- Neu: Im Player ist der obere Teil mit Cover und Equalizer samt Titel fest und scrollt nicht mehr mit; er ist etwas kleiner und weiter oben. Der Rest darunter (Klang, Liste) scrollt weiter.
+- Neu: Im Player gibt es oben einen Optionen-Knopf (Zahnrad). Die Optionen öffnen sich über dem Player.
+- Neu: Optionen → Untere Leiste → „Tasten passend zum Leistenstil“ (standardmäßig aus): Bei Glas, Flach, Leuchtend und Dezent bekommen die Tasten in Player, Startseite und DAW-Leiste dazu passende Formen und Farben.
+- Neu: Optionen → „Scrollbalken anzeigen“ (standardmäßig aus): Scrollbalken sind nun fast überall ausgeblendet; gescrollt wird wie gewohnt per Wischen oder Mausrad.
+- Besser: Leuchtend-Leiste ist jetzt deckend, sodass dahinterliegende Karten nicht mehr durchscheinen. Die Mini-Leiste des Players ist ausgeblendet, solange die DAW-Leiste die Player-Seite zeigt.
+- Hinweis: Die DAW-Leiste ist durch die größeren Tasten etwa 30 px höher als vorher. Nur `www/index.html`, `CHANGELOG.md` und `VORSCHAU.md` ändern sich – Live-Update reicht, keine neue APK nötig.
+
+## 1.28 · 2026-11-19 · Android: eigener Ordner-Dialog und Zeit in der Benachrichtigung
+- Neu: Android-App: Der Player hat jetzt einen eigenen Ordner-Dialog. Die Freigabe bleibt auch nach einem Neustart erhalten – beim Start sind Ordner, Liste, letzter Titel und Position von selbst wieder da, ohne dass du den Ordner erneut wählen musst. Unterordner werden mitgelesen.
+- Neu: Der Verlauf „Zuletzt“ öffnet Ordner in der Android-App direkt, ohne Dialog.
+- Neu: Die Musik-Benachrichtigung zeigt die laufende Zeit (vom System gezählt); in der Pause steht dort „1:23 / 3:45“. Zurück/Weiter und die Zeitleiste auf dem Sperrbildschirm gab es schon – sie funktionieren jetzt mit Titeln aus dem Ordner.
+- Besser: Tags (Titel, Künstler, Album, Cover) werden bei Ordnern in der App nur aus dem Dateianfang gelesen – schnell, auch bei vielen großen Dateien. Die Länge steht, sobald ein Titel das erste Mal läuft.
+- Hinweis: Das braucht **einmalig eine neue APK**: `scripts/patch-android.cjs` hat sich geändert (zusammen mit `www/index.html`, `CHANGELOG.md` und `VORSCHAU.md` hochladen). Mit der alten App läuft die neue Oberfläche ganz normal weiter und nutzt wie bisher den Datei-Dialog. Ein animierter Mini-Equalizer in der Benachrichtigung ist nicht dabei: Android kann Benachrichtigungen nicht flüssig animieren.
+
+## 1.27 · 2026-11-19 · Startbildschirm: Dockbar für Player und DAW, Cover mit Equalizer
+- Neu: Auf dem Startbildschirm erscheint unten die gleiche Dockbar wie im Player und in der DAW, sobald etwas läuft. Sie steuert genau das, was gerade spielt: beim Player Zufall, Zurück, Play/Pause, Weiter und Wiederholen – bei der DAW Loop, Anfang, Play/Pause, Stopp und Metronom. Die Zeitleiste lässt sich verschieben, ein Tipp auf den Titel öffnet den Player bzw. führt zurück ins Projekt, mit ✕ blendest du die Leiste aus.
+- Neu: Das Cover des gerade laufenden Titels (aus dem Player oder dem DAW-Projekt, sonst ein passend erzeugtes) sitzt jetzt mit Effekt und Equalizer verschmolzen über der Dockbar. Die alte Hintergrund-Animation ist entfernt.
+- Besser: Beim Öffnen der Startseite stoppt die DAW nicht mehr – die Musik läuft weiter und lässt sich dort steuern. Startet der Player, pausiert die DAW (und umgekehrt); die Leiste wechselt von selbst.
+- Besser: Der Leistenstil aus den Optionen (Glas, Flach, Leuchtend, Dezent) gilt jetzt auch für die Dockbar der Startseite – alle drei Leisten sehen in jedem Design gleich aus.
+- Besser: Der Equalizer im Player nimmt sich seine Anzeige jedes Mal beim Öffnen zurück, auch wenn die Startseite ihn zwischenzeitlich genutzt hat.
+- Hinweis: Nur `www/index.html`, `CHANGELOG.md` und `VORSCHAU.md` ändern sich gegenüber 1.26 – das Live-Update reicht. Die Android-Benachrichtigung mit Zurück/Weiter und der eigene Ordner-Dialog folgen in 1.28 (neue App nötig).
+
+## 1.26 · 2026-11-19 · Player: Dockbar, Cover mit Equalizer, letzter Stand & Ordner-Verlauf
+- Neu: Der Player hat unten eine Dockbar im Stil der unteren Leiste der DAW: Zeitleiste, Zufall, Zurück, Play/Pause, Weiter und Wiederholen. Sie passt sich dem gewählten Design an (Aurora, Studio, Neon, Liquid, Klassik) und ist in Rundung und Farbe identisch mit der Leiste der DAW.
+- Neu: Der Equalizer sitzt jetzt oben und verschmilzt mit dem Cover samt Effekt – die Balken wachsen hinter und unter dem Cover heraus. Klang-Auswahl und Titelliste rücken nach oben.
+- Neu: Leistenstile unter Optionen → Untere Leiste: „Wie das Design“, „Glas“, „Flach“, „Leuchtend“ und „Dezent“ – wirken auf die DAW-Leiste und die Dockbar des Players.
+- Neu: Der Player merkt sich den letzten Stand: Liste, zuletzt gehörter Titel (mit Tags und Cover) und Position. Nach dem Neustart ist alles sofort wieder da; ein Tipp verbindet den Ordner erneut und es geht an derselben Stelle weiter. Im Desktop-Browser merkt sich der Player den Ordner selbst und verbindet ihn ohne erneute Auswahl (der Browser fragt eventuell einmal nach der Freigabe).
+- Neu: „Zuletzt“ in der Player-Liste zeigt die letzten 8 Ordner zum erneuten Öffnen.
+- Besser: „Bald in der App“ bleibt nicht mehr auf alten Texten stehen. Die Datei im Repo gilt nur, wenn sie eine neuere Version nennt als die installierte App; sonst zeigt die App den beim Bauen eingebauten Text. Die Vorschau ist jetzt gegliedert in „Kommt“, „Zum Testen“ und „Idee“.
+- Hinweis: Nur `www/index.html` und `CHANGELOG.md` ändern sich gegenüber 1.25 – das Live-Update reicht. Auf Android bleibt der Ordner nach dem Neustart nicht von selbst verbunden (Grenze des Browser-Dialogs); der native Ordner-Dialog folgt mit einer späteren App-Version.
+
+## 1.25 · 2026-11-19 · Player: Klang-Voreinstellungen, Equalizer, Cover, Tags & Ordner
+- Neu: Klang-Voreinstellungen im Player – Original, Mehr Bass, Techno, Klassik, Pop, Rock, Stimme, Hip-Hop, Weich und „Eigen“ mit fünf Reglern (Tiefbass, Bass, Mitten, Höhen, Brillanz). Ein Schutz-Limiter verhindert Übersteuern.
+- Neu: Animierter Equalizer im Player. Jede Voreinstellung hat ihre eigene Darstellung (dicke Bass-Balken, LED-Segmente für Techno, weiche Wellen für Klassik, Punkte für Pop, Zacken für Rock, gespiegelt für Stimme, Blöcke für Hip-Hop, Aura für Weich) samt Kurve des Klangreglers. Farben, Rundung und Leuchten folgen dem gewählten Design; ein- und ausblendbar (im Player und unter Optionen → Player & Hintergrund).
+- Neu: Cover im Player mit demselben Rahmen und denselben Musik-Effekten wie in der DAW. Das Bild kommt aus der Datei; fehlt es, entsteht ein passendes Cover aus Titel und Künstler.
+- Neu: Tags aus den Audiodateien (Titel, Künstler, Album, Genre, Jahr, Titelnummer, Cover) – MP3, M4A, FLAC, OGG/Opus und WAV. Anzeige in Liste, Titelkarte, Mini-Leiste, Sperrbildschirm-Steuerung des Systems und Benachrichtigung.
+- Neu: Button „Ordner“ im Player. Dateien werden direkt vom Gerät abgespielt, ohne sie erst in die App zu laden (Desktop-Browser: echter Ordner-Dialog mit Unterordnern; Android: Dateiauswahl, ein eigener Ordner-Dialog folgt mit dem nächsten App-Update).
+- Besser: Die Mini-Leiste zeigt beim Abspielen einen kleinen Equalizer und den Künstler.
+- Hinweis: Nur `www/index.html` und `CHANGELOG.md` ändern sich gegenüber 1.24 – das Live-Update reicht. Tasten Zurück/Weiter, Zeitanzeige und Mini-Equalizer in der Benachrichtigung selbst folgen in 1.26 (neue App nötig).
+
+## 1.24 · 2026-11-19 · Cover-Effekte, Leiste im Design-Stil & Fensterbreiten
+- Neu: Fünf weitere Rand-Effekte fürs Cover: Flackerlinien (Linien blitzen im Takt), Lauflinien (Striche laufen um das Bild), Blur-Rand (weicher Lichtsaum, der mit dem Bass atmet), Lichtkranz (wandernde Lichtflecke) und Aura (weiche Schichten, die nach außen schwingen). Insgesamt 14 Effekte zur Auswahl.
+- Neu: Regler für Größe des Effekts, Helligkeit und Transparenz (Optionen → Design & Aussehen → Cover & Tags), mit Live-Vorschau und „Zurücksetzen“.
+- Neu: „Neues Projekt“ zeigt Cover & Tags jetzt direkt unter dem Projektnamen, aufgeklappt – Bild wählen oder aus Titel und Künstler erstellen gleich beim Anlegen.
+- Besser: Die untere Leiste (Transport · Spuren · Editor · Drums · Vocal · Mixer) passt sich dem gewählten Design an: Rand, Rundung, Glühen, Glas bzw. Metall-Look und Akzentfarbe von Aurora, Studio, Neon, Liquid und Klassik.
+- Besser: Die Großfenster Vocal und Mixer füllen jetzt die ganze Breite (vorher blieb rechts eine Lücke); Spuren, Editor und Drums wurden mitgeprüft.
+- Hinweis: Nur `www/index.html` und `CHANGELOG.md` ändern sich gegenüber 1.23 – das Live-Update reicht.
+
+## 1.23 · 2026-11-19 · Transport in der unteren Leiste
+- Neu: Am Handy liegen Play, Stopp, Loop und Klick jetzt in der unteren Leiste. Mit einem Wisch nach links (oder dem kleinen Pfeil) kommst du zu Spuren · Editor · Drums · Vocal · Mixer, mit einem Wisch zurück wieder zum Transport. Läuft die Musik, leuchtet der Pfeil auf der Bereichs-Seite.
+- Besser: Oben fällt die Transport-Zeile weg – Zeitanzeige, Werkzeugleiste und alle Spuren rutschen nach oben, und das Cover bekommt mehr Platz (größere Stufen für klein / mittel / groß).
+- Neu: In den Optionen (Design & Aussehen → Untere Leiste) lässt sich das abschalten; dann bleibt der Transport oben wie bisher. In Querformat und auf größeren Bildschirmen ändert sich nichts.
+- Besser: Das Cover-Layout rechnete bei manchen Anordnungen im Leerlauf ständig neu (unnötige Last) – behoben.
+- Hinweis: Nur `www/index.html` und `CHANGELOG.md` ändern sich gegenüber 1.22 – das Live-Update reicht.
+
+## 1.22 · 2026-11-19 · Cover: Platz, Randeffekte & Design
+- Besser: Das Cover sitzt jetzt passend in Hoch- und Querformat (oben rechts, ohne Knöpfe oder Texte zu überdecken). Die Größe passt sich dem Gerät an und lässt sich in den Optionen auf klein / mittel / groß stellen.
+- Neu: Neun Randeffekte zur Auswahl (Optionen → Design & Aussehen → Cover & Tags): Pegel-Ring, Punkte, Welle, Puls, Lauflicht, Rahmen, Leuchten, Ring + Leuchten und Aus – mit Live-Vorschau und Stärke (sanft / normal / kräftig). Das Bild bleibt immer frei.
+- Neu: Das Cover-Symbol folgt dem gewählten Design: Rahmen, Rundung, Leuchten und Effektfarben passen zu Aurora, Studio, Neon, Liquid und Klassik sowie zur Akzentfarbe; auch erzeugte Cover und der Platzhalter nutzen die Designfarben.
+- Hinweis: Nur `www/index.html` und `CHANGELOG.md` ändern sich gegenüber 1.21 – das Live-Update reicht.
+
+## 1.21 · 2026-11-19 · Cover & Tags
+- Neu: Cover und Tags pro Projekt. Beim Anlegen (und später in den Projekt-Einstellungen) wählst du ein eigenes Bild oder lässt ein Cover aus Projektname und Künstler/Produzent erstellen – vier Stile, „Neu mischen“ für neue Varianten. Dazu Künstler/Produzent, Genre (mit Vorschlägen), Jahr, Album, Komponist, Copyright und Kommentar.
+- Neu: Das Cover steht oben rechts im Kopfbereich der DAW (Antippen = bearbeiten), in der Projektliste und in der Android-Benachrichtigung. Rund um das Bild laufen Balken im Takt der Musik oder es leuchtet mit dem Bass – das Bild selbst bleibt frei. In den Optionen (Design & Aussehen → Cover & Tags) wählbar: Ring, Leuchten, beides, aus, Cover ausblenden.
+- Neu: Beim Export werden Tags und Cover eingebettet – WAV (16/24 Bit) und Opus/OGG mit Titel, Künstler, Album, Genre, Jahr, Komponist, Copyright, Kommentar, BPM, Tonart und Bild; Stems-ZIP mit getaggten Dateien plus cover.jpg; MIDI mit Titel, Künstler und Copyright. Der Dateiname wird „Künstler - Projektname“. Abschaltbar im Export-Fenster; ohne Cover/Tags exportiert die App wie bisher.
+- Hinweis: MP3 ist in der App nicht enthalten (kein Encoder eingebaut). Manche Abspielprogramme zeigen Tags/Cover in WAV-Dateien nicht an, bei Opus/OGG meist schon.
+- Hinweis: Nur `www/index.html` und `CHANGELOG.md` ändern sich gegenüber 1.20 – das Live-Update reicht.
+
+## 1.20 · 2026-11-19 · Start-Intro
+- Neu: Beim Öffnen der App läuft jetzt dein Intro-Video (10 Sekunden, mit Ton). „Überspringen“ oder die Zurück-Taste beendet es sofort, der Lautsprecher-Knopf schaltet den Ton um. Es läuft einmal pro App-Start, nicht bei jedem Zurückkehren in die App.
+- Neu: Optionen → Design & Aussehen → „Start-Intro“: beim Start abspielen ein/aus, mit oder ohne Ton und „Intro jetzt ansehen“ – das Video lässt sich also auch bei ausgeschaltetem Start jederzeit anschauen.
+- Hinweis: Das Video liegt als eigene Datei in `www/assets/` (intro.mp4 und intro-poster.jpg). Weil sich damit Dateien außerhalb der index.html ändern, braucht dieses Update eine neue APK. Startet der Ton nicht automatisch (Android-Sperre), läuft das Intro stumm und der Lautsprecher-Knopf schaltet ihn zu.
+
+## 1.19 · 2026-11-19 · Player & Musik im Hintergrund
+- Neu: Die Musik läuft jetzt auch im Hintergrund und bei gesperrtem Bildschirm weiter – für den neuen Player und für die DAW-Wiedergabe. In der Benachrichtigungsleiste und auf dem Sperrbildschirm erscheint ein Player mit Titel, Cover im Farbton deines Designs und Tasten (Zurück, Play/Pause, Weiter bzw. Stopp). Das gibt es nur in der Android-App; es braucht einmalig eine neue APK.
+- Neu: Einfacher Player für reine Audiodateien – WAV, MP3, M4A, OGG, FLAC. Auch ganze ZIP-Dateien (z. B. der Suno-Download) lassen sich öffnen; die Titel darin erscheinen sortiert in der Liste und werden erst beim Abspielen entpackt. Mit Zufall, Wiederholen (aus/alle/ein Titel), Lautstärke und kleiner Leiste, wenn du den Player schließt. Erreichbar über ☰ → Player, die Startseite und die Optionen.
+- Neu: Optionen → Klang → „Player & Hintergrund“: Hintergrund-Wiedergabe und Benachrichtigungs-Player lassen sich abschalten.
+- Besser: Der Taktgeber der DAW läuft in einem eigenen Arbeitsthread, damit Drums und MIDI auch bei gesperrtem Bildschirm nicht ins Stocken geraten.
+- Hinweis: Player und DAW spielen nie gleichzeitig – startest du das eine, hält das andere an. Die Titelliste des Players bleibt nur bis zum Schließen der App erhalten. Hält Android die App trotzdem nach längerer Zeit an, hilft in den Android-Einstellungen für die App „Akku → Nicht einschränken“.
+- Hinweis: Ändert die Datei scripts/patch-android.cjs – deshalb ist diesmal eine neue APK nötig (Live-Update allein reicht nicht). Beim ersten Start fragt Android auf neueren Versionen nach der Erlaubnis für Benachrichtigungen.
+
+## 1.18 · 2026-11-19 · Übersichtliche Optionen
+- Neu: Die Optionen sind jetzt in sechs Kategorien geordnet – Design & Aussehen, Effekte & Anzeige, Klang, KI & Assistent, Leistung & Speicher, Updates & Datensicherung, Hilfe & Feedback. Beim Öffnen siehst du die Übersicht mit Kurzinfo; ein Tipp öffnet die Einstellungen der Kategorie.
+- Neu: Suchfeld in den Optionen – findet Einstellungen nach Stichwort („Farbe“, „Update“, „Speicher“ …).
+- Besser: Die Zurück-Leiste „‹ Optionen“ bleibt beim Scrollen oben stehen; Zurück-Taste und Esc führen erst zur Übersicht, dann schließen sie die Optionen. Nach einem Design-Wechsel bleibst du auf der Seite „Design“.
+- Hinweis: Alle bisherigen Einstellungen sind unverändert vorhanden – sie liegen nur an einer geordneten Stelle. Das Update kommt über das Live-Update (nur index.html geändert).
+
+## 1.17 · 2026-11-19 · Aufgeräumte Großansicht, Feedback & Vorschau
+- Neu: Klavier/Piano Roll, Drum-Sequencer, Mixer und MIDI-Werkzeuge öffnen jetzt in einem eigenen Großansicht-Fenster, wenn du sie brauchst – das Hauptfenster bleibt übersichtlich (Spuren, Transport und Navigation bleiben immer erreichbar). Schließen mit ✕, Zurück-Taste oder Esc; ein zweiter Tipp auf den Knopf schließt ebenfalls.
+- Neu: Der MIDI-Editor ist in fünf Werkzeug-Gruppen aufgeteilt (Raster, Tonart, Generator, Audio→MIDI, Klang) – es ist immer nur die Gruppe sichtbar, die du gerade brauchst. Die Auswahl wird gemerkt.
+- Neu: Feedback-Funktion für Tester (Menü, Startseite und Optionen): Fehler, Ideen, Anmerkungen, Lob oder Fragen schreiben, Bereich wird automatisch erkannt. Optional werden Geräte-/Versionsangaben und das technische Fehlerprotokoll (keine Audiodaten, keine Projektinhalte) angehängt. Du siehst vorher genau, was mitgeht, und schickst es per E-Mail, Teilen, Datei oder Kopieren selbst ab – es wird nichts automatisch gesendet.
+- Neu: Update-Vorschau („Bald neu“) auf der Startseite und in „Was ist neu“: ein kurzer Ausblick auf das nächste Release. Der Text wird beim Start live aus der Datei VORSCHAU.md im Repo nachgeladen (ohne neue App-Version) und lässt sich wegklicken.
+- Besser: Optionen → Darstellung der Fenster: „Großansicht“ ist neu der Standard; die bisherigen Modi „Fenster“ (Ziehharmonika) und „Tabs“ bleiben wählbar. Wer bewusst Tabs gewählt hatte, behält sie.
+- Besser: Der Hintergrunddienst für Live-Updates startet jetzt in der Android-App (vorher meldete die App „Der Hintergrunddienst konnte nicht starten“). Seine Dateien kommen nun wie die Seite aus der App selbst.
+- Hinweis: Dieser Fix ändert die Android-Hülle – deshalb einmal die neue APK installieren. Danach können Oberflächen-Änderungen über das Live-Update kommen.
+- Hinweis: Das Feedback läuft ohne Server: „Per E-Mail“ öffnet die Mail-App mit fertigem Text (Betreff „Feedback Sunshine@R DAW Studio“); Teilen, Datei und Kopieren liefern denselben Inhalt.
+
+## 1.16 · 2026-11-19 · Speicher-Sparer, schlankere App
+- Neu: Speicher-Sparer (Optionen → Speicher-Sparer, standardmäßig aus): Spuren, die gerade nicht zu hören sind (stumm oder durch Solo ausgeblendet), werden aus dem Arbeitsspeicher entladen – bei einer 4½-Minuten-Stereo-Spur sind das rund 95 MB. Wellenform, Länge und Name bleiben sichtbar; beim Einschalten, Abspielen oder Exportieren lädt die App die Spur automatisch wieder, bit-genau. Einzelne Spuren lassen sich auch von Hand entladen und laden.
+- Besser: Das Design (Tailwind) wird nicht mehr beim Start im Handy berechnet, sondern liegt fertig in der App. Das spart ca. 400 KB Programmcode, Rechenzeit beim Start und bei jeder Änderung der Oberfläche. Aussehen unverändert (in 135 Ansichten Punkt für Punkt gegen die alte Version geprüft).
+- Besser: Logo und App-Icon sind deutlich kleiner (Logo 2,5 MB → ca. 0,2 MB) – die App wird schneller geladen und das Paket schlanker.
+- Hinweis: Wer gleichzeitig viele Spuren hört, braucht diese Spuren auch gleichzeitig im Speicher. Der Sparer entlastet vor allem beim Arrangieren und beim Abhören einzelner Stems.
+- Hinweis: Diese Version ändert Dateien der App (Logo, Design). Das Update läuft deshalb über eine neue APK, nicht über das Live-Update.
+
+## 1.15 · 2026-11-19 · Kompaktere Projekte & sparsameres Speichern
+- Neu: Importierte Stems (WAV, MP3, …) werden im Projekt als Original-Datei gespeichert statt als entpackte Rohdaten. Projekte, Autosave und Sicherungen werden dadurch kleiner (16-Bit-WAV etwa die Hälfte, MP3 rund ein Zehntel).
+- Besser: Beim Speichern werden die Audiodaten nicht mehr zusätzlich kopiert – das senkt die Speicherspitze, die bei vielen Spuren zum Absturz führen konnte.
+- Hinweis: Aufnahmen, erzeugte oder bearbeitete Spuren und 32-Bit-Float-Dateien bleiben wie bisher als Rohdaten. Ältere Projekte bleiben lesbar und werden erst dann kompakt, wenn die Stems neu importiert werden.
+- Hinweis: Beim Öffnen werden die Original-Dateien neu dekodiert – bei vielen Spuren dauert das einige Sekunden.
+
+## 1.14 · 2026-11-19 · Updates, Sicherung & Stabilität
+- Neu: „Was ist neu“ – dieses Änderungsprotokoll steckt jetzt in der App (Optionen → Updates) und erscheint nach einem Update einmal auf der Startseite.
+- Neu: Beim Update-Hinweis steht jetzt, was die neue Version bringt (aus dem GitHub-Release-Text).
+- Neu: Wöchentliche Sicherung – automatisch in „Dokumente/SunshineDAW/Sicherung“ (die letzten 4 bleiben), bei großen Datenmengen als Erinnerung zum Speichern.
+- Neu: Live-Update der Oberfläche – kleine Änderungen kommen ohne neue APK, mit automatischem Rückfall auf die eingebaute Version, falls etwas nicht startet.
+- Neu: Optionen → Stabilität & Leistung: Speicher-Anzeige mit Warnung, Fehlerprotokoll zum Kopieren, Sparmodus für schwächere Handys, Anzeige-Test.
+- Der Name der App ist jetzt überall „Sunshine@R DAW Studio“.
+
+## 1.13 · Updates & Datensicherung
+- Neu: Feste App-Signatur und hochzählende Versionsnummer – neue APKs lassen sich über die installierte App einspielen, Projekte bleiben erhalten.
+- Neu: „Nach Updates suchen“ in den Optionen (GitHub-Releases) mit Hinweis auf der Startseite.
+- Neu: „Alles sichern“ und „Wiederherstellen“ – alle Projekte, Autosave und Einstellungen als eine ZIP-Datei.
+- Neu: Gerätespeicher dauerhaft schützen.
+
+## 1.12 · Anzeige & Effekte
+- Effekte sind standardmäßig aus und wirken nur noch auf große Flächen und Ränder (kein Vollbild-Overlay mehr).
+- Layout-Wächter gegen seitliche Ränder, Kamera-Abstand optional, „Anzeige prüfen“ in den Optionen.
+
+## 1.11 · Anleitung
+- Neu: Interaktiver Rundgang und Handbuch in der App (Optionen oder Startseite → Hilfe).
+
+## 1.10 · Android-Feinschliff
+- Zurück-Taste schließt Fenster und führt zur Startseite, Vollbild und Querformat randlos.
+- Icons je Design vereinheitlicht, Transportleiste und Werkzeugleiste ans Design angepasst.
+
+## 1.9 · Kreativ-Werkzeuge
+- Beat-Slicer, Tonart-Erkennung mit Transponieren, Stem-Import-Assistent, Strukturmarker.
+
+## 1.8 · Mix & Export
+- Automation, LUFS-Messung mit Limiter, Spektrum.
+- Export als Stems-ZIP, Loop-Bereich, komprimiert oder MIDI.
+
+## 1.7 · Clip-Bearbeitung
+- Teilen, zuschneiden, kopieren, einfügen, verschieben; Fades und Überblendungen; Mehrfachauswahl; Lücke schließen.
+- Großansicht je Spur, Autosave mit Wiederherstellung.
+
+## 1.6 · Fenster-Modus
+- Editor, Drums, Vocal, Mixer und Spuren als einzeln ein- und ausklappbare Fenster.
+- Einheitliche Transport-Buttons, klarere Zurück/Vor-Symbole.
+
+## 1.5 · KI & Sprache
+- KI-Assistent mit Sprachsteuerung.
+- Audio-zu-MIDI per Basic-Pitch-KI.
+
+## 1.4 · Design-Optionen
+- Farbe, Transparenz, Unschärfe und Rundung einstellbar; „Vor“-Button (Redo).
+
+## 1.3 · Neues Design
+- Theme „Liquid Matt“, schwebende Navigation unten, kompaktere Spurkarten, aufgeräumtes Datei-Menü.
+
+## 1.2 · SoundFonts
+- SpessaSynth-Integration: SoundFonts laden und als Instrument nutzen.
+
+## 1.1 · Mixer & Editor
+- Mixer, Piano-Roll, Drum-Pattern und Vocal-Ansicht für Suno-Stems.
+
+## 1.0 · Erste Fassung
+- Suno-Stems laden, abspielen, mischen und exportieren.

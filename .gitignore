@@ -1,0 +1,5 @@
+dist/
+node_modules/
+__pycache__/
+*.bak*
+tests/ergebnis.txt
