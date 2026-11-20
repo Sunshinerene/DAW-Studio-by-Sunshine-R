@@ -2,6 +2,11 @@
 <!-- Pflege: Ganz oben einen neuen Abschnitt „## Version · Datum · Titel“ anlegen, darunter die Neuerungen als Stichpunkte.
      Der oberste Abschnitt wird (1) in die App eingebaut („Was ist neu“) und (2) bei GitHub als Release-Text veröffentlicht. -->
 
+## 1.34 · 2026-11-20 · Aufräumen, Teil 4: Ebenen an einer Stelle
+- Besser: Alle Fenster, Leisten und Meldungen, die übereinander liegen (Großfenster, Dialoge, Player, Hilfe, Feedback, Intro …), haben ihre Reihenfolge jetzt als benannte Liste an EINER Stelle statt als 23 verstreute Zahlen im Code. Neue Fenster lassen sich damit sicher einordnen.
+- Besser: Das Aussehen ist unverändert – geprüft mit einem Pixelvergleich von 14 Ansichten in allen fünf Designs gegen die Vorversion (70 von 70 identisch).
+- Hinweis: Die 227 `!important` im Stil-Code habe ich bewusst nicht angefasst. Sie sind fast alle gewollt (Designs überschreiben Tailwind-Klassen, versteckte Fenster, Handy-Leiste); das Entfernen brächte nur Risiko. Es ist im Handbuch für Entwickler (README) beschrieben.
+
 ## 1.33 · 2026-11-20 · Aufräumen, Teil 3: schlankerer Start
 - Besser: Die ZIP-Bibliothek (für Stem-Import, Export und Datensicherung) wird nicht mehr beim Start geladen, sondern erst bei der ersten Nutzung – und sicherheitshalber einmal im Leerlauf kurz nach dem Start, damit der erste Import nicht warten muss. Der Start ist dadurch spürbar, aber nicht dramatisch schneller (im Test ca. 10 %).
 - Besser: Ist die lokale Kopie der Bibliothek einmal nicht erreichbar, versucht die App es über das Netz und meldet sonst verständlich, dass das ZIP-Modul fehlt. Ein späterer Versuch ist jederzeit möglich.
