@@ -1,0 +1,133 @@
+const http=require('http'),fs=require('fs'),path=require('path');const {chromium}=require('playwright');
+const WORK=process.argv[2];const TW=fs.readFileSync(path.join(__dirname,'fixtures/tailwind.js'));
+const srv=http.createServer((q,r)=>{const f=path.join(WORK,decodeURIComponent(q.url.split('?')[0]).replace(/^\//,''));fs.readFile(f,(e,d)=>{if(e){r.writeHead(404);r.end();return;}r.writeHead(200,{'content-type':f.endsWith('.html')?'text/html':'application/octet-stream'});r.end(d)})});
+let ok=0,bad=0;const T=(n,c,x)=>{if(c){ok++;console.log('PASS',n)}else{bad++;console.log('FAIL',n,x||'')}};
+(async()=>{await new Promise(r=>srv.listen(0,'127.0.0.1',r));const port=srv.address().port;const b=await chromium.launch();
+const ctx=await b.newContext({viewport:{width:393,height:852},isMobile:true,hasTouch:true});await ctx.addInitScript(()=>{try{localStorage.setItem('sunshine.home','off')}catch(_){}});const pg=await ctx.newPage();const errs=[];pg.on('pageerror',e=>errs.push(e.message));
+await pg.route(/cdn\.tailwindcss\.com/,r=>r.fulfill({status:200,contentType:'application/javascript',body:TW}));
+await pg.route(/^https?:\/\/(?!127\.0\.0\.1|cdn\.tailwindcss\.com)/,r=>r.abort());
+await pg.goto(`http://127.0.0.1:${port}/index_ueberarbeitet.html`,{waitUntil:'load'});await pg.waitForTimeout(1200);
+const n=()=>pg.evaluate(()=>dawState.tracks.length);
+
+const SHOT=path.join(__dirname,'../dist/_shots');
+const ev=(f,a)=>pg.evaluate(f,a);
+// ---------- Testdaten ----------
+await ev(async()=>{await audioEngine.ensureCtx();const ctx=audioEngine.ctx,sr=ctx.sampleRate;let seed=99;const rnd=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
+ const mk=(sec,ch,fn)=>{const b=ctx.createBuffer(ch,Math.floor(sr*sec),sr);for(let c=0;c<ch;c++){const d=b.getChannelData(c);for(let i=0;i<d.length;i++)d[i]=fn(i/sr)}return b};
+ const add=(name,type,buf)=>{const t=createTrack(type,name);dawState.buffers[t.id]=buf;return t};
+ const drums=mk(24,2,t=>{if(t<0.5)return 0;const ph=(t-0.5)%0.5,q=(t-0.5)%0.25;return 0.7*Math.sin(2*Math.PI*(55+90*Math.exp(-ph*38))*ph)*Math.exp(-ph*9)+0.12*(rnd()*2-1)*Math.exp(-q*45)});
+ const vox=mk(12,1,t=>((Math.floor(t)%3)<2?0.25*Math.sin(2*Math.PI*330*t)*(0.6+0.4*Math.sin(t*5)):0)+0.02*(rnd()*2-1));
+ const pad=mk(24,1,t=>0.1*(Math.sin(2*Math.PI*110*t)+0.5*Math.sin(2*Math.PI*277*t)));
+ add('Drums','audio',drums);add('Lead Vocals','audio',vox);add('Synth Pad','audio',pad);
+ const m=createTrack('midi','Melodie');[48,51,55,53,51,48,48,51,55,58,55,53].forEach((p,i)=>dawState.midiNotes.push({id:i+1,pitch:p,start:[0,3,6,8,10,14,16,19,22,24,26,30][i],dur:2,vel:100}));
+ syncActiveMidiTrackFromState();renderMultiTrackLanes();});
+const nTracks=await ev(()=>dawState.tracks.length);
+T('Testspuren angelegt (Drums, Vocals, Pad, MIDI)',nTracks>=4);
+T('Kern + UI geladen',await ev(()=>!!(window.StudioAI&&window.SunshineAI&&window.SunshineVoice)));
+// ---------- Menü ----------
+await pg.tap('#btn-menu');await pg.waitForTimeout(200);
+T('Menüpunkt „KI-Assistent“ vorhanden',await pg.locator('#btn-assistant').isVisible());
+await pg.tap('#btn-assistant');await pg.waitForTimeout(300);
+T('Assistent-Dialog offen, Menü zu',await pg.locator('#assistant-modal').isVisible()&&await ev(()=>document.getElementById('file-menu').hidden));
+T('Tempo-Abschnitt offen',await ev(()=>document.getElementById('as-sec-tempo').open));
+await pg.screenshot({path:SHOT+'/ai_dialog_tempo.png'});
+// ---------- Tempo ----------
+await pg.selectOption('#as-src',{index:1});   // erste Audiospur = Drums
+await pg.tap('button[data-as="tempo"]');await pg.waitForFunction(()=>/BPM/.test(document.getElementById('as-tempo-res').textContent),null,{timeout:30000});
+const tr=await ev(()=>document.getElementById('as-tempo-res').textContent.replace(/\s+/g,' '));console.log('  Tempo-Ergebnis:',tr.slice(0,160));
+const bpmShown=+(tr.match(/(\d{2,3})\s*BPM/)||[])[1];
+T('Tempo ≈ 120 BPM erkannt ('+bpmShown+')',Math.abs(bpmShown-120)<=1);
+await pg.tap('button[data-as-apply="both"]');await pg.waitForTimeout(250);
+const ap=await ev(()=>({bpm:dawState.bpm,inp:document.getElementById('input-bpm').value,off:dawState.startOffsetMs,lbl:document.getElementById('lbl-trim-offset').textContent}));
+console.log('  übernommen:',JSON.stringify(ap));
+T('BPM übernommen (Feld + Zustand)',ap.bpm===120&&ap.inp==='120');
+T('Takt 1 ≈ 500 ms ('+ap.off+')',Math.abs(ap.off-500)<=60&&ap.lbl===ap.off+' ms');
+await ev(()=>window.__dawUndo());T('Undo setzt Takt-1-Offset zurück',await ev(()=>dawState.startOffsetMs)===0);
+// ---------- Auto-Mix ----------
+await ev(()=>{document.getElementById('as-sec-tempo').open=false;document.getElementById('as-sec-mix').open=true});
+const before=await ev(()=>dawState.tracks.map(t=>[t.name,t.vol,t.pan||0,!!t.lowCut]));
+await pg.tap('button[data-as="mix"]');await pg.waitForFunction(()=>document.querySelector('#as-mix-res table'),null,{timeout:30000});
+const rowsTxt=await ev(()=>document.getElementById('as-mix-res').textContent.replace(/\s+/g,' '));console.log('  Mix:',rowsTxt.slice(0,330));
+T('Auto-Mix-Tabelle mit Gesang/Drums/Pad',/Lead Vocals/.test(rowsTxt)&&/Drums/.test(rowsTxt)&&/Synth Pad/.test(rowsTxt));
+T('MIDI-Spur wird als übersprungen gezeigt',/ohne Audio/.test(rowsTxt));
+await pg.screenshot({path:SHOT+'/ai_dialog_mix.png'});
+await pg.tap('button[data-as-apply="mix"]');await pg.waitForTimeout(250);
+const after=await ev(()=>dawState.tracks.map(t=>[t.name,t.vol,t.pan||0,!!t.lowCut]));
+const changed=after.filter((a,i)=>Math.abs(a[1]-before[i][1])>0.01||a[3]!==before[i][3]).length;
+T('Auto-Mix hat Spuren verändert ('+changed+')',changed>=2);
+T('Alle Lautstärken im Bereich',after.every(a=>a[1]>=0.02&&a[1]<=1.25));
+await ev(()=>window.__dawUndo());
+const undone=await ev(()=>dawState.tracks.map(t=>[t.name,t.vol,t.pan||0,!!t.lowCut]));
+T('Undo stellt Mix-Werte exakt wieder her',JSON.stringify(undone)===JSON.stringify(before));
+// ---------- Rauschfilter ----------
+await ev(()=>{document.getElementById('as-sec-mix').open=false;document.getElementById('as-sec-denoise').open=true});
+const sel=await ev(()=>document.getElementById('as-dn-track').selectedOptions[0].textContent);
+T('Rauschfilter wählt Gesangsspur vor ('+sel+')',/Vocal/.test(sel));
+const rmsGap=()=>ev(()=>{const t=dawState.tracks.find(t=>/Vocals/.test(t.name));const d=dawState.buffers[t.id].getChannelData(0),sr=dawState.buffers[t.id].sampleRate;let s=0,n=0;for(let i=Math.floor(2.2*sr);i<Math.floor(2.9*sr);i++){s+=d[i]*d[i];n++}return 20*Math.log10(Math.sqrt(s/n)+1e-9)});
+const g0=await rmsGap(),idBefore=await ev(()=>{const t=dawState.tracks.find(t=>/Vocals/.test(t.name));window.__bufRef=dawState.buffers[t.id];return 1});
+await pg.tap('button[data-as="denoise"]');await pg.waitForFunction(()=>/gefiltert/.test(document.getElementById('as-dn-res').textContent),null,{timeout:60000});
+const g1=await rmsGap();console.log('  Pause: ',g0.toFixed(1),'→',g1.toFixed(1),'dB');
+T('Rauschfilter: Pause ≥ 10 dB leiser',g0-g1>=10);
+await ev(()=>window.__dawUndo());
+T('Undo bringt Original-Puffer zurück',await ev(()=>{const t=dawState.tracks.find(t=>/Vocals/.test(t.name));return dawState.buffers[t.id]===window.__bufRef}));
+// ---------- Pattern ----------
+await ev(()=>{document.getElementById('as-sec-denoise').open=false;document.getElementById('as-sec-pattern').open=true});
+const orig=await ev(()=>JSON.stringify(dawState.midiNotes.map(n=>[n.pitch,n.start,n.dur])));
+await pg.tap('button[data-as="pattern"]');await pg.waitForTimeout(300);
+const v1=await ev(()=>JSON.stringify(dawState.midiNotes.map(n=>[n.pitch,n.start,n.dur])));
+T('Pattern-Variation verändert die Noten',v1!==orig);
+T('Noten gültig (36–71, 0–31)',await ev(()=>dawState.midiNotes.every(n=>n.pitch>=36&&n.pitch<=71&&n.start>=0&&n.start<32&&n.dur>=1)));
+T('Aktive MIDI-Spur synchron',await ev(()=>{const t=dawState.tracks.find(t=>t.id===dawState.activeMidiTrackId);return t&&t.midiNotes.length===dawState.midiNotes.length}));
+await pg.tap('button[data-as="pattern"]');await pg.waitForTimeout(200);
+await pg.tap('button[data-as="pattern-orig"]');await pg.waitForTimeout(200);
+T('„Original zurück“ stellt exakt her',await ev(()=>JSON.stringify(dawState.midiNotes.map(n=>[n.pitch,n.start,n.dur])))===orig);
+await pg.screenshot({path:SHOT+'/ai_dialog_pattern.png'});
+await pg.tap('#assistant-modal [data-close]');T('Dialog schließt',await pg.locator('#assistant-modal').count()===0);
+// Variation-Button am Pattern-Studio
+T('Button „🧬 Variation“ neben Pattern-Studio',await pg.locator('#btn-pattern-variation').count()===1);
+await ev(()=>document.getElementById('btn-pattern-variation').click());await pg.waitForTimeout(200);
+T('…öffnet Assistent bei Pattern',await ev(()=>document.getElementById('as-sec-pattern')&&document.getElementById('as-sec-pattern').open));
+await pg.tap('#assistant-modal [data-close]');
+// ---------- Sprachsteuerung ----------
+T('Sprach-Knopf standardmäßig aus',await ev(()=>{const f=document.getElementById('voice-fab');return !f||f.hidden}));
+await pg.tap('#btn-menu');await pg.tap('#btn-settings');await pg.waitForTimeout(300);
+T('Optionen: Schalter „Sprachsteuerung (Test)“',await pg.locator('input[data-ui="voice"]').count()===1);
+await pg.locator('input[data-ui="voice"]').check();await pg.waitForTimeout(250);
+T('Einschalten blendet 🎤 ein',await ev(()=>{const f=document.getElementById('voice-fab');return !!f&&!f.hidden}));
+T('Einstellung gespeichert',await ev(()=>JSON.parse(localStorage.getItem('sunshine.ui')).voice===true));
+await pg.screenshot({path:SHOT+'/ai_settings_voice.png',fullPage:false});
+await pg.tap('#settings-modal [data-close]');
+await pg.tap('#voice-fab');await pg.waitForTimeout(250);
+T('Sprach-Panel offen',await pg.locator('#voice-panel').isVisible());
+await pg.screenshot({path:SHOT+'/ai_voice_panel.png'});
+const h=t=>ev(t=>window.SunshineVoice.handle(t),t);
+let r=await h('Tempo 132');T('„Tempo 132“ → BPM',r.ok&&await ev(()=>dawState.bpm)===132);
+r=await h('Spur 2 stumm');T('„Spur 2 stumm“',r.ok&&await ev(()=>dawState.tracks[1].mute)===true);
+r=await h('Spur zwei stumm aus');T('„Spur zwei stumm aus“',r.ok&&await ev(()=>dawState.tracks[1].mute)===false);
+r=await h('Spur 1 solo');T('„Spur 1 solo“',r.ok&&await ev(()=>dawState.tracks[0].solo)===true);
+await h('Spur 1 solo aus');
+const v0=await ev(()=>dawState.tracks[2].vol);r=await h('Spur 3 leiser');T('„Spur 3 leiser“ senkt Lautstärke',r.ok&&await ev(()=>dawState.tracks[2].vol)<v0);
+r=await h('Zurück');T('„Zurück“ macht rückgängig',r.ok&&Math.abs(await ev(()=>dawState.tracks[2].vol)-v0)<1e-6);
+r=await h('Metronom an');T('„Metronom an“',r.ok&&await ev(()=>dawState.metronomeOn)===true);
+await h('Metronom aus');
+r=await h('Mixer zeigen');T('„Mixer zeigen“ wechselt Tab',r.ok&&await ev(()=>dawState.activeTab)==='mixer');
+const nB=await ev(()=>dawState.tracks.length);
+r=await h('Projekt leeren');T('„Projekt leeren“ ist gesperrt',!r.ok&&await ev(()=>dawState.tracks.length)===nB);
+r=await h('Spur 1 löschen');T('„Spur löschen“ ist gesperrt',!r.ok&&await ev(()=>dawState.tracks.length)===nB);
+r=await h('Spur 99 stumm');T('Unbekannte Spur → Hinweis, kein Absturz',!r.ok);
+r=await h('Tempo 999');T('Tempo außerhalb 60–180 abgelehnt',!r.ok&&await ev(()=>dawState.bpm)===132);
+r=await h('blablabla');T('Unverständlich → Hinweis',!r.ok);
+// Tippfeld
+await pg.fill('#vp-in','Tempo 100');await pg.press('#vp-in','Enter');await pg.waitForTimeout(200);
+T('Tippfeld + Enter führt Befehl aus',await ev(()=>dawState.bpm)===100);
+T('Protokoll zeigt Befehle',await ev(()=>document.getElementById('vp-log').children.length>=3));
+T('Mikrofon-Taste ohne Spracherkennung → nur Hinweis',await ev(()=>{document.getElementById('vp-mic').click();return true}));
+// Persistenz
+await pg.reload({waitUntil:'load'});await pg.waitForTimeout(1200);
+T('Nach Neustart: 🎤 weiterhin an',await ev(()=>{const f=document.getElementById('voice-fab');return !!f&&!f.hidden}));
+await pg.tap('#btn-menu');await pg.tap('#btn-settings');await pg.waitForTimeout(300);
+await pg.locator('input[data-ui="voice"]').uncheck();await pg.waitForTimeout(250);
+T('Ausschalten blendet 🎤 + Panel aus',await ev(()=>document.getElementById('voice-fab').hidden&&document.getElementById('voice-panel').hidden));
+T('Assistent-Menüpunkt bleibt nach Reload',await ev(()=>!!document.getElementById('btn-assistant')));
+T('Keine Skriptfehler',errs.length===0,errs.join(' | '));
+console.log(`\n${ok} bestanden, ${bad} fehlgeschlagen`);await b.close();srv.close();process.exit(bad?1:0)})();

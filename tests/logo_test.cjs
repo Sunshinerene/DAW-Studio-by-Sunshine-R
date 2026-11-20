@@ -1,0 +1,7 @@
+const http=require('http'),fs=require('fs'),path=require('path');const {chromium}=require('playwright');const WORK=process.argv[2];
+const srv=http.createServer((q,r)=>{const f=path.join(WORK,decodeURIComponent(q.url.split('?')[0]).replace(/^\//,''));fs.readFile(f,(e,d)=>{if(e){r.writeHead(404);r.end();return;}r.writeHead(200,{'content-type':f.endsWith('.html')?'text/html; charset=utf-8':f.endsWith('.png')?'image/png':'application/octet-stream'});r.end(d);});});
+(async()=>{await new Promise(r=>srv.listen(0,'127.0.0.1',r));const port=srv.address().port;const b=await chromium.launch();const pg=await(await b.newContext({viewport:{width:1280,height:900}})).newPage();
+await pg.route(/^https?:\/\/(?!127\.0\.0\.1)/,r=>r.abort());await pg.goto(`http://127.0.0.1:${port}/index_ueberarbeitet.html`,{waitUntil:'load'});await pg.waitForTimeout(800);
+await pg.evaluate(()=>{dawState.tracks.length=0;renderMultiTrackLanes();});await pg.waitForTimeout(600);
+const r=await pg.evaluate(()=>{const i=[...document.querySelectorAll('img')].filter(x=>/daw-studio-logo/.test(x.getAttribute('src')||''));const ic=document.getElementById('brand-icon');return{wide:i.map(x=>({w:x.naturalWidth,hidden:x.classList.contains('hidden')})),icon:{w:ic&&ic.naturalWidth,hidden:ic&&ic.classList.contains('hidden')},fav:(document.querySelector('link[rel~=icon]')||{}).href&&document.querySelector('link[rel~=icon]').href.slice(0,40)}});
+console.log(JSON.stringify(r));await pg.screenshot({path:WORK+'/../logo_shot.png'});await b.close();srv.close();})();

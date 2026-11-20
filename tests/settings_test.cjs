@@ -1,0 +1,23 @@
+const http=require('http'),fs=require('fs'),path=require('path');const {chromium}=require('playwright');
+const WORK=process.argv[2];const TW=fs.readFileSync(path.join(__dirname,'fixtures/tailwind.js'));const res=[];const check=(n,ok,i='')=>{res.push(ok);console.log(`${ok?'PASS':'FAIL'}  ${n}${i?'  — '+i:''}`);};
+const srv=http.createServer((q,r)=>{const f=path.join(WORK,decodeURIComponent(q.url.split('?')[0]).replace(/^\//,''));fs.readFile(f,(e,d)=>{if(e){r.writeHead(404);r.end();return;}r.writeHead(200,{'content-type':f.endsWith('.html')?'text/html; charset=utf-8':f.endsWith('.png')?'image/png':'application/octet-stream'});r.end(d);});});
+(async()=>{await new Promise(r=>srv.listen(0,'127.0.0.1',r));const port=srv.address().port;const b=await chromium.launch();
+const ctx=await b.newContext({viewport:{width:393,height:852},deviceScaleFactor:1.5,isMobile:true,hasTouch:true});await ctx.addInitScript(()=>{try{localStorage.setItem('sunshine.home','off')}catch(_){}});const pg=await ctx.newPage();const errs=[];pg.on('pageerror',e=>errs.push(e.message));
+await pg.route(/cdn\.tailwindcss\.com/,r=>r.fulfill({status:200,contentType:'application/javascript',body:TW}));await pg.route(/^https?:\/\/(?!127\.0\.0\.1|cdn\.tailwindcss\.com)/,r=>r.abort());
+await pg.goto(`http://127.0.0.1:${port}/index_ueberarbeitet.html`,{waitUntil:'load'});await pg.waitForTimeout(1000);
+check('Standard-Design ist Aurora Glass (nichts gespeichert)',await pg.evaluate(()=>document.documentElement.dataset.theme)==='aurora');
+await pg.tap('#btn-menu');await pg.tap('#file-menu #btn-settings');await pg.waitForSelector('#settings-modal');check('Optionen-Dialog öffnet über ☰-Menü → Optionen',true);
+await pg.screenshot({path:`${WORK}/../shots/settings_aurora.png`});
+const cards=await pg.evaluate(()=>[...document.querySelectorAll('[data-theme-id]')].map(x=>x.dataset.themeId));check('5 Designs wählbar (inkl. Liquid Matt)',cards.length===5&&cards.includes('liquid'),cards.join(','));
+for(const t of ['neon','studio','classic','liquid','aurora']){await pg.tap(`[data-theme-id="${t}"]`);await pg.waitForTimeout(150);
+ const st=await pg.evaluate(()=>({th:document.documentElement.dataset.theme,ls:localStorage.getItem('sunshine.theme'),open:!!document.getElementById('settings-modal'),meta:document.querySelector('meta[name=theme-color]').content}));
+ check(`Design „${t}“ wird sofort angewendet & gespeichert`,st.th===t&&st.ls===t&&st.open,JSON.stringify(st));}
+await pg.tap('[data-ui="glass"]');await pg.tap('[data-ui="glow"]');await pg.tap('[data-ui="large"]');await pg.waitForTimeout(100);
+const ui=await pg.evaluate(()=>({g:document.documentElement.dataset.glass,w:document.documentElement.dataset.glow,l:document.documentElement.dataset.large,ls:localStorage.getItem('sunshine.ui')}));
+check('Schalter Glas/Leuchten/Groß wirken & werden gespeichert',ui.g==='off'&&ui.w==='off'&&ui.l==='1'&&/"large":true/.test(ui.ls),JSON.stringify(ui));
+await pg.tap('#settings-modal [data-close] >> nth=-1');await pg.waitForTimeout(100);check('Dialog schließt mit „Fertig“',!(await pg.evaluate(()=>!!document.getElementById('settings-modal'))));
+await pg.reload({waitUntil:'load'});await pg.waitForTimeout(800);
+const re=await pg.evaluate(()=>({th:document.documentElement.dataset.theme,g:document.documentElement.dataset.glass,l:document.documentElement.dataset.large}));
+check('Auswahl bleibt nach Neustart erhalten',re.th==='aurora'&&re.g==='off'&&re.l==='1',JSON.stringify(re));
+const bad=errs.filter(e=>!/JSZip/i.test(e));check('Keine Skriptfehler',bad.length===0,bad.join('|').slice(0,300));
+await b.close();srv.close();const f=res.filter(x=>!x).length;console.log(`${res.length-f}/${res.length} bestanden`);process.exit(f?1:0);})().catch(e=>{console.error('FEHLER',e);process.exit(2);});

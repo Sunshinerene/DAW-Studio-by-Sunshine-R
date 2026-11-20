@@ -1,0 +1,58 @@
+const http=require('http'),fs=require('fs'),path=require('path');const {chromium}=require('playwright');
+const WORK=process.argv[2];const TW=fs.readFileSync(path.join(__dirname,'fixtures/tailwind.js'));
+const srv=http.createServer((q,r)=>{const f=path.join(WORK,decodeURIComponent(q.url.split('?')[0]).replace(/^\//,''));fs.readFile(f,(e,d)=>{if(e){r.writeHead(404);r.end();return;}r.writeHead(200,{'content-type':f.endsWith('.html')?'text/html':'application/octet-stream'});r.end(d)})});
+let ok=0,bad=0;const T=(n,c,x)=>{if(c){ok++;console.log('PASS',n)}else{bad++;console.log('FAIL',n,x||'')}};
+(async()=>{await new Promise(r=>srv.listen(0,'127.0.0.1',r));const port=srv.address().port;const b=await chromium.launch();
+const ctx=await b.newContext({viewport:{width:393,height:852},isMobile:true,hasTouch:true});await ctx.addInitScript(()=>{try{localStorage.setItem('sunshine.home','off')}catch(_){}});const pg=await ctx.newPage();const errs=[];pg.on('pageerror',e=>errs.push(e.message));
+await pg.route(/cdn\.tailwindcss\.com/,r=>r.fulfill({status:200,contentType:'application/javascript',body:TW}));
+await pg.route(/^https?:\/\/(?!127\.0\.0\.1|cdn\.tailwindcss\.com)/,r=>r.abort());
+await pg.goto(`http://127.0.0.1:${port}/index_ueberarbeitet.html`,{waitUntil:'load'});await pg.waitForTimeout(1200);
+const SHOT=path.join(__dirname,'../dist/_shots');const ev=(f,a)=>pg.evaluate(f,a);
+await ev(async()=>{await audioEngine.ensureCtx();const sr=44100;const mk=(f,a)=>{const b=audioEngine.ctx.createBuffer(1,sr*20,sr),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=a*Math.sin(2*Math.PI*f*i/sr);return b};
+ const t=createTrack('audio','Bass');dawState.buffers[t.id]=mk(80,0.3);window.__tid=t.id;audioEngine.ensureTrackNode(t);
+ const k=createTrack('audio','Kick');dawState.buffers[k.id]=mk(70,0.3);window.__kid=k.id;audioEngine.ensureTrackNode(k);
+ const i=document.getElementById('input-bpm');i.value=120;i.dispatchEvent(new Event('change',{bubbles:true}));renderMultiTrackLanes()});
+await pg.tap('#btn-menu');T('Menüpunkt „Lautheit & Spektrum“ vorhanden',await pg.locator('#file-menu #btn-loudness').isVisible());
+await pg.tap('#file-menu #btn-loudness');await pg.waitForTimeout(500);
+T('Fenster öffnet, Menü schließt',await pg.locator('#lm-root').isVisible()&&!await pg.locator('#file-menu').isVisible());
+T('Messleisten (Momentan/Kurzzeit/Spitze)',await pg.locator('#lm-m').count()===1&&await pg.locator('#lm-s').count()===1&&await pg.locator('#lm-p').count()===1);
+T('Zielwerte (5)',await ev(()=>document.getElementById('lm-target').options.length)===5);
+T('Messkette am Master angeschlossen',await ev(()=>!!LoudnessUI._tap()));
+// Regler
+await pg.locator('#lm-trim').evaluate(el=>{el.value=3;el.dispatchEvent(new Event('input',{bubbles:true}))});
+T('Anhebung-Regler setzt masterTrimDb',await ev(()=>dawState.masterTrimDb)===3);
+T('…Anzeige „+3.0 dB“',/\+3\.0 dB/.test(await pg.locator('#lm-trimv').innerText()),await pg.locator('#lm-trimv').innerText());
+await pg.locator('#lm-lim').evaluate(el=>{el.value=-3;el.dispatchEvent(new Event('input',{bubbles:true}))});
+T('Limiter-Regler setzt limiterDb und die Engine',await ev(()=>dawState.limiterDb)===-3);
+await pg.tap('[data-lm="reset"]');T('Zurücksetzen: 0 dB / −1 dB',await ev(()=>[dawState.masterTrimDb,dawState.limiterDb])+''==='0,-1');
+// Messen
+await pg.tap('[data-lm="measure"]');await pg.waitForFunction(()=>/LUFS/.test(document.getElementById('lm-out').textContent),null,{timeout:60000});
+const m1=await ev(async()=>{const b=await __exportMix({returnBuffer:true,endSec:LoudnessUI&&audioEngine.getContentDurationSec()+1});return (await Loudness.measure(b)).integrated});
+const shown=parseFloat((await pg.locator('#lm-out .lm-res span').nth(1).innerText()).replace('−','-'));
+T('Messwert im Fenster = direkte Messung (±0,1)',Math.abs(shown-m1)<0.1,[shown,m1]);
+T('Ergebnis mit True Peak, LRA, Urteil',await pg.locator('#lm-out .lm-verdict').count()===1&&/dBTP/.test(await pg.locator('#lm-out').innerText())&&/LRA/.test(await pg.locator('#lm-out').innerText()));
+// Auf Ziel
+await pg.selectOption('#lm-target','spotify');await pg.tap('[data-lm="auto"]');
+await pg.waitForFunction(()=>/Fertig|fehlgeschlagen/.test(document.getElementById('lm-status').textContent),null,{timeout:120000});
+const fin=await ev(async()=>{const b=await __exportMix({returnBuffer:true,endSec:audioEngine.getContentDurationSec()+1});const r=await Loudness.measure(b);return {lufs:r.integrated,tp:r.truePeakDb,trim:dawState.masterTrimDb,lim:dawState.limiterDb}});
+T('„Auf Ziel anpassen“ trifft −14 LUFS (±0,5)',Math.abs(fin.lufs+14)<0.5,JSON.stringify(fin));
+T('…True Peak ≤ −0,7 dBTP',fin.tp<=-0.7,fin.tp);
+T('…Status meldet Ergebnis',/Fertig/.test(await pg.locator('#lm-status').innerText()),await pg.locator('#lm-status').innerText());
+await pg.tap('[data-lm="reset"]');
+// Live + Spektrum
+await pg.selectOption('#lm-a',await ev(()=>__tid));await pg.selectOption('#lm-b',await ev(()=>__kid));
+T('Spur-Messpunkte A und B angelegt',await ev(()=>!!LoudnessUI._tap().a&&!!LoudnessUI._tap().b));
+await ev(async()=>{audioEngine.seek(0);await audioEngine.play()});await pg.waitForTimeout(2200);
+const live=await ev(()=>({m:document.getElementById('lm-m').textContent,p:document.getElementById('lm-p').textContent}));
+T('Live-Momentanwert zeigt eine Zahl beim Abspielen',live.m!=='−∞'&&/^−?\d/.test(live.m),JSON.stringify(live));
+T('Live-Spitze zeigt eine Zahl',live.p!=='−∞',JSON.stringify(live));
+const px=await ev(()=>{const c=document.getElementById('lm-spec');const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let blue=0,pink=0,red=0;for(let i=0;i<d.length;i+=4){if(d[i+2]>200&&d[i]<90&&d[i+1]>150)blue++;if(d[i]>200&&d[i+1]<140&&d[i+2]>130)pink++;if(d[i]>190&&d[i+1]<90&&d[i+2]<90)red++}return {blue,pink,red}});
+T('Spektrum zeichnet Spur A (blau) und Spur B (rosa)',px.blue>20&&px.pink>20,JSON.stringify(px));
+T('Kollisions-Markierung (rot) bei Bass 80 Hz + Kick 70 Hz',px.red>3,JSON.stringify(px));
+await pg.screenshot({path:SHOT+'/loudness_dialog.png'});
+await ev(()=>audioEngine.stop(false));
+await pg.tap('[data-lm="close"]');await pg.waitForTimeout(200);
+T('Schließen trennt die Messkette',await ev(()=>LoudnessUI._tap())===null&&!await pg.locator('#lm-root').isVisible());
+T('Keine Skriptfehler',errs.length===0,errs.join(' | '));
+console.log(`\n${ok} bestanden, ${bad} fehlgeschlagen`);await b.close();srv.close();
+})();

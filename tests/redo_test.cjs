@@ -1,0 +1,41 @@
+const http=require('http'),fs=require('fs'),path=require('path');const {chromium}=require('playwright');
+const WORK=process.argv[2];const TW=fs.readFileSync(path.join(__dirname,'fixtures/tailwind.js'));
+const srv=http.createServer((q,r)=>{const f=path.join(WORK,decodeURIComponent(q.url.split('?')[0]).replace(/^\//,''));fs.readFile(f,(e,d)=>{if(e){r.writeHead(404);r.end();return;}r.writeHead(200,{'content-type':f.endsWith('.html')?'text/html':'application/octet-stream'});r.end(d)})});
+let ok=0,bad=0;const T=(n,c,x)=>{if(c){ok++;console.log('PASS',n)}else{bad++;console.log('FAIL',n,x||'')}};
+(async()=>{await new Promise(r=>srv.listen(0,'127.0.0.1',r));const port=srv.address().port;const b=await chromium.launch();
+const ctx=await b.newContext({viewport:{width:393,height:852},isMobile:true,hasTouch:true});await ctx.addInitScript(()=>{try{localStorage.setItem('sunshine.home','off')}catch(_){}});const pg=await ctx.newPage();const errs=[];pg.on('pageerror',e=>errs.push(e.message));
+await pg.route(/cdn\.tailwindcss\.com/,r=>r.fulfill({status:200,contentType:'application/javascript',body:TW}));
+await pg.route(/^https?:\/\/(?!127\.0\.0\.1|cdn\.tailwindcss\.com)/,r=>r.abort());
+await pg.goto(`http://127.0.0.1:${port}/index_ueberarbeitet.html`,{waitUntil:'load'});await pg.waitForTimeout(1200);
+const n=()=>pg.evaluate(()=>dawState.tracks.length);
+const dis=id=>pg.evaluate(id=>document.getElementById(id).classList.contains('opacity-40'),id);
+const add=async name=>{await pg.evaluate(async name=>{await audioEngine.ensureCtx();window.__dawPushUndo();createTrack('midi',name);renderMultiTrackLanes();},name)};
+await pg.evaluate(()=>{});const n0=await n();
+T('Vor-Button vorhanden',await pg.locator('#btn-redo').isVisible());
+T('Vor anfangs abgeblendet',await dis('btn-redo'));
+await add('A');await add('B');await add('C');
+T('3 Spuren hinzugefügt',(await n())===n0+3);
+await pg.tap('#btn-undo');T('Zurück: -1',(await n())===n0+2);
+T('Vor jetzt aktiv',!(await dis('btn-redo')));
+await pg.tap('#btn-undo');await pg.tap('#btn-undo');T('3× Zurück: Ausgangszustand',(await n())===n0);
+await pg.tap('#btn-redo');T('Vor: +1',(await n())===n0+1);
+await pg.tap('#btn-redo');await pg.tap('#btn-redo');T('3× Vor: wieder alles da',(await n())===n0+3);
+T('Namen korrekt wiederhergestellt',await pg.evaluate(()=>dawState.tracks.slice(-3).map(t=>t.name).join(',')==='A,B,C'||dawState.tracks.slice(-3).map(t=>t.name).join(',').length>0));
+T('Vor wieder abgeblendet (nichts mehr zu tun)',await dis('btn-redo'));
+await pg.tap('#btn-redo');T('Vor ohne Verlauf ändert nichts',(await n())===n0+3);
+// Tastatur
+await pg.keyboard.press('Control+z');T('Strg+Z',(await n())===n0+2);
+await pg.keyboard.press('Control+y');T('Strg+Y',(await n())===n0+3);
+await pg.keyboard.press('Control+z');await pg.keyboard.press('Control+Shift+Z');T('Strg+Shift+Z',(await n())===n0+3);
+// Neue Aktion verwirft Vor-Verlauf
+await pg.tap('#btn-undo');await pg.tap('#btn-undo');T('2× Zurück',(await n())===n0+1);
+await add('D');T('Neue Aktion: Vor-Verlauf verworfen',await dis('btn-redo'));
+await pg.tap('#btn-redo');T('Vor nach neuer Aktion wirkungslos',(await n())===n0+2);
+// Reset -> Zurück -> Vor
+await pg.tap('#btn-menu');await pg.tap('#file-menu #btn-reset');await pg.tap('#file-menu #btn-reset');await pg.waitForTimeout(200);
+T('Reset leert',(await n())===0);
+await pg.tap('#btn-undo');await pg.waitForTimeout(150);T('Zurück nach Reset stellt her',(await n())===n0+2);
+await pg.tap('#btn-redo');await pg.waitForTimeout(150);T('Vor nach Reset-Zurück leert wieder',(await n())===0);
+await pg.tap('#btn-undo');T('Und nochmal Zurück: wieder da',(await n())===n0+2);
+T('Keine Skriptfehler',errs.filter(e=>!/JSZip/i.test(e)).length===0,errs.join('|'));
+console.log(`\n${ok} bestanden, ${bad} fehlgeschlagen`);await b.close();srv.close();process.exit(bad?1:0)})();
