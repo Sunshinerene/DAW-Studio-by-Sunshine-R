@@ -1,0 +1,8 @@
+{
+  "appId": "de.sunshiner.stemdaw",
+  "appName": "Sunshine@R DAW Studio",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}
