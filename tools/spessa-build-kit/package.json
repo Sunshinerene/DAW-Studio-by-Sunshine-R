@@ -1,0 +1,10 @@
+{
+  "name": "sunshine-r-spessa-build-kit",
+  "private": true,
+  "type": "module",
+  "description": "Baut das SpessaSynth-Bundle für die Sunshine@R DAW (mit SF3-Unterstützung).",
+  "dependencies": {
+    "fflate": "0.8.3",
+    "stb-vorbis": "latest"
+  }
+}
