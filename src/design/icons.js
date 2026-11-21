@@ -47,6 +47,9 @@
     film: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18M3 7.5h4M3 12h18M3 16.5h4M17 3v18M17 7.5h4M17 16.5h4"/>',
     shuffle: '<path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22"/><path d="m18 2 4 4-4 4"/><path d="M2 6h1.9c1.5 0 2.9.9 3.6 2.2"/><path d="M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8"/><path d="m18 14 4 4-4 4"/>',
     clipboard: '<rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>',
+    fileDown: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M12 18v-6"/><path d="m9 15 3 3 3-3"/>',
+    folders: '<path d="M20 17a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3.9a2 2 0 0 1-1.69-.9l-.81-1.2a2 2 0 0 0-1.67-.9H8a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2z"/><path d="M2 8v11a2 2 0 0 0 2 2h14"/>',
+    upload: '<path d="M12 15V3"/><path d="m17 8-5-5-5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>',
     inbox: '<path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M8 5H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-4"/>',
     timer: '<path d="M10 2h4M12 14l3-3"/><circle cx="12" cy="14" r="8"/>',
     undo: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
@@ -73,7 +76,7 @@
     bug: '<path d="m8 2 1.9 1.9M14.1 3.9 16 2"/><path d="M9 7.1V6a3 3 0 0 1 6 0v1.1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6z"/><path d="M12 20v-9M6.5 13H2M17.5 13H22M3 21c0-2.1 1.7-3.9 3.8-4M20.9 21c0-2.1-1.7-3.9-3.8-4M6 8c-2.1 0-3.9-1.7-4-3.8M18 8c2.1 0 3.9-1.7 4-3.8"/>'
   };
   const MAP = {
-    '📂': 'folderOpen', '💾': 'save', '📁': 'folder', '⬇': 'download', '⬇️': 'download', '📥': 'inbox', '☰': 'menu', '✎': 'pencil', '✏': 'pencil', '✏️': 'pencil',
+    '📂': 'fileDown', '🗂': 'folders', '🗂️': 'folders', '📤': 'upload', '💾': 'save', '📁': 'folder', '⬇': 'download', '⬇️': 'download', '📥': 'inbox', '☰': 'menu', '✎': 'pencil', '✏': 'pencil', '✏️': 'pencil',
     '➕': 'plus', '🎹': 'piano', '🎲': 'dice', '✨': 'sparkles', '🧬': 'dna', '🤖': 'bot', '🧠': 'brain', '🥁': 'drum', '🌊': 'waves', '💥': 'burst',
     '🌪': 'tornado', '🌪️': 'tornado', '🎙': 'mic', '🎙️': 'mic', '🎤': 'mic', '🎚': 'slidersV', '🎚️': 'slidersV', '🎛': 'slidersH', '🎛️': 'slidersH',
     '🏠': 'home', '📦': 'pack', '📊': 'chart', '🎼': 'wave', '🎵': 'note', '✂': 'scissors', '✂️': 'scissors', '🚩': 'flag', '🧭': 'compass', '💬': 'chat', '🎧': 'headphones', '🖼': 'image', '🖼️': 'image',

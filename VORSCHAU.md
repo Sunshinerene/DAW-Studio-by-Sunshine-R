@@ -13,7 +13,7 @@
 
 ### Zum Testen
 - Schlaf-Timer (1.48): Mond oben rechts im Player – klappt „15 Minuten“ und „Nach diesem Titel“, wird die Musik zum Schluss sanft leiser, und hält sie auch bei gesperrtem Bildschirm an? Passt die Position des Mondes?
-- Export-Knopf (1.48): Oben rechts „Export“ in der DAW – öffnet er das Fenster mit WAV/MP3/Opus? Fehlt dir das direkte „Master WAV“ mit einem Tipp?
+- Export-Knopf und Kopfleiste (1.48): Oben rechts „Export“ in der DAW – öffnet er das Fenster mit WAV/MP3/Opus? Fehlt dir das direkte „Master WAV“ mit einem Tipp? Sind die neuen Symbole (Laden, Projekte, Export) auf den ersten Blick klar?
 - Anleitung (1.47): Rundgang und Handbuch einmal durchgehen – stimmt alles mit der App überein? Fehlt etwas, ist etwas unklar oder zu lang?
 - Labor (1.46): Optionen → Labor (Beta) – verständlich erklärt? Findest du den Feedback-Knopf pro Idee? Welche Ideen sollen als Erstes hinein?
 - Schnellwahl und aufgeräumte Dockbars (1.45): Dockbar nach oben wischen – klappen die sechs Tasten auf, in DAW, Player und Startseite? Stört der kleine Strich, oder hilft er? Passt es, dass die Player-Leiste nur im Player und die DAW-Leiste nur in der DAW sitzt?

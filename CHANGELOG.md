@@ -5,6 +5,7 @@
 ## 1.48 · 2026-11-21 · Schlaf-Timer und Export-Knopf
 - Neu: **Schlaf-Timer im Player** – der **Mond** oben rechts in der Player-Kopfzeile. Wähle 15, 30, 45, 60 oder 90 Minuten oder **„Nach diesem Titel“**. In den letzten 20 Sekunden wird die Musik sanft leiser, dann hält der Player an. Eine kleine Zahl am Mond zeigt die Restminuten; nochmal antippen zum Ändern oder Ausschalten. Läuft auch bei gesperrtem Bildschirm.
 - Neu: Der Knopf oben rechts in der DAW heißt jetzt **„Export“** und öffnet das Export-Fenster – dort wählst du **WAV, MP3 oder Opus** (und Bereich oder Stems). Der Mix ist schon vorgewählt. Dasselbe Fenster gibt es weiter im Menü.
+- Besser: **Aufgeräumte Kopfleiste** – die Symbole sind jetzt eindeutig: **Laden** = Datei mit Pfeil, **Projekte** = Ordnerstapel, **Export** = Pfeil nach oben. Der Export-Knopf ist schmaler; auch bei 360 px passt alles in die Leiste.
 - Besser: Rundgang und Handbuch beschreiben den neuen Export-Knopf und den Schlaf-Timer.
 
 ## 1.47 · 2026-11-21 · Anleitung auf dem neuesten Stand

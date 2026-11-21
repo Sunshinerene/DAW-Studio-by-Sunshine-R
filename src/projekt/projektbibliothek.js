@@ -172,7 +172,7 @@
           <button data-open="${escapeText(p.id)}" class="px-2.5 py-1.5 rounded-lg bg-cyan-500/20 border border-cyan-500/40 text-cyan-200 text-xs font-bold">Öffnen</button>
           <button data-delete="${escapeText(p.id)}" class="px-2 py-1.5 rounded-lg bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs">✕</button>
         </div>`).join('')}</div>` : `<div class="rounded-xl border border-dashed border-daw-border p-6 text-center text-xs text-slate-400">Noch keine gespeicherten Projekte vorhanden.</div>`;
-      const ov = modalBase('📁 Gespeicherte Projekte', body,
+      const ov = modalBase('🗂️ Gespeicherte Projekte', body,
         `<span class="mr-auto self-center text-[10px] text-slate-500">${projects.length} Projekt(e)</span><button data-close class="px-3 py-2 rounded-lg bg-daw-surface border border-daw-border text-xs">Schließen</button>`);
       ov.querySelectorAll('[data-open]').forEach(btn => btn.onclick = async () => {
         const record = projects.find(p => p.id === btn.dataset.open);

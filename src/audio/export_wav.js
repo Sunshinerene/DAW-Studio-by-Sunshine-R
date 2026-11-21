@@ -232,7 +232,7 @@
         toast('Fehler beim Master WAV Export.', 'error');
       } finally {
         btn.classList.remove('opacity-70', 'pointer-events-none');
-        lbl.textContent = '⬇️ Export';
+        lbl.textContent = '📤 Export';
       }
     }
 

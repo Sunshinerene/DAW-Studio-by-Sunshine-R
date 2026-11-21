@@ -178,7 +178,12 @@ html[data-radius="round"] .rounded-2xl{border-radius:36px!important}
   #hdr-actions .hb-tx{display:none}
   #hdr-actions>button{min-height:44px;min-width:44px;display:inline-flex;align-items:center;justify-content:center;padding-left:10px;padding-right:10px;font-size:15px}
   #hdr-actions>button{min-width:40px;padding-left:8px;padding-right:8px}
-  #hdr-actions>#btn-export-wav{flex:1 1 auto;font-size:12px;white-space:nowrap}
+  #hdr-actions>#btn-export-wav{flex:0 0 auto;font-size:12px;white-space:nowrap;padding-left:10px;padding-right:12px;gap:2px}
+}
+@media (max-width:380px){
+  #hdr-actions{gap:4px}
+  #hdr-actions>button{min-width:38px;padding-left:6px;padding-right:6px}
+  #hdr-actions>#btn-export-wav{padding-left:8px;padding-right:9px;font-size:11.5px}
 }
   
 /* ---------- Schwebende Bottom-Navigation (mobil) ---------- */
