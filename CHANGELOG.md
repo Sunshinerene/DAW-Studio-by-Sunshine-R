@@ -2,6 +2,11 @@
 <!-- Pflege: Ganz oben einen neuen Abschnitt „## Version · Datum · Titel“ anlegen, darunter die Neuerungen als Stichpunkte.
      Der oberste Abschnitt wird (1) in die App eingebaut („Was ist neu“) und (2) bei GitHub als Release-Text veröffentlicht. -->
 
+## 1.44 · 2026-11-21 · MP3-Export
+- Neu: **MP3-Export** – Menü → Export → Format: **MP3 128, 192 oder 320 kbit/s**. Geht für den Mix, für Bereiche und für Einzelstems (dann liegen MP3-Dateien in der ZIP). Titel, Künstler, Album, Genre, Jahr, BPM, Tonart und Cover kommen als ID3-Tag in die Datei (Schalter „Tags & Cover einbetten“). Der Encoder steckt in der App, du brauchst kein Netz und keine Zusatzdatei.
+- Besser: Das Export-Fenster zeigt beim MP3-Format die ungefähre Größe pro Minute; „Abbrechen“ wirkt jetzt auch mitten im Kodieren.
+- Hinweis: MP3 ist verlustbehaftet – zum Weiterbearbeiten besser WAV nehmen. Der Encoder ist lamejs (LGPL), unverändert eingebaut und wird erst beim ersten MP3-Export gestartet.
+
 ## 1.43 · 2026-11-21 · Titel aus dem Player als Spur
 - Neu: Im **Player** hat jede Zeile ein Symbol (Pfeil neben dem X): **„Als Spur in die DAW laden“**. Der Titel landet als neue Audio-Spur im Projekt, ohne Import-Dialog und ohne den Titel erst abzuspielen. Das Laden lässt sich in der DAW mit „Zurück“ rückgängig machen.
 - Besser: **Speicherschutz** – lange Titel brauchen als Spur viel Arbeitsspeicher (ein 5-Minuten-Titel etwa 110 MB). Wird der Speicher knapp, fragt die App vorher nach; ist er voll, lädt sie den Titel nicht und sagt warum, statt abzustürzen.
@@ -162,7 +167,7 @@
 - Neu: Cover und Tags pro Projekt. Beim Anlegen (und später in den Projekt-Einstellungen) wählst du ein eigenes Bild oder lässt ein Cover aus Projektname und Künstler/Produzent erstellen – vier Stile, „Neu mischen“ für neue Varianten. Dazu Künstler/Produzent, Genre (mit Vorschlägen), Jahr, Album, Komponist, Copyright und Kommentar.
 - Neu: Das Cover steht oben rechts im Kopfbereich der DAW (Antippen = bearbeiten), in der Projektliste und in der Android-Benachrichtigung. Rund um das Bild laufen Balken im Takt der Musik oder es leuchtet mit dem Bass – das Bild selbst bleibt frei. In den Optionen (Design & Aussehen → Cover & Tags) wählbar: Ring, Leuchten, beides, aus, Cover ausblenden.
 - Neu: Beim Export werden Tags und Cover eingebettet – WAV (16/24 Bit) und Opus/OGG mit Titel, Künstler, Album, Genre, Jahr, Komponist, Copyright, Kommentar, BPM, Tonart und Bild; Stems-ZIP mit getaggten Dateien plus cover.jpg; MIDI mit Titel, Künstler und Copyright. Der Dateiname wird „Künstler - Projektname“. Abschaltbar im Export-Fenster; ohne Cover/Tags exportiert die App wie bisher.
-- Hinweis: MP3 ist in der App nicht enthalten (kein Encoder eingebaut). Manche Abspielprogramme zeigen Tags/Cover in WAV-Dateien nicht an, bei Opus/OGG meist schon.
+- Hinweis (damals): MP3 war noch nicht enthalten. Manche Abspielprogramme zeigen Tags/Cover in WAV-Dateien nicht an, bei Opus/OGG meist schon.
 - Hinweis: Nur `www/index.html` und `CHANGELOG.md` ändern sich gegenüber 1.20 – das Live-Update reicht.
 
 ## 1.20 · 2026-11-19 · Start-Intro

@@ -4,7 +4,7 @@
    SunIDB   – alle IndexedDB-Datenbanken der App an EINEM Ort (Name, Stores, Öffnen, Transaktionen)
    SunTick  – ein gemeinsamer Taktgeber für wiederkehrende Aufgaben (pausiert im Hintergrund, steht still ohne Aufgaben)
    SunDOM   – ein gemeinsamer Beobachter für „Platzhalter erscheint“ (Optionsmenü-Abschnitte)
-   SunLazy  – Bibliotheken erst bei Bedarf nachladen (derzeit: ZIP-Bibliothek JSZip)
+   SunLazy  – Bibliotheken erst bei Bedarf nachladen (derzeit: ZIP-Bibliothek JSZip, MP3-Encoder lamejs)
    Die Namen der Schlüssel und Datenbanken bleiben unverändert – bestehende Daten werden also ohne Übernahme weiter gefunden. */
 (function () {
   'use strict';
@@ -148,6 +148,14 @@
   const SunLazy = {
     once: lazyOnce,
     zip: () => lazyOnce('jszip', ['assets/vendor/jszip-3.10.1.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'], () => window.JSZip),
+    /** MP3-Encoder (lamejs): steckt als ruhender Text in der Seite (Element mit der Kennung lame-src) und wird erst beim ersten MP3-Export ausgeführt – keine Datei, kein Netz nötig. */
+    lame: () => {
+      if (window.lamejs && window.lamejs.Mp3Encoder) return Promise.resolve(window.lamejs);
+      const el = document.getElementById('lame-src');
+      if (!el) return Promise.reject(new Error('MP3-Encoder nicht eingebaut'));
+      try { const s = document.createElement('script'); s.textContent = el.textContent; document.head.appendChild(s); s.remove(); } catch (e) { return Promise.reject(e); }
+      return window.lamejs && window.lamejs.Mp3Encoder ? Promise.resolve(window.lamejs) : Promise.reject(new Error('MP3-Encoder konnte nicht gestartet werden'));
+    },
     /** Anzahl bisher gestarteter Nachlade-Vorgänge (für Tests) */
     started: () => Object.keys(lazy)
   };

@@ -1,4 +1,4 @@
-/* ===== Sunshine@R: Export-Fenster (Master/Bereich · Einzelstems als ZIP · alle MIDI-Spuren · WAV 16/24 · Opus) ===== */
+/* ===== Sunshine@R: Export-Fenster (Master/Bereich · Einzelstems als ZIP · alle MIDI-Spuren · WAV 16/24 · MP3 · Opus) ===== */
 (function () {
   'use strict';
   if (typeof window.__exportMix !== 'function') return;
@@ -58,10 +58,31 @@
       if (acc.length >= 40 || last) { pages.push(oggPage(acc, last ? 4 : 0, last ? pre + N : pre + gran, serial, seq++)); acc = []; } });
     return new Blob(pages, { type: 'audio/ogg' });
   }
+  /* 1.44: MP3 (lamejs). Der Mix wird blockweise von Gleitkomma nach 16 Bit gewandelt und kodiert – so entsteht keine zweite Kopie des ganzen Songs im Speicher.
+     Raten außer 32/44,1/48 kHz werden vorher auf 44,1 kHz umgerechnet. Tags kommen als ID3v2.3 (inkl. Cover) vorn dran. */
+  async function encodeMp3(buf, kbps, meta, onProg) {
+    const L = await SunLazy.lame();
+    let src = buf;
+    if ([32000, 44100, 48000].indexOf(buf.sampleRate) < 0) { const N = Math.ceil(buf.length * 44100 / buf.sampleRate), oc = new OfflineAudioContext(Math.min(2, buf.numberOfChannels), N, 44100), bs = oc.createBufferSource(); bs.buffer = buf; bs.connect(oc.destination); bs.start(); src = await oc.startRendering(); }
+    const ch = Math.min(2, src.numberOfChannels), sr = src.sampleRate, enc = new L.Mp3Encoder(ch, sr, kbps);
+    const l = src.getChannelData(0), r = ch > 1 ? src.getChannelData(1) : null, n = src.length, BLK = 1152 * 24, parts = [];
+    const i16 = (f, a, b) => { const o = new Int16Array(b - a); for (let i = a; i < b; i++) { const v = f[i] < -1 ? -1 : f[i] > 1 ? 1 : f[i]; o[i - a] = v < 0 ? v * 32768 : v * 32767; } return o; };
+    for (let pos = 0, k = 0; pos < n; pos += BLK, k++) {
+      if (S.cancel) throw new Error('Abgebrochen');
+      const e = Math.min(n, pos + BLK), out = r ? enc.encodeBuffer(i16(l, pos, e), i16(r, pos, e)) : enc.encodeBuffer(i16(l, pos, e));
+      if (out.length) parts.push(new Uint8Array(out));
+      if (k % 6 === 5) { if (onProg) onProg(pos / n); await new Promise(res => setTimeout(res, 0)); }
+    }
+    const end = enc.flush(); if (end.length) parts.push(new Uint8Array(end));
+    if (!parts.length) throw new Error('MP3-Encoder lieferte nichts');
+    const tag = meta && window.Cover && Cover.id3 ? Cover.id3(meta) : null;
+    return new Blob(tag ? [tag, ...parts] : parts, { type: 'audio/mpeg' });
+  }
   async function encodeBuf(buf, fmt, extra) {
     const meta = (S.tags && window.Cover) ? await Cover.exportMeta(extra) : null;
     if (fmt === 'wav24') return { blob: meta ? Cover.tagWav(wav24(buf), meta) : wav24(buf), ext: 'wav' };
     if (fmt === 'opus') return { blob: await encodeOpus(buf, 160, meta), ext: 'ogg' };
+    if (/^mp3_\d+$/.test(fmt)) return { blob: await encodeMp3(buf, +fmt.slice(4), meta, S.onEncProg), ext: 'mp3' };
     return { blob: meta ? Cover.tagWav(encodeWav16Bit(buf), meta) : encodeWav16Bit(buf), ext: 'wav' };
   }
 
@@ -159,7 +180,7 @@
       const fmt = S.fmt;
       if (S.what === 'master') {
         status('Rendere Mix …', 15); const buf = await window.__exportMix({ returnBuffer: true, startSec: rg.start, endSec: rg.end });
-        if (!buf) throw new Error('Render fehlgeschlagen'); status('Kodiere …', 70); const e = await encodeBuf(buf, fmt);
+        if (!buf) throw new Error('Render fehlgeschlagen'); status('Kodiere …', 70); S.onEncProg = p => status('Kodiere MP3 … ' + Math.round(p * 100) + ' %', 70 + Math.round(p * 25)); const e = await encodeBuf(buf, fmt); S.onEncProg = null;
         await save(e.blob, `${bpmTag}_Mix${rg.tag}.${e.ext}`); status('Fertig.', 100); setBusy(false); return;
       }
       /* Einzelstems */
@@ -177,7 +198,7 @@
       if (S.cancel) { status('Abgebrochen.', 0); setBusy(false); return; }
       if (S.tags && window.Cover && Cover.coverBytes()) files.unshift(await zipEntry('cover.jpg', new Blob([Cover.coverBytes()], { type: 'image/jpeg' })));
       status('Packe ZIP …', 95); await save(zipBlob(files), `${bpmTag}_Stems${rg.tag}.zip`); status(`Fertig: ${files.length} Datei(en) in der ZIP.`, 100); setBusy(false);
-    } catch (e) { console.error(e); status('Export fehlgeschlagen: ' + (e && e.message || e), 0); setBusy(false); }
+    } catch (e) { console.error(e); S.onEncProg = null; if (e && e.message === 'Abgebrochen') status('Abgebrochen.', 0); else status('Export fehlgeschlagen: ' + (e && e.message || e), 0); setBusy(false); }
   }
 
   /* ------------------------------------------------------------------ Fenster */
@@ -214,10 +235,10 @@
   }
   function refresh() {
     root.querySelectorAll('[data-what]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.what === S.what)));
-    { const tn = $('ex-tagnote'), has = !!(window.Cover && Cover.hasTags()); $('ex-tags').checked = S.tags; tn.textContent = has ? (S.what === 'midi' ? 'Titel und Urheber kommen in die MIDI-Datei (ohne Cover).' : 'Titel, Künstler, Genre, Jahr, BPM, Tonart und Cover – in WAV und Opus/OGG; bei Stems zusätzlich cover.jpg in der ZIP.') : 'Noch keine Tags/Cover im Projekt (Projekt-Einstellungen → Cover & Tags).'; }
+    { const tn = $('ex-tagnote'), has = !!(window.Cover && Cover.hasTags()); $('ex-tags').checked = S.tags; tn.textContent = has ? (S.what === 'midi' ? 'Titel und Urheber kommen in die MIDI-Datei (ohne Cover).' : 'Titel, Künstler, Genre, Jahr, BPM, Tonart und Cover – in WAV, MP3 und Opus/OGG; bei Stems zusätzlich cover.jpg in der ZIP.') : 'Noch keine Tags/Cover im Projekt (Projekt-Einstellungen → Cover & Tags).'; }
     $('ex-audio').hidden = S.what === 'midi'; $('ex-stems').hidden = S.what !== 'stems'; $('ex-custom').hidden = S.range !== 'custom';
     $('ex-whatnote').textContent = { master: 'Der fertige Mix mit Master-Lautstärke und Limiter – wie „Master WAV“, aber mit Bereich und Format zur Wahl.', stems: 'Jede Spur einzeln gerendert, alle in einer ZIP-Datei (zum Weiterbearbeiten in anderen Programmen).', midi: 'Alle MIDI-Spuren plus Kick/Hi-Hat/Bass-Muster des Sequencers als eine .mid-Datei (Format 1, Tempo enthalten).' }[S.what];
-    const f = $('ex-fmtnote'); f.textContent = S.fmt === 'opus' ? 'Opus (.ogg): sehr klein (≈ 160 kbit/s), gut zum Teilen. Nicht für die Weiterbearbeitung.' : (S.fmt === 'wav24' ? '24-Bit-WAV: mehr Reserve für die Nachbearbeitung, größere Dateien.' : '16-Bit-WAV: Standard, überall abspielbar.');
+    const f = $('ex-fmtnote'); f.textContent = /^mp3_/.test(S.fmt) ? 'MP3 (.mp3): läuft auf jedem Gerät und in jeder App, ' + ({ mp3_128: 'etwa 1 MB pro Minute', mp3_192: 'etwa 1,4 MB pro Minute', mp3_320: 'etwa 2,4 MB pro Minute' }[S.fmt]) + '. Verlustbehaftet – zum Weiterbearbeiten besser WAV nehmen.' : S.fmt === 'opus' ? 'Opus (.ogg): sehr klein (≈ 160 kbit/s), gut zum Teilen. Nicht für die Weiterbearbeitung.' : (S.fmt === 'wav24' ? '24-Bit-WAV: mehr Reserve für die Nachbearbeitung, größere Dateien.' : '16-Bit-WAV: Standard, überall abspielbar.');
   }
   function fill() {
     const total = audioEngine.getTotalArrangementBars(); let b = 0;
@@ -226,7 +247,7 @@
     dawState.sections.forEach((s, i) => { const span = s.bars + (i === dawState.sections.length - 1 ? extra : 0); opts.push(`<option value="sec${i}">Abschnitt: ${esc(s.name)} (Takt ${b + 1}–${b + span})</option>`); b += span; });
     opts.push('<option value="custom">Eigener Bereich (Takte) …</option>'); $('ex-range').innerHTML = opts.join(''); if (!$('ex-range').querySelector(`[value="${S.range}"]`)) S.range = 'all'; $('ex-range').value = S.range;
     $('ex-to').value = S.to = Math.min(total, Math.max(parseInt(S.to, 10) || 8, 1)); $('ex-to').max = $('ex-from').max = total;
-    $('ex-fmt').innerHTML = `<option value="wav16">WAV 16-Bit</option><option value="wav24">WAV 24-Bit</option>${opusOk ? '<option value="opus">Opus komprimiert (.ogg, klein)</option>' : ''}`; if (S.fmt === 'opus' && !opusOk) S.fmt = 'wav16'; $('ex-fmt').value = S.fmt;
+    $('ex-fmt').innerHTML = `<option value="wav16">WAV 16-Bit</option><option value="wav24">WAV 24-Bit</option>${opusOk ? '<option value="opus">Opus komprimiert (.ogg, klein)</option>' : ''}<option value="mp3_128">MP3 128 kbit/s (.mp3, klein)</option><option value="mp3_192">MP3 192 kbit/s (.mp3, gut)</option><option value="mp3_320">MP3 320 kbit/s (.mp3, beste Qualität)</option>`; if (S.fmt === 'opus' && !opusOk) S.fmt = 'wav16'; $('ex-fmt').value = S.fmt;
     const list = $('ex-list'); list.innerHTML = '';
     dawState.tracks.forEach((t, i) => { const empty = trackEmpty(t); if (S.pick[t.id] === undefined) S.pick[t.id] = !empty; const l = document.createElement('label'); l.innerHTML = `<input type="checkbox" data-tid="${esc(t.id)}" ${S.pick[t.id] ? 'checked' : ''}><span>${String(i + 1).padStart(2, '0')} · ${esc(t.name)}${empty ? ' <em style="color:#64748b">(leer)</em>' : ''}</span>`; list.appendChild(l); });
     if (!dawState.tracks.length) list.innerHTML = '<div class="lm-note">Noch keine Spuren.</div>';

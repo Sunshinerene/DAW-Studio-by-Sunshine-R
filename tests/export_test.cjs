@@ -25,7 +25,7 @@ await dlg();
 T('Export-Fenster über das Menü',await pg.locator('#ex-root').isVisible());
 const opusOk=await ev(()=>ExportUI.opusSupported());console.log('INFO Opus-Encoder verfügbar:',opusOk);
 T('Bereichsliste: Ganz, Inhalt, 5 Abschnitte, Eigener',await ev(()=>document.getElementById('ex-range').options.length)===8);
-T('Format-Liste enthält WAV 16/24'+(opusOk?' und Opus':''),await ev(()=>document.getElementById('ex-fmt').options.length)===(opusOk?3:2));
+T('Format-Liste enthält WAV 16/24, MP3 128/192/320'+(opusOk?' und Opus':''),await ev(()=>document.getElementById('ex-fmt').options.length)===(opusOk?6:5));
 // Master ganz
 await run();let sv=await ev(()=>window.__saved);let by=await bytes();let wi=wavInfo(by);
 T('Master: Dateiname …_Mix.wav',/Sunshine-R_120BPM_Mix\.wav$/.test(sv.name),sv.name);

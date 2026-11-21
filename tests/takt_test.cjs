@@ -3,7 +3,7 @@ const WORK=process.argv[2];const TW=fs.readFileSync(path.join(__dirname,'fixture
 const srv=http.createServer((q,r)=>{const f=path.join(WORK,decodeURIComponent(q.url.split('?')[0]).replace(/^\//,''));fs.readFile(f,(e,d)=>{if(e){r.writeHead(404);r.end();return;}r.writeHead(200,{'content-type':f.endsWith('.html')?'text/html':'application/octet-stream'});r.end(d)})});
 let ok=0,bad=0;const T=(n,c,x)=>{if(c){ok++;console.log('PASS',n)}else{bad++;console.log('FAIL',n,x===undefined?'':JSON.stringify(x))}};
 (async()=>{await new Promise(r=>srv.listen(0,'127.0.0.1',r));const port=srv.address().port;const b=await chromium.launch();
-const ctx=await b.newContext({viewport:{width:393,height:852},isMobile:true,hasTouch:true});await ctx.addInitScript(()=>{try{localStorage.setItem('sunshine.home','off');localStorage.setItem('sunshine.news','{"seen":"1.43"}')}catch(_){}
+const ctx=await b.newContext({viewport:{width:393,height:852},isMobile:true,hasTouch:true});await ctx.addInitScript(()=>{try{localStorage.setItem('sunshine.home','off');localStorage.setItem('sunshine.news','{"seen":"1.44"}')}catch(_){}
  window.__raf=0;window.__rn={};const r=window.requestAnimationFrame;window.requestAnimationFrame=function(f){return r.call(window,function(t){window.__raf++;const k=f.name||String(f).replace(/\s+/g,' ').slice(0,60);window.__rn[k]=(window.__rn[k]||0)+1;return f(t)})};
  window.__iv=0;const si=window.setInterval;window.setInterval=function(...a){window.__iv++;return si.apply(this,a)};
  window.__mo=0;const MO=window.MutationObserver;window.MutationObserver=function(cb){window.__mo++;return new MO(cb)};window.MutationObserver.prototype=MO.prototype});

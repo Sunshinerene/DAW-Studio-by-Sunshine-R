@@ -4,7 +4,7 @@
      Gruppen: „Kommt definitiv“ (Kommt) · „Zum Testen“ (Zum Testen) · „Ideen“ (Idee). Datei leer lassen = keine Vorschau.
      Wichtig: Nennt der Titel keine NEUERE Version als die installierte App, ignoriert die App diese Datei und zeigt den eingebauten Text. -->
 
-## Version 1.44 – in Arbeit
+## Version 1.45 – in Arbeit
 
 ### Kommt definitiv
 - Feinschliff nach deinem Test der neuen Dockbars, Rand-Seiten und Player-Kopfzeile
@@ -12,6 +12,8 @@
 - Feinschliff nach deinem Test der Android-Funktionen (Ordner-Dialog, Benachrichtigung)
 
 ### Zum Testen
+- Titel als Spur (1.43): Im Player das Symbol neben dem X antippen – landet der Titel als Spur in der DAW? Klappt „Zurück"? Bei einem langen Titel: Kommt die Speicher-Rückfrage?
+- MP3-Export (1.44): Menü → Export → MP3 192. Öffnet sich die Datei in deinem Musikplayer, mit Titel und Cover? Wie lange dauert ein ganzer Song?
 - Dockbar (1.41): Rastet sie nach jedem Wischen auf einer ganzen Seite ein – in DAW, Player und Startseite? Wenn nicht: Auf welcher Seite, und wie hast du gewischt?
 - Rand-Seiten (1.41): Optionen → Effekte → „Seiten der Fenster“ – gefällt dir „nur unten“, oder willst du lieber andere Seiten? Auch mit anderen Rand-Effekten (Lichtstrahl, Regenbogen …) ansehen.
 - Player-Kopfzeile (1.41): Passt sie zu jedem Design, und ist „+ Dateien“ im Listenfenster gut erreichbar?
@@ -41,8 +43,6 @@
 - Ruhe im Leerlauf (1.32): Wirkt die App beim Stehenlassen sparsamer (Akku, Wärme)? Laufen Wiedergabe, Aufnahme, Mixer-Pegel und das Cover-Leuchten weiterhin flüssig?
 
 ### Ideen
-- Titel aus dem Player direkt als Spur ins Projekt übernehmen
-- MP3-Export direkt in der App
 - Playlists speichern und eigene Klangprofile teilen
 - Schlaf-Timer für den Player
 - Equalizer als Standbild in der Benachrichtigung (Android erlaubt keine flüssige Animation)
