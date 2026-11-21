@@ -2,6 +2,12 @@
 <!-- Pflege: Ganz oben einen neuen Abschnitt „## Version · Datum · Titel“ anlegen, darunter die Neuerungen als Stichpunkte.
      Der oberste Abschnitt wird (1) in die App eingebaut („Was ist neu“) und (2) bei GitHub als Release-Text veröffentlicht. -->
 
+## 1.42 · 2026-11-21 · Rand-Effekte wirklich überall nach Seiten
+- Fix: Die gewählten **Seiten der Rand-Effekte** (Optionen → Effekte → Seiten der Fenster) gelten jetzt **überall**: auch an der Kopfleiste, an den unteren Leisten (DAW, Player, Startseite) und an der Player-Kopfzeile. Vorher behielten diese Leisten den Effekt rundherum.
+- Besser: Mehr Blöcke tragen den Rand-Effekt und folgen den gewählten Seiten: die **Werkzeuge-Karte** und das große Werkzeug-Fenster in der DAW, „Letzte Sitzung fortsetzen“ auf der Startseite sowie im Player das Klang-Fenster, das Listenfenster mit „+ Dateien“ und die Dockbar.
+- Fix: **Alle Dialoge** bekommen den Fenster-Rand (bisher nur einige, zum Beispiel Optionen): Projektbibliothek, Spuren-Ansicht, Import-Dialoge, Muster-Generator, SoundFont-Auswahl und die Sheets der Startseite. Bei „Oben“ leuchten sie nur oben.
+- Hinweis: Der **Dockbar-Effekt** (Optionen → Effekte & Anzeige, der Ring ums Cover und um die Leisten) ist eine eigene Einstellung und läuft weiter rundherum. Wenn er an ist, ersetzt er an den Leisten den Rand-Effekt.
+
 ## 1.41 · 2026-11-21 · Dockbars einheitlich, Rand-Effekte nach Seiten
 - Besser: Die Dockbars (DAW, Player, Startseite) **rasten nach dem Wischen immer auf einer ganzen Seite** ein. Bleibt sie einmal dazwischen stehen, schnappt sie nach einem Moment von selbst auf die nächste Seite.
 - Besser: Die **DAW-Leiste ist jetzt gebaut wie die Dockbars im Player und auf der Startseite**: Punkte mittig unten (antippbar) statt Pfeile, gleiche Seitenbreite und gleiche Höhe. Die Transport-Seite hat – wie im Player – oben die Positionsleiste und unten die Tasten in derselben Reihenfolge: Loop · Zum Anfang · Play · Stopp · Klick.

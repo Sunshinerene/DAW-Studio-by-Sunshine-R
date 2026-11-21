@@ -4,7 +4,7 @@
      Gruppen: „Kommt definitiv“ (Kommt) · „Zum Testen“ (Zum Testen) · „Ideen“ (Idee). Datei leer lassen = keine Vorschau.
      Wichtig: Nennt der Titel keine NEUERE Version als die installierte App, ignoriert die App diese Datei und zeigt den eingebauten Text. -->
 
-## Version 1.42 – in Arbeit
+## Version 1.43 – in Arbeit
 
 ### Kommt definitiv
 - Feinschliff nach deinem Test der neuen Dockbars, Rand-Seiten und Player-Kopfzeile
