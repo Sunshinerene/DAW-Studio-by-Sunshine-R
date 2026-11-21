@@ -1,0 +1,44 @@
+/* 1.43: Titel aus dem Player als Spur in die DAW */
+const http=require('http'),fs=require('fs'),path=require('path');const {chromium}=require('playwright');
+const WORK=process.argv[2];
+const srv=http.createServer((q,r)=>{const f=path.join(WORK,decodeURIComponent(q.url.split('?')[0]).replace(/^\//,''));fs.readFile(f,(e,d)=>{if(e){r.writeHead(404);r.end();return;}r.writeHead(200,{'content-type':f.endsWith('.html')?'text/html':'application/octet-stream'});r.end(d)})});
+let ok=0,bad=0;const T=(n,c,x)=>{if(c){ok++;console.log('PASS',n)}else{bad++;console.log('FAIL',n,x===undefined?'':JSON.stringify(x))}};
+(async()=>{await new Promise(r=>srv.listen(0,'127.0.0.1',r));const port=srv.address().port;const b=await chromium.launch();
+const ctx=await b.newContext({viewport:{width:393,height:852},isMobile:true,hasTouch:true});const pg=await ctx.newPage();pg.errs=[];pg.on('pageerror',e=>pg.errs.push(e.message));
+await pg.route(/^https?:\/\/(?!127\.0\.0\.1)/,r=>r.abort());
+await pg.addInitScript(()=>{try{localStorage.setItem('sunshine.home','off');localStorage.setItem('sunshine.news','{"seen":"9.99"}')}catch(_){}});
+await pg.goto(`http://127.0.0.1:${port}/index_ueberarbeitet.html`,{waitUntil:'load'});await pg.waitForTimeout(1200);
+const ev=(f,a)=>pg.evaluate(f,a);
+const wav=(sec,hz)=>{const sr=8000,n=Math.round(sr*sec),b=Buffer.alloc(44+n*2);b.write('RIFF',0);b.writeUInt32LE(36+n*2,4);b.write('WAVEfmt ',8);b.writeUInt32LE(16,16);b.writeUInt16LE(1,20);b.writeUInt16LE(1,22);b.writeUInt32LE(sr,24);b.writeUInt32LE(sr*2,28);b.writeUInt16LE(2,32);b.writeUInt16LE(16,34);b.write('data',36);b.writeUInt32LE(n*2,40);for(let i=0;i<n;i++)b.writeInt16LE(Math.round(Math.sin(i*2*Math.PI*hz/sr)*8000),44+i*2);return b};
+await ev(()=>Player.open());await pg.waitForTimeout(400);
+await pg.setInputFiles('#pl-file',[{name:'a-eins.wav',mimeType:'audio/wav',buffer:wav(2,440)},{name:'b-zwei.wav',mimeType:'audio/wav',buffer:wav(1.5,660)}]);await pg.waitForTimeout(1000);
+T('Player: zwei Titel in der Liste',await ev(()=>Player.list().length===2));
+T('Jede Zeile hat den Knopf „Als Spur in die DAW laden“',await ev(()=>document.querySelectorAll('#pl-list .pl-row [data-pl=tospur]').length===2&&/Spur/.test(document.querySelector('#pl-list [data-pl=tospur]').getAttribute('aria-label'))));
+T('Knopf groß genug zum Tippen (≥ 40 × 44 px)',await ev(()=>{const r=document.querySelector('#pl-list [data-pl=tospur]').getBoundingClientRect();return r.width>=40&&r.height>=44}));
+const idx0=await ev(()=>Player.state().idx);
+await ev(()=>document.querySelector('#pl-list .pl-row [data-pl=tospur]').click());await pg.waitForTimeout(1500);
+const s1=await ev(()=>({n:dawState.tracks.length,t:dawState.tracks[0]&&dawState.tracks[0].type,name:dawState.tracks[0]&&dawState.tracks[0].name,dur:dawState.buffers[dawState.tracks[0]&&dawState.tracks[0].id]&&dawState.buffers[dawState.tracks[0].id].duration,idx:Player.state().idx}));
+T('Titel 1 liegt als Audio-Spur im Projekt (Name aus dem Titel)',s1.n===1&&s1.t==='audio'&&/a-eins/.test(s1.name),s1);
+T('Der geladene Puffer hat die Länge des Titels (≈ 2 s)',Math.abs(s1.dur-2)<0.1,s1);
+T('Der Knopf spielt den Titel nicht ab und wählt ihn nicht (Zeile bleibt)',s1.idx===idx0,s1);
+T('Spur ist nicht stumm',await ev(()=>dawState.tracks[0].mute===false));
+await ev(()=>document.querySelectorAll('#pl-list .pl-row [data-pl=tospur]')[1].click());await pg.waitForTimeout(1500);
+T('Titel 2 wird als zweite Spur angehängt',await ev(()=>dawState.tracks.length===2&&/b-zwei/.test(dawState.tracks[1].name)));
+await ev(()=>window.__dawUndo());await pg.waitForTimeout(300);
+T('Rückgängig entfernt die zuletzt geladene Spur',await ev(()=>dawState.tracks.length===1&&!dawState.buffers[Object.keys(dawState.buffers).find(k=>false)||'x']));
+// Speicherschutz
+await ev(()=>{window.__cf=0;window.__cfAns=false;window.confirm=()=>{window.__cf++;return window.__cfAns};Health.__mem=Health.memory;Health.memory=()=>({mb:880,limits:[500,900],tracks:1})});
+await ev(()=>Player.toDaw(1));await pg.waitForTimeout(600);
+T('Hoher Speicherstand: Rückfrage, bei „Nein“ keine Spur',await ev(()=>window.__cf===1&&dawState.tracks.length===1));
+await ev(()=>{window.__cfAns=true});await ev(()=>Player.toDaw(1));await pg.waitForTimeout(1500);
+T('Bei „Ja“ wird die Spur geladen',await ev(()=>dawState.tracks.length===2));
+await ev(()=>{window.__cf=0;Health.memory=()=>({mb:950,limits:[500,900],tracks:1})});
+await ev(()=>Player.toDaw(0));await pg.waitForTimeout(600);
+T('Zu wenig Speicher: ohne Rückfrage abgelehnt, keine neue Spur',await ev(()=>window.__cf===0&&dawState.tracks.length===2));
+T('Ablehnung nennt Grund (Meldung sichtbar)',await ev(()=>/Arbeitsspeicher/.test(document.body.innerText)));
+await ev(()=>{Health.memory=Health.__mem});
+// nicht lesbarer Titel
+await ev(()=>{const t=Player.list();return 0});
+T('Ungültiger Index lädt nichts',await ev(async()=>{const r=await Player.toDaw(99);return r===false||r===undefined}));
+T('Keine JS-Fehler',pg.errs.length===0,pg.errs.slice(0,3));
+console.log(`\n${ok} ok / ${bad} fail`);await b.close();srv.close();process.exit(bad?1:0)})();

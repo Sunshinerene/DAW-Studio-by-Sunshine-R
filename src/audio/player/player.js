@@ -487,6 +487,26 @@
     } catch (_) {}
   }
   const dawSoon = () => { if (dawT) clearTimeout(dawT); dawT = setTimeout(dawSync, 300); };
+  /* 1.43: Titel als Audio-Spur in die DAW laden. Schützt vor Speicher-Überlauf: Ein Titel wird als Gleitkomma-Audio (≈ 48 kHz, stereo) entpackt und braucht ein Vielfaches seiner Dateigröße. */
+  let tdBusy = false;
+  const estMB = t => { const d = isFinite(t.dur) && t.dur > 0 ? t.dur : (t.size ? t.size / (/wav/i.test((t.fmt || '') + ' ' + (t.name || '')) ? 176400 : 16000) : 0); return d * 48000 * 8 / 1048576; };
+  async function toDaw(i) {
+    const t = list[i]; if (!t || tdBusy) return false;
+    if (typeof window.addAudioBlobAsTrack !== 'function') { say('Die DAW ist noch nicht bereit.', 'error'); return false; }
+    if (t.bad || t.off) { say('„' + t.title + '“ ist gerade nicht lesbar.', 'warn'); return false; }
+    let mem = null; try { mem = window.Health && Health.memory ? Health.memory() : null; } catch (_) {}
+    const lim = mem ? mem.limits : [500, 900], have = mem ? mem.mb : 0, est = Math.round(estMB(t));
+    if (have + est >= lim[1]) { say('„' + t.title + '“ ist zu lang für den Arbeitsspeicher (als Spur ≈ ' + est + ' MB, schon ' + have + ' MB belegt). Nicht geladen – nicht benötigte Spuren löschen und die App neu starten schafft Platz.', 'error'); return false; }
+    if (have + est >= lim[0] && !confirm('„' + t.title + '“ braucht als Spur ≈ ' + est + ' MB Arbeitsspeicher (schon ' + have + ' MB belegt). Die App kann dadurch instabil werden. Trotzdem laden?')) return false;
+    tdBusy = true; say('„' + t.title + '“ wird als Spur geladen …', 'info');
+    try {
+      const b = await t.get(() => false, () => {});
+      const r = await window.addAudioBlobAsTrack(typed(b, t.name), t.name, t.title);
+      say('„' + t.title + '“ liegt jetzt als Spur ' + r.num + ' im Projekt (' + fmt(r.seconds) + '). Rückgängig mit „Zurück“ in der DAW.', 'success');
+      return true;
+    } catch (e) { say('„' + t.title + '“ konnte nicht als Spur geladen werden.', 'error'); try { window.Health && Health.log && Health.log('Titel als Spur: ' + (e && e.message || e), 'player'); } catch (_) {} return false; }
+    finally { tdBusy = false; }
+  }
   function hookDaw() {
     try {
       if (typeof audioEngine === 'undefined' || audioEngine.__bg) return;
@@ -506,6 +526,7 @@
     repeat: '<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>',
     vol: '<path d="M11 5 6 9H2v6h4l5 4V5z" fill="currentColor"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/>',
     chat: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1.1-4.6A8 8 0 1 1 21 12z"/>',
+    tospur: '<path d="M4 7h9M4 12h6M4 17h9"/><path d="M16 9v8M13 14l3 3 3-3"/>',
     x: '<path d="M18 6 6 18M6 6l12 12"/>', plus: '<path d="M5 12h14M12 5v14"/>', back: '<path d="m15 18-6-6 6-6"/>',
     note: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
     folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/>',
@@ -562,6 +583,7 @@
         else if (a === 'bandreset') { S.custom = [0, 0, 0, 0, 0]; saveS(); applySound(); paintSound(); }
         else if (a === 'dspon') { S.dsp = true; saveS(); applySound(); render(true); }
         else if (a === 'rm') { remove(+b.dataset.id); }
+        else if (a === 'tospur') { toDaw(list.findIndex(x => x.id === +b.dataset.id)); }
         return;
       }
       if (row) { const i = +row.dataset.plI; if (i === idx) toggle(); else load(i, true); }
@@ -640,7 +662,7 @@
   /* Liste: Zeilen werden nur neu gebaut, wenn sich die Reihenfolge/Anzahl ändert. Sonst (z. B. Dauer vom Hintergrund-Scan, Wechsel des laufenden Titels) werden nur die geänderten Stellen angepasst –
      so bleiben Zeilen mitten in einem Fingertipp erhalten, und 107 Titel kosten nicht bei jedem Scan-Schritt einen kompletten Neuaufbau. */
   const subOf = t => esc(subLine(t)) + (t.size ? ' · ' + mb(t.size) : '') + (t.bad ? ' · nicht lesbar' : '');
-  const rowOf = (t, i) => '<div class="pl-row' + (i === idx ? ' on' : '') + (t.bad ? ' bad' : '') + (t.off ? ' off' : '') + '" role="listitem" data-pl-i="' + i + '"><span class="pl-n" data-k="' + (i === idx && !au.paused ? 'eq' : i + 1) + '">' + (i === idx && !au.paused ? '<i class="pl-eq"><u></u><u></u><u></u></i>' : (i + 1)) + '</span><span class="pl-t"><b>' + esc(t.title) + '</b><small>' + subOf(t) + '</small></span><span class="pl-d">' + fmt(t.dur) + '</span><button type="button" class="pl-rm" data-pl="rm" data-id="' + t.id + '" aria-label="Aus Liste entfernen">' + svg('x', 16) + '</button></div>';
+  const rowOf = (t, i) => '<div class="pl-row' + (i === idx ? ' on' : '') + (t.bad ? ' bad' : '') + (t.off ? ' off' : '') + '" role="listitem" data-pl-i="' + i + '"><span class="pl-n" data-k="' + (i === idx && !au.paused ? 'eq' : i + 1) + '">' + (i === idx && !au.paused ? '<i class="pl-eq"><u></u><u></u><u></u></i>' : (i + 1)) + '</span><span class="pl-t"><b>' + esc(t.title) + '</b><small>' + subOf(t) + '</small></span><span class="pl-d">' + fmt(t.dur) + '</span><button type="button" class="pl-ts" data-pl="tospur" data-id="' + t.id + '" aria-label="Als Spur in die DAW laden" title="Als Spur in die DAW laden">' + svg('tospur', 18) + '</button><button type="button" class="pl-rm" data-pl="rm" data-id="' + t.id + '" aria-label="Aus Liste entfernen">' + svg('x', 16) + '</button></div>';
   function paintList() {
     if (!root) return;
     const L = $('pl-list'); if (!L) return;
@@ -725,7 +747,7 @@
 
   window.Player = {
     svg, open, close, add: addFiles, play, pause, toggle, shuffle: () => { S.shuffle = !S.shuffle; history = []; saveS(); render(true); }, repeat: () => { S.repeat = S.repeat === 'off' ? 'all' : S.repeat === 'all' ? 'one' : 'off'; saveS(); render(true); }, current: () => { const t = cur(); return t ? { title: t.title, sub: subLine(t), cover: coverOf(t), off: !!t.off } : null; }, next: () => next(false), prev, seek: seekTo, clear, remove,
-    addFolder: addEntries, pickFolder, preset: setPreset, scan, recents: () => recents.map(r => ({ id: r.id, name: r.name, count: r.count, ts: r.ts, handle: !!r.handle, nat: !!r.nat })), restore, _snap: snapshot, _persistNow: async () => { const sn = snapshot(); if (sn) await KV.set('session', sn); savePos(true); },
+    toDaw: i => toDaw(i == null ? idx : i), addFolder: addEntries, pickFolder, preset: setPreset, scan, recents: () => recents.map(r => ({ id: r.id, name: r.name, count: r.count, ts: r.ts, handle: !!r.handle, nat: !!r.nat })), restore, _snap: snapshot, _persistNow: async () => { const sn = snapshot(); if (sn) await KV.set('session', sn); savePos(true); },
     _coverUrl: i => (list[i] && list[i].cover) || '',
     list: () => list.map(t => ({ id: t.id, title: t.title, sub: t.sub, artist: t.artist, album: t.album, genre: t.genre, year: t.year, track: t.track, fmt: t.fmt, hasCover: !!t.cover, size: t.size, dur: t.dur, bad: !!t.bad, off: !!t.off, key: t.key })),
     state: () => ({ idx, count: list.length, playing: !au.paused, time: au.currentTime, dur: au.duration, shuffle: S.shuffle, repeat: S.repeat, bg: S.bg, owner: Media.owner, preset: S.preset, dsp: S.dsp, viz: S.viz, cover: !!cvb }),

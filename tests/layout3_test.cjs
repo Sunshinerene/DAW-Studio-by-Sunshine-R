@@ -46,7 +46,7 @@ await pg.close();
 pg=await mk(384,{'sunshine.fx':JSON.stringify({v:2,on:true,edge:'glow',full:'off',k:60,mode:'static'})});const e2=(f,a)=>pg.evaluate(f,a);
 T('Rand-Effekte: Standard „nur unten“ für Fenster',await e2(()=>FX.sides()==='b'&&document.documentElement.getAttribute('data-fx-sides')==='b'));
 T('Glühen unten: Fenster (Klang-/Spurfenster) leuchten nur unten',await e2(()=>{const w=document.querySelector('#drop-zone-wrapper > .bg-daw-panel');if(!w)return false;const sh=getComputedStyle(w,'::after').boxShadow;return /inset/.test(sh)&&!/rgba?\([^)]*\) 0px 0px 28px/.test(sh)}));
-T('Kopfleiste und untere Leiste folgen ebenfalls den Seiten (1.42: kein voller Rand mehr)',await e2(()=>{const h=document.querySelector('header.sticky'),n=document.getElementById('bottom-nav');return h.classList.contains('fx-edge')&&n.classList.contains('fx-edge')&&!/0px 0px 28px/.test(getComputedStyle(h,'::after').boxShadow)&&!/0px 0px 28px/.test(getComputedStyle(n,'::after').boxShadow)}));
+T('Kopfleiste und untere Leiste folgen ebenfalls den Seiten (1.43: kein voller Rand mehr)',await e2(()=>{const h=document.querySelector('header.sticky'),n=document.getElementById('bottom-nav');return h.classList.contains('fx-edge')&&n.classList.contains('fx-edge')&&!/0px 0px 28px/.test(getComputedStyle(h,'::after').boxShadow)&&!/0px 0px 28px/.test(getComputedStyle(n,'::after').boxShadow)}));
 await e2(()=>FX.set({edge:'beam'},false));await pg.waitForTimeout(200);
 T('Ring-Stile: Ausschnitt nur an den gewählten Seiten',await e2(()=>{const w=document.querySelector('#drop-zone-wrapper > .bg-daw-panel');const c=getComputedStyle(w,'::after').clipPath;return /polygon/.test(c)}));
 await e2(()=>FX.set({sides:'trbl'},false));await pg.waitForTimeout(100);

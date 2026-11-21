@@ -547,6 +547,20 @@
     document.body.append(ov);
   }
 
+  /* 1.43: Einzelne Datei (z. B. ein Titel aus dem Player) als neue Audio-Spur ins Projekt – ohne Import-Dialog.
+     Dekodiert zuerst (schlägt das fehl, bleibt das Projekt unverändert), merkt sich die Original-Datei wie jeder Import und legt einen Undo-Schritt an. */
+  window.addAudioBlobAsTrack = async function (blob, fileName, title) {
+    await audioEngine.ensureCtx();
+    const raw = await blob.arrayBuffer();
+    const decoded = await (window.__projectIO && window.__projectIO.decodeKeep ? window.__projectIO.decodeKeep(raw, fileName) : audioEngine.ctx.decodeAudioData(raw.slice(0)));
+    pushUndo();
+    const name = String(title || fileName || 'Titel').replace(/\.[^/.]+$/, '').slice(0, 28);
+    const tr = createTrack('audio', name);
+    dawState.buffers[tr.id] = decoded; delete tr.clips; tr.mute = false;
+    refreshAll();
+    return { id: tr.id, num: tr.num, name: tr.name, seconds: decoded.duration };
+  };
+
   window.handleUniversalFileImport = async function (fileList) {
     const files = Array.from(fileList || []);
     const input = $('universal-file-input'); if (input) input.value = '';

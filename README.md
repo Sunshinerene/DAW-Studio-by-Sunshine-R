@@ -4,7 +4,7 @@ Dieser Ordner ist die **Quelle** der App. Das Ergebnis des Baus ist eine einzige
 `dist/index_ueberarbeitet.html` – sie wird als `www/index.html` ins Android-Repo gelegt (Live-Update und APK-Bau
 bleiben unverändert, siehe `ANLEITUNG.md` im Android-Zusatzpaket).
 
-Stand: Version 1.42 (Rand-Effekte wirklich überall nach Seiten). Der Bau aus Stufe 1 war Byte für Byte gleich 1.30; ab 1.31 sind die gemeinsamen Bausteine (unten) eingebaut, ab 1.32 laufen Takt und Beobachter zentral und die App ruht im Leerlauf.
+Stand: Version 1.43 (Titel aus dem Player als Spur). Der Bau aus Stufe 1 war Byte für Byte gleich 1.30; ab 1.31 sind die gemeinsamen Bausteine (unten) eingebaut, ab 1.32 laufen Takt und Beobachter zentral und die App ruht im Leerlauf.
 
 ## Bauen und testen
 
@@ -34,7 +34,7 @@ echten GitHub-Actions-Lauf sind sie nicht gelaufen.
 | `android/` | `patch-android.cjs` und `sw.js` als Referenzkopie. **Maßgeblich ist die Kopie im Android-Repo (`scripts/patch-android.cjs`)**; bei Änderung beides angleichen |
 | `patches/` | Bau-Skripte (siehe unten) |
 
-Außerhalb von `src/`: `assets/` (Logo, Icon, Intro, `vendor/jszip`), `tests/` (63 Testdateien + `fixtures/`), `tools/` (Prüfskripte, Spessa-Bau-Kit),
+Außerhalb von `src/`: `assets/` (Logo, Icon, Intro, `vendor/jszip`), `tests/` (64 Testdateien + `fixtures/`), `tools/` (Prüfskripte, Spessa-Bau-Kit),
 `CHANGELOG.md` (oberster Abschnitt = „Was ist neu“ in der App, die Version der App wird daraus gelesen), `VORSCHAU.md`, `feedback_to.txt`.
 
 ## Gemeinsame Bausteine (`src/kern/bausteine.js`, lädt vor allen anderen Modulen)
@@ -122,3 +122,4 @@ Alle Rundungen in Stilen laufen über Faktoren aus `src/layout/ui2/ui2.css`: `--
 - Rand-Effekte nach Seiten: `FX.set({sides:'b'})` (Zeichen `t r b l`, Standard `b`) setzt `html[data-fx-sides="b"]`; fehlt das Attribut, gilt das alte Aussehen. Gilt (ab 1.42) für alle `.fx-edge` – auch Leisten (`.fx-bar`) – und Dialoge (`.fx-win`); Leisten (`.fx-bar`: Kopfleiste, `#bottom-nav`, Player-Kopfzeile) behalten den vollen Rand.
 - Tests: `layout3_test.cjs`. `runall.sh` zählt ab jetzt auch Abstürze (Abbruchcode ≠ 0) als Fehler.
 - 1.42: `EDGE_SEL` in `fx.js` umfasst zusätzlich `.bw-lcard`, `#bw-root`, `.hm-resume`, `#hm-dock`, `.pl-lh`, `.pl-dock`. `tagWin()` markiert das erste Kind jedes Overlays mit `fixed inset-0` (und `.hm-sheet-bg`) als `.fx-win` – neue Dialoge brauchen keinen Eintrag in `WIN_IDS`. Der Dockbar-Effekt (`dockfx.js`, Canvas-Ring) bleibt eine eigene Einstellung ohne Seiten-Auswahl.
+- 1.43: `window.addAudioBlobAsTrack(blob, dateiname, titel)` (`import_undo_reset.js`) legt eine einzelne Audio-Datei als neue Spur an (dekodieren → Undo-Schritt → `createTrack` → `refreshAll`). `Player.toDaw(i)` ruft es für einen Titel auf und prüft vorher mit `Health.memory()` den Speicher (Rückfrage ab Warnstufe, Ablehnung ab Hochstufe). Test: `tospur_test.cjs`.

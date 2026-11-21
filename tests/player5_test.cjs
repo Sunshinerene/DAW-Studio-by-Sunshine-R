@@ -14,7 +14,7 @@ await pg.route(/^https?:\/\/(?!127\.0\.0\.1)/,r=>r.abort());
 await pg.exposeFunction('__natPick',()=>ST.dialog==='cancel'?{cancelled:true}:ST.dialog==='old'?'UNIMPL':{cancelled:false,uri:'content://tree/Music',name:'Musik'});
 await pg.exposeFunction('__natList',()=>{ST.lists++;if(!ST.perm)return null;return Object.keys(DISK).map(u=>({name:u.replace('content://tree/Music/doc/',''),uri:u,size:fs.statSync(DISK[u]).size}))});
 await pg.exposeFunction('__natRead',(uri,off,len)=>{ST.reads.push([uri.split('/').pop(),off,len]);const fd=fs.openSync(DISK[uri],'r');const buf=Buffer.alloc(len);const n=fs.readSync(fd,buf,0,len,off);fs.closeSync(fd);return {b64:buf.subarray(0,n).toString('base64'),n}});
-await pg.addInitScript(()=>{try{if(!sessionStorage.__i){sessionStorage.__i=1;localStorage.setItem('sunshine.home','off');localStorage.setItem('sunshine.news','{"seen":"1.42"}');localStorage.setItem('sunshine.player','{"bg":true,"vol":1}');}}catch(_){}
+await pg.addInitScript(()=>{try{if(!sessionStorage.__i){sessionStorage.__i=1;localStorage.setItem('sunshine.home','off');localStorage.setItem('sunshine.news','{"seen":"1.43"}');localStorage.setItem('sunshine.player','{"bg":true,"vol":1}');}}catch(_){}
  window.__upd=[];window.__dirClick=0;
  window.Capacitor={isNativePlatform:()=>true,Plugins:{SunshineMedia:{
   update:async o=>{window.__upd.push(o)},stop:async()=>{},

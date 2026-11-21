@@ -2,6 +2,11 @@
 <!-- Pflege: Ganz oben einen neuen Abschnitt „## Version · Datum · Titel“ anlegen, darunter die Neuerungen als Stichpunkte.
      Der oberste Abschnitt wird (1) in die App eingebaut („Was ist neu“) und (2) bei GitHub als Release-Text veröffentlicht. -->
 
+## 1.43 · 2026-11-21 · Titel aus dem Player als Spur
+- Neu: Im **Player** hat jede Zeile ein Symbol (Pfeil neben dem X): **„Als Spur in die DAW laden“**. Der Titel landet als neue Audio-Spur im Projekt, ohne Import-Dialog und ohne den Titel erst abzuspielen. Das Laden lässt sich in der DAW mit „Zurück“ rückgängig machen.
+- Besser: **Speicherschutz** – lange Titel brauchen als Spur viel Arbeitsspeicher (ein 5-Minuten-Titel etwa 110 MB). Wird der Speicher knapp, fragt die App vorher nach; ist er voll, lädt sie den Titel nicht und sagt warum, statt abzustürzen.
+- Besser: Anleitung → Player erklärt die neue Funktion.
+
 ## 1.42 · 2026-11-21 · Rand-Effekte wirklich überall nach Seiten
 - Fix: Die gewählten **Seiten der Rand-Effekte** (Optionen → Effekte → Seiten der Fenster) gelten jetzt **überall**: auch an der Kopfleiste, an den unteren Leisten (DAW, Player, Startseite) und an der Player-Kopfzeile. Vorher behielten diese Leisten den Effekt rundherum.
 - Besser: Mehr Blöcke tragen den Rand-Effekt und folgen den gewählten Seiten: die **Werkzeuge-Karte** und das große Werkzeug-Fenster in der DAW, „Letzte Sitzung fortsetzen“ auf der Startseite sowie im Player das Klang-Fenster, das Listenfenster mit „+ Dateien“ und die Dockbar.
