@@ -1,4 +1,4 @@
-/* 1.46: MP3-Export (lamejs) – Datei wird mit ffprobe/ffmpeg geprüft */
+/* 1.47: MP3-Export (lamejs) – Datei wird mit ffprobe/ffmpeg geprüft */
 const http=require('http'),fs=require('fs'),path=require('path'),cp=require('child_process');const {chromium}=require('playwright');
 const WORK=process.argv[2];
 const srv=http.createServer((q,r)=>{const f=path.join(WORK,decodeURIComponent(q.url.split('?')[0]).replace(/^\//,''));fs.readFile(f,(e,d)=>{if(e){r.writeHead(404);r.end();return;}r.writeHead(200,{'content-type':f.endsWith('.html')?'text/html':'application/octet-stream'});r.end(d)})});

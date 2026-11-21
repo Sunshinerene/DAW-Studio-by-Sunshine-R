@@ -2,6 +2,12 @@
 <!-- Pflege: Ganz oben einen neuen Abschnitt „## Version · Datum · Titel“ anlegen, darunter die Neuerungen als Stichpunkte.
      Der oberste Abschnitt wird (1) in die App eingebaut („Was ist neu“) und (2) bei GitHub als Release-Text veröffentlicht. -->
 
+## 1.47 · 2026-11-21 · Anleitung auf dem neuesten Stand
+- Besser: **Rundgang** – drei neue Schritte: **Cover & Tags**, **Schnellwahl** (Dockbar nach oben wischen) und der **Player**. Texte zu Menü, Optionen (jetzt sieben Kategorien) und Export (MP3) sind angepasst. Am großen Bildschirm entfällt die Schnellwahl von selbst, der Player wird dort über ☰ gezeigt.
+- Neu im **Handbuch**: Kapitel **„Zentrale & Schnellwahl“** und **„Labor (Beta)“**. Dazu überarbeitet: Startseite (jetzt unter „Startseite & Projekte“), untere Leiste, Player (Dockbar mit drei Seiten, Listenfenster, eigener Ordner-Dialog in der Android-App), Export (MP3 statt „geht nicht“), Design & Effekte (Rand-Effekte mit Seiten, Voreinstellungen, Dockbar-Effekt, Leistung und Leistungs-Wächter), Feedback und Hilfe bei Problemen.
+- Fix: Veraltete Aussagen im Handbuch entfernt (z. B. „MP3 kann die App nicht erzeugen“, „Ordner-Dialog folgt mit dem nächsten Update“, „Liste bleibt nur bis zum Schließen“, die alte Player-Seite in der DAW-Leiste). Die Optionen-Pfade im Text („Optionen → …“) stimmen jetzt mit den echten Kategorien überein.
+- Neue Mini-Rundgänge zu „Zeig es mir“: Zentrale, Player, Cover und Labor.
+
 ## 1.46 · 2026-11-21 · Labor (Beta)
 - Neu: **Labor (Beta)** unter Optionen – eine eigene Kategorie für neue Ideen zum Ausprobieren. Jede Idee ist **aus**, bis du sie einschaltest; dann ist die App wie gewohnt. Zu jeder Idee gibt es einen Knopf „Feedback zu dieser Idee“, und im Feedback steht automatisch, welche Labor-Ideen an waren.
 - Neu: Im Labor steht schon der Platzhalter „Nativer Player (Android)“ als **geplant** – ein Player, der direkt in Android läuft. Er braucht später eine neue App-Version.

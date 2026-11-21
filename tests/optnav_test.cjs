@@ -5,7 +5,7 @@ let ok=0,bad=0;const T=(n,c,x)=>{if(c){ok++;console.log('PASS',n)}else{bad++;con
 (async()=>{await new Promise(r=>srv.listen(0,'127.0.0.1',r));const port=srv.address().port;const b=await chromium.launch();
 const mk=async(init)=>{const ctx=await b.newContext({viewport:{width:393,height:852},isMobile:true,hasTouch:true});const pg=await ctx.newPage();pg.__errs=[];pg.on('pageerror',e=>pg.__errs.push(e.message));
  await pg.route(/^https?:\/\/(?!127\.0\.0\.1)/,r=>r.abort());
- await pg.addInitScript(i=>{try{if(!sessionStorage.__i){sessionStorage.__i=1;localStorage.setItem('sunshine.home','off');localStorage.setItem('sunshine.news','{"seen":"1.46"}');if(i)Object.keys(i).forEach(k=>localStorage.setItem(k,i[k]))}}catch(e){}},init||null);
+ await pg.addInitScript(i=>{try{if(!sessionStorage.__i){sessionStorage.__i=1;localStorage.setItem('sunshine.home','off');localStorage.setItem('sunshine.news','{"seen":"1.47"}');if(i)Object.keys(i).forEach(k=>localStorage.setItem(k,i[k]))}}catch(e){}},init||null);
  await pg.goto(`http://127.0.0.1:${port}/index_ueberarbeitet.html`,{waitUntil:'load'});await pg.waitForTimeout(1200);return pg};
 const openOpt=async pg=>{await pg.evaluate(()=>document.getElementById('btn-settings').click());await pg.waitForTimeout(450)};
 const vis=(pg,s)=>pg.locator(s).first().isVisible();
@@ -15,7 +15,7 @@ T('Automatisierte Tests: flache Liste (keine Kategorien)',!await pg.locator('#on
 await pg.close();
 // ---- Kategorien aktiv
 pg=await mk({'sunshine.optnav':'on'});const ev=(f,a)=>pg.evaluate(f,a);await openOpt(pg);
-T('Übersicht: 7 Kategorien-Karten (ab 1.46 mit Labor)',await pg.locator('#on-home .on-card').count()===7);
+T('Übersicht: 7 Kategorien-Karten (ab 1.47 mit Labor)',await pg.locator('#on-home .on-card').count()===7);
 T('Übersicht: Suchfeld sichtbar, keine Zurück-Leiste',await vis(pg,'#on-q')&&!await vis(pg,'.on-back'));
 T('Übersicht: Einzel-Bereiche noch zu (Updates, Design, Speicher)',!await vis(pg,'#up-sec')&&!await vis(pg,'#theme-grid')&&!await vis(pg,'#sv-sec'));
 T('Karten zeigen Kurztext (aktuelles Design, Speicher)',await ev(()=>{const t=document.querySelector('[data-on-go=look]').textContent;return /Aurora|Studio|Neon|Liquid|Klassisch/.test(t)&&/Arbeitsspeicher/.test(document.querySelector('[data-on-go=perf]').textContent)}));

@@ -4,7 +4,7 @@
      Gruppen: „Kommt definitiv“ (Kommt) · „Zum Testen“ (Zum Testen) · „Ideen“ (Idee). Datei leer lassen = keine Vorschau.
      Wichtig: Nennt der Titel keine NEUERE Version als die installierte App, ignoriert die App diese Datei und zeigt den eingebauten Text. -->
 
-## Version 1.47 – in Arbeit
+## Version 1.48 – in Arbeit
 
 ### Kommt definitiv
 - Feinschliff nach deinem Test der neuen Dockbars, Rand-Seiten und Player-Kopfzeile
@@ -12,6 +12,7 @@
 - Feinschliff nach deinem Test der Android-Funktionen (Ordner-Dialog, Benachrichtigung)
 
 ### Zum Testen
+- Anleitung (1.47): Rundgang und Handbuch einmal durchgehen – stimmt alles mit der App überein? Fehlt etwas, ist etwas unklar oder zu lang?
 - Labor (1.46): Optionen → Labor (Beta) – verständlich erklärt? Findest du den Feedback-Knopf pro Idee? Welche Ideen sollen als Erstes hinein?
 - Schnellwahl und aufgeräumte Dockbars (1.45): Dockbar nach oben wischen – klappen die sechs Tasten auf, in DAW, Player und Startseite? Stört der kleine Strich, oder hilft er? Passt es, dass die Player-Leiste nur im Player und die DAW-Leiste nur in der DAW sitzt?
 - Titel als Spur (1.43): Im Player das Symbol neben dem X antippen – landet der Titel als Spur in der DAW? Klappt „Zurück"? Bei einem langen Titel: Kommt die Speicher-Rückfrage?
@@ -19,7 +20,7 @@
 - Dockbar (1.41): Rastet sie nach jedem Wischen auf einer ganzen Seite ein – in DAW, Player und Startseite? Wenn nicht: Auf welcher Seite, und wie hast du gewischt?
 - Rand-Seiten (1.41): Optionen → Effekte → „Seiten der Fenster“ – gefällt dir „nur unten“, oder willst du lieber andere Seiten? Auch mit anderen Rand-Effekten (Lichtstrahl, Regenbogen …) ansehen.
 - Player-Kopfzeile (1.41): Passt sie zu jedem Design, und ist „+ Dateien“ im Listenfenster gut erreichbar?
-- Zentrale (1.40): Ganz nach links wischen oder die Punkte tippen – kommst du von DAW, Player und Startseite aus überall hin, und fehlen dir die alten Knöpfe?
+- Zentrale (1.40): Kommst du von DAW, Player und Startseite aus überall hin (Wischen, Punkte oder Schnellwahl), und fehlen dir die alten Knöpfe?
 - Startseiten-Dockbar (1.40): Playbar, Klang und Zentrale per Wischen – passt die Reihenfolge, auch wenn gerade nichts läuft?
 - Beim Start öffnen (1.40): Optionen → Design & Aussehen – lädt die App die gewählte Ansicht (Startseite, DAW, Player)?
 - Gleiche Breiten und feste Dockbar (1.39): Haben alle Fenster dieselbe Breite, sitzt die Dockbar bündig unten – in DAW, Player und Startseite?
@@ -34,7 +35,6 @@
 - Android: Ordner-Dialog und Zeit in der Benachrichtigung – bleibt der Ordner nach dem Neustart verbunden?
 - Startbildschirm-Dockbar mit Cover: Passen Größe und Platz?
 - Leistenstile (Glas, Flach, Leuchtend, Dezent) mit der Option „Tasten passend zum Leistenstil“ – welcher gefällt am besten?
-- Dritte Seite „Player“ in der DAW-Leiste: Passt die automatische Umschaltung?
 - Neue Startseite: Passt sie bei dir ohne Scrollen, und gefällt dir die große „Alle Projekte“-Ansicht?
 - Klang-Vorauswahl auf der zweiten Seite der Player-Dockbar
 - Klang-Voreinstellungen bei gesperrtem Bildschirm in der Android-App

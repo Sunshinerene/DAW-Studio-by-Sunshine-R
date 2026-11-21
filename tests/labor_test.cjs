@@ -1,4 +1,4 @@
-/* 1.46: Labor (Beta) – eigene Optionen-Kategorie; Ideen sind aus, bis man sie einschaltet; Feedback-Knopf pro Idee */
+/* 1.47: Labor (Beta) – eigene Optionen-Kategorie; Ideen sind aus, bis man sie einschaltet; Feedback-Knopf pro Idee */
 const http=require('http'),fs=require('fs'),path=require('path');const {chromium}=require('playwright');
 const WORK=process.argv[2];
 const srv=http.createServer((q,r)=>{const f=path.join(WORK,decodeURIComponent(q.url.split('?')[0]).replace(/^\//,''));fs.readFile(f,(e,d)=>{if(e){r.writeHead(404);r.end();return;}r.writeHead(200,{'content-type':f.endsWith('.html')?'text/html':'application/octet-stream'});r.end(d)})});

@@ -14,13 +14,13 @@ const openOpt=async pg=>{await pg.evaluate(()=>document.getElementById('btn-menu
 // ================= NEWS
 let pg=await mk(()=>{try{localStorage.setItem('sunshine.home','off')}catch(e){}});   // Bestandsnutzer (hat schon sunshine.*-Einstellung)
 let r=await pg.evaluate(()=>({v:News.version(),n:News.list().length,top:News.list()[0],has:News.hasUnseen()}));
-T('Changelog eingebettet: 47 Abschnitte, oben 1.46 mit Titel und Punkten',r.n===47&&r.top.v==="1.46"&&/Labor/.test(r.top.title)&&r.top.items.length>=3&&r.top.date==='2026-11-21',r);
+T('Changelog eingebettet: 48 Abschnitte, oben 1.47 mit Titel und Punkten',r.n===48&&r.top.v==="1.47"&&/Anleitung/.test(r.top.title)&&r.top.items.length>=3&&r.top.date==='2026-11-21',r);
 T('Bestandsnutzer: Neuerungen ungelesen',r.has);
 await pg.evaluate(()=>Home.open());await pg.waitForTimeout(500);
-T('Startseite: Karte „Neu in Version 1.46“',await pg.evaluate(()=>{const e=document.querySelector('#hm-update [data-nw-card]');return !!e&&/Version 1\.46/.test(e.textContent)}));
+T('Startseite: Karte „Neu in Version 1.47“',await pg.evaluate(()=>{const e=document.querySelector('#hm-update [data-nw-card]');return !!e&&/Version 1\.47/.test(e.textContent)}));
 await pg.screenshot({path:path.join(SHOT,'v114_homecard.png')});
 await pg.evaluate(()=>document.querySelector('#hm-update [data-nw="open"]').click());await pg.waitForTimeout(300);
-T('„Ansehen“ öffnet „Was ist neu“ mit allen Versionen',await pg.evaluate(()=>{const e=document.getElementById('nw-root');return !!e&&e.querySelectorAll(".nw-e:not(.pv)").length===47&&/installiert/.test(e.textContent)&&e.querySelector('.nw-tag.nw-neu')}));
+T('„Ansehen“ öffnet „Was ist neu“ mit allen Versionen',await pg.evaluate(()=>{const e=document.getElementById('nw-root');return !!e&&e.querySelectorAll(".nw-e:not(.pv)").length===48&&/installiert/.test(e.textContent)&&e.querySelector('.nw-tag.nw-neu')}));
 await pg.screenshot({path:path.join(SHOT,'v114_news.png')});
 T('Android-Zurück schließt „Was ist neu“',await pg.evaluate(()=>{const x=window.__androidBack();return x===true&&!document.getElementById('nw-root')}));
 T('Nach dem Ansehen gilt es als gelesen (Karte weg)',await pg.evaluate(()=>{Home.close();Home.open();return !News.hasUnseen()&&!document.querySelector('#hm-update [data-nw-card]')}));
@@ -34,7 +34,7 @@ await pg.evaluate(()=>News.close());
 T('Keine JS-Fehler (News)',pg.errs.length===0,pg.errs);await pg.context().close();
 // frische Installation
 pg=await mk();
-T('Frische Installation: keine „Neu in…“-Karte, Merker = aktuelle Version',await pg.evaluate(()=>{Home.open();return News._state().seen==='1.46'&&!document.querySelector('#hm-update [data-nw-card]')}));
+T('Frische Installation: keine „Neu in…“-Karte, Merker = aktuelle Version',await pg.evaluate(()=>{Home.open();return News._state().seen==='1.47'&&!document.querySelector('#hm-update [data-nw-card]')}));
 await pg.context().close();
 
 // ================= WÖCHENTLICHE SICHERUNG (Browser: Erinnerung)
@@ -84,7 +84,7 @@ await pg.evaluate(()=>{window.dispatchEvent(new ErrorEvent('error',{message:'Boo
 Promise.resolve();await pg.evaluate(()=>{Promise.reject(new Error('Nope Test'))});await pg.waitForTimeout(200);
 r=await pg.evaluate(()=>Health.errors());
 T('Fehlerprotokoll: Fehler gesammelt, Wiederholung gezählt, ResizeObserver ignoriert, Promise-Fehler erfasst',r.some(e=>e.m==='Boom Test'&&e.c===2&&e.s==='app.js:7')&&!r.some(e=>/ResizeObserver/.test(e.m))&&r.some(e=>/Promise: Nope Test/.test(e.m)),r);
-T('Bericht enthält Version, Gerät, Speicher und Fehler',await pg.evaluate(()=>{const t=Health.report();return /Version 1\.46/.test(t)&&/Gerät:/.test(t)&&/Audio im Speicher/.test(t)&&/Boom Test/.test(t)}));
+T('Bericht enthält Version, Gerät, Speicher und Fehler',await pg.evaluate(()=>{const t=Health.report();return /Version 1\.47/.test(t)&&/Gerät:/.test(t)&&/Audio im Speicher/.test(t)&&/Boom Test/.test(t)}));
 r=await pg.evaluate(()=>{dawState.buffers.__t1={length:44100*300,numberOfChannels:2,duration:300};dawState.buffers.__t2={length:44100*300,numberOfChannels:2,duration:300};return Health.memory()});
 T('Speicherschätzung: 2 × 300 s Stereo = 202 MB (Float32)',r.mb===202&&r.tracks>=2&&r.level==='ok',r);
 r=await pg.evaluate(()=>{Object.defineProperty(navigator,'deviceMemory',{get:()=>2,configurable:true});return Health.memory().level});
