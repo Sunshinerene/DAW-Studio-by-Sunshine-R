@@ -2,6 +2,15 @@
 <!-- Pflege: Ganz oben einen neuen Abschnitt „## Version · Datum · Titel“ anlegen, darunter die Neuerungen als Stichpunkte.
      Der oberste Abschnitt wird (1) in die App eingebaut („Was ist neu“) und (2) bei GitHub als Release-Text veröffentlicht. -->
 
+## 1.40 · 2026-11-21 · Eine Dockbar als Zentrale
+- Neu: **Zentrale** – die letzte Seite jeder Dockbar (DAW, Player, Startseite) mit sechs großen Tasten: Startseite · DAW · Player · Feedback · Optionen · Anleitung. Von überall kommst du so überall hin; die Taste der aktuellen Ansicht ist markiert.
+- Neu: Die Dockbar der **Startseite** ist jetzt wie die der DAW wischbar: Playbar (nur wenn etwas läuft) · Klang-Voreinstellungen (Techno, Bass …) · Steuerung der anderen Seite (DAW oder Player) · Zentrale. Läuft nichts, bleibt sie mit Klang und Zentrale da (Start auf der Zentrale).
+- Neu: Die Dockbar im **Player** hat jetzt vier Seiten: Player-Playbar · Klang · DAW-Playbar · Zentrale. Die DAW-Leiste hat als vierte Seite die Zentrale (Pfeile und Punkte wie bisher).
+- Neu: Optionen → Design & Aussehen → **Beim Start öffnen**: Startseite, DAW oder Player. Der alte Schalter „Beim Start anzeigen“ auf der Startseite funktioniert weiter.
+- Aufgeräumt: Wo die Zentrale erreichbar ist, entfallen die alten Knöpfe – „Zurück“, Feedback und Optionen oben im Player; „Projekt“, Feedback, Anleitung, Optionen und Player auf der Startseite; Startseite, Player, Feedback und Optionen im ☰-Menü der DAW (am Handy mit Dockbar). Am großen Bildschirm ohne Dockbar bleibt alles wie bisher.
+- Besser: Die Player-Punkte unter der Dockbar sind größer und lassen sich antippen. Gewischt wird auf den Tasten oder der freien Fläche; wer auf der Zeitleiste wischt, verschiebt die Position.
+- Besser: Der Hilfe-Rundgang zeigt am Handy die Zentrale statt des ☰-Menüs.
+
 ## 1.39 · 2026-11-21 · Gleiche Breiten, feste Dockbar, ruhigerer Player
 - Besser: Alle Fenster der DAW (Kopfzeile, Spuren, Werkzeuge) haben jetzt dieselbe Breite und denselben Seitenabstand. Auch Player-Leiste und Dockbars von DAW, Player und Startseite schließen mit demselben Rand ab.
 - Besser: Die Dockbar sitzt fest am unteren Bildschirmrand, in der DAW, im Player und auf der Startseite, ohne Lücke darunter. Sie wird auch beim Scrollen nicht mehr mitgenommen.
