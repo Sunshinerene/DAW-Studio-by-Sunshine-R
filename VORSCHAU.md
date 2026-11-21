@@ -4,13 +4,17 @@
      Gruppen: „Kommt definitiv“ (Kommt) · „Zum Testen“ (Zum Testen) · „Ideen“ (Idee). Datei leer lassen = keine Vorschau.
      Wichtig: Nennt der Titel keine NEUERE Version als die installierte App, ignoriert die App diese Datei und zeigt den eingebauten Text. -->
 
-## Version 1.39 – in Arbeit
+## Version 1.40 – in Arbeit
 
 ### Kommt definitiv
 - Eine gemeinsame Dockbar für DAW, Player und Startseite (auch im Player wischbar) mit Navigation – und die Wahl, welche Ansicht beim Start geladen wird
+- Eine „Zentrale“-Seite in der Dockbar für Feedback, Optionen und den Wechsel zwischen DAW, Player und Startseite; die alten Knöpfe dafür entfallen
 - Feinschliff nach deinem Test der Android-Funktionen (Ordner-Dialog, Benachrichtigung) und der neuen DAW-Leiste
 
 ### Zum Testen
+- Gleiche Breiten und feste Dockbar (1.39): Haben alle Fenster dieselbe Breite, sitzt die Dockbar bündig unten – in DAW, Player und Startseite?
+- Player-Hänger (1.39): Bleibt der Player beim Einlesen großer Ordner und langer Dateien bedienbar? Wenn nicht: Welche Datei, wie groß?
+- Leistungs-Wächter (1.39): Optionen → Effekte → „Leistung“ – schaltet „Automatisch“ bei Ruckeln sinnvoll herunter?
 - Dockbar-Effekt (1.38): Optionen → Effekte & Anzeige → „Dockbar-Effekt“ einschalten – sieht er an der DAW-, Player- und Startseiten-Leiste gut aus, und bleibt die Bedienung flüssig?
 - Rand-Voreinstellungen (1.38): Probiere „Club“, „Aurora“ und „Still“ sowie die Bewegung „Zur Musik“ – ruckelt etwas, und wie wirkt es auf Startseite und Player?
 - Cover-Effekte (1.38): Neue Regler für Tempo, Linienstärke, Farbe und Bewegung – passen die Wertebereiche?

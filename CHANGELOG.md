@@ -2,6 +2,15 @@
 <!-- Pflege: Ganz oben einen neuen Abschnitt „## Version · Datum · Titel“ anlegen, darunter die Neuerungen als Stichpunkte.
      Der oberste Abschnitt wird (1) in die App eingebaut („Was ist neu“) und (2) bei GitHub als Release-Text veröffentlicht. -->
 
+## 1.39 · 2026-11-21 · Gleiche Breiten, feste Dockbar, ruhigerer Player
+- Besser: Alle Fenster der DAW (Kopfzeile, Spuren, Werkzeuge) haben jetzt dieselbe Breite und denselben Seitenabstand. Auch Player-Leiste und Dockbars von DAW, Player und Startseite schließen mit demselben Rand ab.
+- Besser: Die Dockbar sitzt fest am unteren Bildschirmrand, in der DAW, im Player und auf der Startseite, ohne Lücke darunter. Sie wird auch beim Scrollen nicht mehr mitgenommen.
+- Besser: Hinter Player und Startseite scrollt die DAW-Seite nicht mehr mit. Gescrollt wird nur dort, wo der Inhalt wirklich über den Bildschirm hinausgeht.
+- Besser: Auf schmalen Handys (360 px) werden in der DAW-Kopfzeile „Master WAV“ und „TAP“ nicht mehr abgeschnitten, und in der Player-Kopfzeile ist „Dateien“ wieder vollständig sichtbar.
+- Besser (Player-Hänger): Die Titelliste im Player wird beim Einlesen großer Ordner nicht mehr bei jedem Schritt komplett neu gebaut, sondern nur an den geänderten Stellen aktualisiert. Das Einlesen pausiert, solange du den Player bedienst. Ob das die Hänger auf deinem Handy ganz behebt, kann ich nicht prüfen, weil ich nur in einem Server-Browser teste.
+- Neu: Leistungs-Wächter. Läuft etwas Aufwendiges (Effekte, Cover-Leuchten) und die Anzeige ruckelt, schaltet die App die Effekte von selbst eine Stufe sparsamer und sagt es dir. Unter Optionen → Effekte & Anzeige → „Leistung“ kannst du zwischen „Automatisch“, „Volle Qualität“ und „Sparsam“ wählen.
+- Hinweis: Die gemeinsame wischbare Dockbar mit Navigation, einer „Zentrale“-Seite (Feedback, Optionen, Wechsel zwischen DAW, Player und Startseite) und der Wahl der Startansicht folgt in 1.40; erst dann entfallen die alten Knöpfe.
+
 ## 1.38 · 2026-11-20 · Effekte für Dockbars, Ränder und Cover
 - Neu: Eigener Effekt für die Dockbars (DAW, Player, Startseite). Es ist derselbe Musik-Effekt wie am Cover, aber um die ganze Leiste, und er wird getrennt vom Cover eingestellt: Optionen → Effekte & Anzeige → „Dockbar-Effekt“. Du kannst unter 14 Effekten wählen und Stärke, Bewegung, Farbe, Größe, Helligkeit, Transparenz, Tempo und Linienstärke einstellen. Mit Häkchen bestimmst du, an welchen Leisten er läuft. Standard: aus.
 - Neu: Rand-Effekte haben jetzt Voreinstellungen (Ruhig, Club, Aurora, Neon-Linie, Regenbogen, Im Takt, Lauflicht, Still), vier neue Stile (Doppelstrahl, Regenbogen, Lauflinien, Rahmen) und die Bewegung „Animiert“, „Zur Musik“ oder „Starr“. Dazu kommt ein Tempo-Regler. „Zur Musik“ ruht ohne Musik und folgt dem Bass, wenn Musik läuft.
