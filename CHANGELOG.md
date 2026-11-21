@@ -2,6 +2,12 @@
 <!-- Pflege: Ganz oben einen neuen Abschnitt „## Version · Datum · Titel“ anlegen, darunter die Neuerungen als Stichpunkte.
      Der oberste Abschnitt wird (1) in die App eingebaut („Was ist neu“) und (2) bei GitHub als Release-Text veröffentlicht. -->
 
+## 1.41 · 2026-11-21 · Dockbars einheitlich, Rand-Effekte nach Seiten
+- Besser: Die Dockbars (DAW, Player, Startseite) **rasten nach dem Wischen immer auf einer ganzen Seite** ein. Bleibt sie einmal dazwischen stehen, schnappt sie nach einem Moment von selbst auf die nächste Seite.
+- Besser: Die **DAW-Leiste ist jetzt gebaut wie die Dockbars im Player und auf der Startseite**: Punkte mittig unten (antippbar) statt Pfeile, gleiche Seitenbreite und gleiche Höhe. Die Transport-Seite hat – wie im Player – oben die Positionsleiste und unten die Tasten in derselben Reihenfolge: Loop · Zum Anfang · Play · Stopp · Klick.
+- Neu: Optionen → Effekte → **Seiten der Fenster**: Der Rand-Effekt sitzt bei Fenstern und Karten jetzt nur noch **unten** (Standard); Oben, Rechts, Links lassen sich dazuschalten. Alle vier gewählt = wie bisher. Kopfleiste und untere Leiste behalten den vollen Rand.
+- Besser: **Player-Kopfzeile** – „Player“ sitzt mittig und die Leiste folgt dem gewählten Design (Aurora, Neon, Studio, Liquid, Klassisch). „+ Dateien“ ist aus der Kopfzeile in ein eigenes Listenfenster über der Playlist gewandert (mit Titelzahl und den Aktionen Zuletzt · Ordner wählen · Liste leeren).
+
 ## 1.40 · 2026-11-21 · Eine Dockbar als Zentrale
 - Neu: **Zentrale** – die letzte Seite jeder Dockbar (DAW, Player, Startseite) mit sechs großen Tasten: Startseite · DAW · Player · Feedback · Optionen · Anleitung. Von überall kommst du so überall hin; die Taste der aktuellen Ansicht ist markiert.
 - Neu: Die Dockbar der **Startseite** ist jetzt wie die der DAW wischbar: Playbar (nur wenn etwas läuft) · Klang-Voreinstellungen (Techno, Bass …) · Steuerung der anderen Seite (DAW oder Player) · Zentrale. Läuft nichts, bleibt sie mit Klang und Zentrale da (Start auf der Zentrale).

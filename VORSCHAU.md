@@ -4,15 +4,18 @@
      Gruppen: „Kommt definitiv“ (Kommt) · „Zum Testen“ (Zum Testen) · „Ideen“ (Idee). Datei leer lassen = keine Vorschau.
      Wichtig: Nennt der Titel keine NEUERE Version als die installierte App, ignoriert die App diese Datei und zeigt den eingebauten Text. -->
 
-## Version 1.41 – in Arbeit
+## Version 1.42 – in Arbeit
 
 ### Kommt definitiv
-- Feinschliff nach deinem Test der Zentrale und der wischbaren Dockbars
+- Feinschliff nach deinem Test der neuen Dockbars, Rand-Seiten und Player-Kopfzeile
 - Gezielte Prüfung großer Audiodateien im Player, falls er bei dir weiter hängt
 - Feinschliff nach deinem Test der Android-Funktionen (Ordner-Dialog, Benachrichtigung)
 
 ### Zum Testen
-- Zentrale (1.40): Ganz nach links wischen oder die Pfeile/Punkte tippen – kommst du von DAW, Player und Startseite aus überall hin, und fehlen dir die alten Knöpfe?
+- Dockbar (1.41): Rastet sie nach jedem Wischen auf einer ganzen Seite ein – in DAW, Player und Startseite? Wenn nicht: Auf welcher Seite, und wie hast du gewischt?
+- Rand-Seiten (1.41): Optionen → Effekte → „Seiten der Fenster“ – gefällt dir „nur unten“, oder willst du lieber andere Seiten? Auch mit anderen Rand-Effekten (Lichtstrahl, Regenbogen …) ansehen.
+- Player-Kopfzeile (1.41): Passt sie zu jedem Design, und ist „+ Dateien“ im Listenfenster gut erreichbar?
+- Zentrale (1.40): Ganz nach links wischen oder die Punkte tippen – kommst du von DAW, Player und Startseite aus überall hin, und fehlen dir die alten Knöpfe?
 - Startseiten-Dockbar (1.40): Playbar, Klang und Zentrale per Wischen – passt die Reihenfolge, auch wenn gerade nichts läuft?
 - Beim Start öffnen (1.40): Optionen → Design & Aussehen – lädt die App die gewählte Ansicht (Startseite, DAW, Player)?
 - Gleiche Breiten und feste Dockbar (1.39): Haben alle Fenster dieselbe Breite, sitzt die Dockbar bündig unten – in DAW, Player und Startseite?
