@@ -1,5 +1,2 @@
 # ---------- Schritt 4: Autosave ----------
-h=once(h,"  function makePayload() {\n    if (typeof syncActiveMidiTrackFromState === 'function') syncActiveMidiTrackFromState();","  function makePayload(opts) {\n    if (typeof syncActiveMidiTrackFromState === 'function') syncActiveMidiTrackFromState();",'ap-sig')
-h=once(h,"    const buffers = {};\n    Object.entries(dawState.buffers || {}).forEach(([id, audioBuffer]) => {\n      if (!audioBuffer || !audioBuffer.numberOfChannels) return;","    const buffers = {};\n    if (opts && opts.noBuffers) return { state, buffers, savedAt: Date.now(), formatVersion: 1 };\n    Object.entries(dawState.buffers || {}).forEach(([id, audioBuffer]) => {\n      if (!audioBuffer || !audioBuffer.numberOfChannels) return;",'ap-nobuf')
-h=once(h,"  window.addEventListener('DOMContentLoaded', () => {\n    $('btn-save-project')?.addEventListener('click', saveNamedProject);","  window.__projectIO = { makePayload, restorePayload };\n  window.addEventListener('DOMContentLoaded', () => {\n    $('btn-save-project')?.addEventListener('click', saveNamedProject);",'ap-expose')
 AUTOSAVE_JS=rd('src/projekt/autosave.js')

@@ -5,10 +5,8 @@
   const D = StudioAI.dsp;
   const $ = id => document.getElementById(id);
   const say = (m, k) => { try { toast(m, k || 'info'); } catch (_) { console.log(m); } };
-  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const { esc, clamp, safe } = window.SunUtil;
   const push = () => { try { window.__dawPushUndo && window.__dawPushUndo(); } catch (_) {} };
-  const safe = f => { try { return f(); } catch (e) { console.warn(e); } };
   const refresh = () => { safe(() => audioEngine.syncAudioParams()); safe(renderVerticalMixer); safe(renderMultiTrackLanes); };
   const audioTracks = () => dawState.tracks.filter(t => t.type !== 'midi' && dawState.buffers[t.id]);
   const pct = v => Math.round(v * 100) + ' %';
@@ -38,7 +36,7 @@
     S.tempo = null; S.mix = null; S.patOrigin = null;
     const ov = document.createElement('div');
     ov.id = 'assistant-modal';
-    ov.className = 'fixed inset-0 z-[120] bg-black/80 flex items-end sm:items-center justify-center p-2 sm:p-5';
+    ov.className = 'fixed inset-0 z-[var(--z-dialog-3)] bg-black/80 flex items-end sm:items-center justify-center p-2 sm:p-5';
     const sec = (id, ico, title, sub, body) => `<details id="as-sec-${id}" class="rounded-2xl border border-slate-800 bg-slate-900/60 mb-2.5" ${section === id ? 'open' : ''}>
         <summary class="${SUM}"><span class="text-lg">${ico}</span><span class="min-w-0"><span class="block">${title}</span><span class="block text-[11px] font-normal text-slate-400">${sub}</span></span><span class="ml-auto text-slate-500 text-xs">▾</span></summary>
         <div class="px-3 pb-3 space-y-2.5">${body}</div></details>`;
@@ -317,11 +315,11 @@
     const fab = document.createElement('button');
     fab.id = 'voice-fab'; fab.type = 'button'; fab.setAttribute('aria-label', 'Sprachsteuerung (Test)'); fab.title = 'Sprachsteuerung (Test)';
     fab.textContent = '🎤'; fab.hidden = true;
-    fab.style.cssText = 'position:fixed;right:14px;bottom:calc(88px + env(safe-area-inset-bottom,0px));width:52px;height:52px;border-radius:26px;z-index:70;font-size:22px;background:rgba(15,23,42,.92);border:1px solid rgba(251,191,36,.6);box-shadow:0 6px 22px rgba(0,0,0,.5)';
+    fab.style.cssText = 'position:fixed;right:14px;bottom:calc(88px + env(safe-area-inset-bottom,0px));width:52px;height:52px;border-radius:calc(26px * var(--rk,1));z-index:var(--z-fab);font-size:22px;background:rgba(15,23,42,.92);border:1px solid rgba(251,191,36,.6);box-shadow:0 6px 22px rgba(0,0,0,.5)';
     document.body.appendChild(fab);
     const p = document.createElement('div');
     p.id = 'voice-panel'; p.hidden = true;
-    p.style.cssText = 'position:fixed;left:10px;right:10px;bottom:calc(150px + env(safe-area-inset-bottom,0px));z-index:71;max-width:440px;margin-left:auto;padding:12px;border-radius:18px;background:rgba(2,6,23,.96);border:1px solid rgba(168,85,247,.45);color:#e2e8f0;box-shadow:0 10px 40px rgba(0,0,0,.6)';
+    p.style.cssText = 'position:fixed;left:10px;right:10px;bottom:calc(150px + env(safe-area-inset-bottom,0px));z-index:var(--z-fab-panel);max-width:440px;margin-left:auto;padding:12px;border-radius:calc(18px * var(--rk,1));background:rgba(2,6,23,.96);border:1px solid rgba(168,85,247,.45);color:#e2e8f0;box-shadow:0 10px 40px rgba(0,0,0,.6)';
     p.innerHTML = `<div class="flex items-center gap-2 mb-2"><div class="text-sm font-black">🎤 Sprachsteuerung <span class="text-[10px] font-bold text-amber-300 border border-amber-400/50 rounded px-1 ml-1">TEST</span></div><button type="button" id="vp-close" class="ml-auto px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300" aria-label="Schließen">✕</button></div>
       <div class="flex gap-2"><input id="vp-in" type="text" autocomplete="off" placeholder="z. B. „Tempo 120“ oder „Spur 2 stumm“" class="flex-1 min-w-0 rounded-xl bg-slate-900 border border-slate-700 px-3 py-2.5 text-sm"><button type="button" id="vp-go" class="px-3 rounded-xl border border-amber-400/70 bg-amber-400/15 text-amber-100 text-sm font-bold">OK</button></div>
       <button type="button" id="vp-mic" class="mt-2 w-full py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-sm font-bold ${SRC ? '' : 'opacity-50'}">🎤 Sprechen</button>
@@ -351,5 +349,5 @@
   const boot = () => { injectEntryPoints(); syncVoice(); };
   if (document.readyState === 'complete') setTimeout(boot, 0); else window.addEventListener('load', () => setTimeout(boot, 0));
   /* Menü kann später gebaut werden → kurz nachprüfen */
-  let tries = 0; const iv = setInterval(() => { injectEntryPoints(); if ((($('btn-assistant') && $('btn-pattern-variation')) || ++tries > 20)) clearInterval(iv); }, 500);
+  let tries = 0; const iv = SunTick.every(500, () => { injectEntryPoints(); if ((($('btn-assistant') && $('btn-pattern-variation')) || ++tries > 20)) SunTick.stop(iv); }, { hidden: true });
 })();

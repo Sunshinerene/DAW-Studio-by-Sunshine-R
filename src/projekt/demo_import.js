@@ -146,7 +146,7 @@
           importMidiArrayBuffer(buf);
         } else if (lower.endsWith('.zip')) {
           try {
-            const zip = await JSZip.loadAsync(file);
+            const JSZip = await SunLazy.zip(), zip = await JSZip.loadAsync(file);
             const tasks = [];
             zip.forEach((relPath, entry) => {
               if (entry.dir) return;
@@ -180,7 +180,7 @@
 
       for (const item of audioItems) {
         try {
-          const decoded = await audioEngine.ctx.decodeAudioData(item.buffer.slice(0));
+          const decoded = await (window.__projectIO && window.__projectIO.decodeKeep ? window.__projectIO.decodeKeep(item.buffer, item.name) : audioEngine.ctx.decodeAudioData(item.buffer.slice(0)));
           const lower = item.name.toLowerCase();
           let slot = null;
 
@@ -192,7 +192,7 @@
 
           if (slot) {
             usedPrimary.add(slot);
-            dawState.buffers[slot] = decoded;
+            dawState.buffers[slot] = decoded; { const _t = dawState.tracks.find(t => t.id === slot); if (_t) delete _t.clips; }
           } else {
             // Create dynamic individual track row (04b, 04c, ...) right after 04 | Suno Vocals!
             extraCounter++;

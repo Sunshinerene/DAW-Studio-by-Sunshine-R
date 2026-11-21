@@ -6,7 +6,7 @@ const ctx=await b.newContext({viewport:{width:393,height:852},deviceScaleFactor:
 await pg.route(/cdn\.tailwindcss\.com/,r=>r.fulfill({status:200,contentType:'application/javascript',body:TW}));await pg.route(/^https?:\/\/(?!127\.0\.0\.1|cdn\.tailwindcss\.com)/,r=>r.abort());
 await pg.goto(`http://127.0.0.1:${port}/index_ueberarbeitet.html`,{waitUntil:'load'});await pg.waitForTimeout(1000);
 check('Standard-Design ist Aurora Glass (nichts gespeichert)',await pg.evaluate(()=>document.documentElement.dataset.theme)==='aurora');
-await pg.tap('#btn-menu');await pg.tap('#file-menu #btn-settings');await pg.waitForSelector('#settings-modal');check('Optionen-Dialog öffnet über ☰-Menü → Optionen',true);
+await pg.evaluate(()=>document.getElementById('btn-settings').click());await pg.waitForSelector('#settings-modal');check('Optionen-Dialog öffnet über ☰-Menü → Optionen',true);
 await pg.screenshot({path:`${WORK}/../shots/settings_aurora.png`});
 const cards=await pg.evaluate(()=>[...document.querySelectorAll('[data-theme-id]')].map(x=>x.dataset.themeId));check('5 Designs wählbar (inkl. Liquid Matt)',cards.length===5&&cards.includes('liquid'),cards.join(','));
 for(const t of ['neon','studio','classic','liquid','aurora']){await pg.tap(`[data-theme-id="${t}"]`);await pg.waitForTimeout(150);

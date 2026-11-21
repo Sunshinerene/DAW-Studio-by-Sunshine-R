@@ -7,8 +7,7 @@
 (function () {
   'use strict';
   const K = 'sunshine.saver', DELAY = 8000, MIN_MB = 1;
-  const say = (m, k) => { try { if (typeof toast === 'function') toast(m, k || 'info'); } catch (_) {} };
-  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const { esc, say } = window.SunUtil;
   const auto = () => { try { return localStorage.getItem(K) === '1'; } catch (_) { return false; } };
   const eng = () => (typeof audioEngine !== 'undefined' ? audioEngine : null);
   const B = () => (typeof dawState !== 'undefined' && dawState.buffers) || {};
@@ -195,9 +194,9 @@
       else if (t.matches('[data-sv-inaud]')) { const n = needed(); let k = 0; candidates().forEach(id => { if (!n.has(id) && park(id, { force: true })) k++; }); say(k ? k + ' Spur(en) entladen.' : 'Keine nicht hörbare Spur zum Entladen.', 'info'); repaint(); }
     });
   }
-  new MutationObserver(ms => { for (const m of ms) m.addedNodes.forEach(n => { if (n.nodeType !== 1) return; const ph = n.id === 'sv-sec' ? n : (n.querySelector && n.querySelector('#sv-sec')); if (ph && !ph.dataset.done) { ph.dataset.done = '1'; section(ph); } }); }).observe(document.body || document.documentElement, { childList: true, subtree: true });
+  SunDOM.mount('sv-sec', ph => section(ph));
 
-  function boot() { hook(); setInterval(() => { reconcile().catch(() => {}); }, 3000); }
+  function boot() { hook(); SunTick.every(3000, () => { reconcile().catch(() => {}); }, { hidden: true }); }
   window.Saver = { status, park, load, ensureAll, ensureAudible, reconcile, needed: () => Array.from(needed()), setAuto: on => { try { localStorage.setItem(K, on ? '1' : '0'); } catch (_) {} later(); }, auto, _wavBlob: wavBlob, _DELAY: DELAY };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 })();

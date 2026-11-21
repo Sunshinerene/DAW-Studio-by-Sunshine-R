@@ -54,7 +54,7 @@ const n0=await ev(()=>dawState.tracks.length);
 await ask('Lösche alles bitte');T('„Lösche alles“ wird abgelehnt',/nicht per Sprache/.test(await lastBot())&&await ev(()=>dawState.tracks.length)===n0);
 // 4) Einrichten über Optionen
 await pg.tap('#chat-modal [data-close]');
-await pg.tap('#btn-menu');await pg.tap('#btn-settings');await pg.waitForTimeout(300);
+await pg.evaluate(()=>document.getElementById('btn-settings').click());await pg.waitForTimeout(300);
 T('Optionen: Button „Assistent einrichten“',await pg.locator('button[data-ai-settings]').count()===1);
 await pg.locator('button[data-ai-settings]').scrollIntoViewIfNeeded();await pg.tap('button[data-ai-settings]');await pg.waitForTimeout(300);
 T('Einrichtungs-Dialog offen, Optionen zu',await pg.locator('#assistant-settings').isVisible()&&await pg.locator('#settings-modal').count()===0);

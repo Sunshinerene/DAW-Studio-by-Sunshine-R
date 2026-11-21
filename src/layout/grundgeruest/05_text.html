@@ -3,7 +3,7 @@
 <body class="min-h-screen flex flex-col bg-daw-bg text-slate-200">
 
   <!-- Non-blocking Toast Notification Stack -->
-  <div id="toast-container" class="fixed bottom-4 right-4 z-[200] flex flex-col gap-2 max-w-sm pointer-events-none"></div>
+  <div id="toast-container" class="fixed bottom-4 right-4 z-[var(--z-toast)] flex flex-col gap-2 max-w-sm pointer-events-none"></div>
 
   <!-- Hidden Universal File Input (ZIP, Audio, MIDI) -->
   <input id="universal-file-input" type="file" accept=".zip,.wav,.mp3,.ogg,.flac,.m4a,.aac,.mid,.midi,application/zip,application/x-zip-compressed,audio/*,audio/midi,audio/x-midi" multiple class="hidden" />
@@ -11,7 +11,7 @@
   <!-- =========================================================================
        BEREICH 1 (OBEN): FIXIERTE TRANSPORT-, PRESET- & DATEI-STEUERUNGSLEISTE
        ========================================================================= -->
-  <header class="sticky top-0 z-40 bg-daw-panel/95 backdrop-blur-md border-b border-daw-border px-3 py-2 shadow-2xl">
+  <header class="sticky top-0 z-[var(--z-header)] bg-daw-panel/95 backdrop-blur-md border-b border-daw-border px-3 py-2 shadow-2xl">
     <img class="brand-banner" src="assets/sunshine-r-daw-studio-logo.png" alt="Sunshine@R DAW Studio" onerror="this.remove()">
     <div class="max-w-[1800px] mx-auto flex flex-wrap items-center justify-between gap-2.5">
 
@@ -26,7 +26,7 @@
           </div>
           <div>
             <div class="flex items-center gap-1.5">
-              <span class="text-sm font-extrabold tracking-tight text-white">Sunshine@R Stem DAW Studio</span>
+              <span class="text-sm font-extrabold tracking-tight text-white">Sunshine@R DAW Studio</span>
               <span class="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">PRO</span>
             </div>
             <div id="status-subtitle" class="text-[10px] text-slate-400 truncate max-w-[170px]">Bereit – ZIP, Audio oder MIDI laden</div>
@@ -42,7 +42,7 @@
           </button>
 
           <button id="btn-stop" title="Stopp &amp; Anfang" class="p-1.5 rounded-lg bg-daw-surface hover:bg-daw-elevated text-slate-200 border border-daw-border transition">
-            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
+            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg><span>Stopp</span>
           </button>
 
           <button id="btn-loop" title="Loop-Modus (Arrangement vs. Loop-Bereich)" class="px-2 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-[11px] font-semibold transition">
@@ -145,7 +145,7 @@
     <div class="bg-daw-panel rounded-2xl border border-daw-border shadow-2xl overflow-hidden">
 
       <!-- Tab Navigation Header -->
-      <div class="flex flex-wrap items-center justify-between gap-2 px-3 py-2 bg-daw-surface border-b border-daw-border">
+      <div id="dock-tabbar" class="flex flex-wrap items-center justify-between gap-2 px-3 py-2 bg-daw-surface border-b border-daw-border">
         <div class="flex flex-wrap items-center gap-1.5">
           <button data-tab="midi" class="dock-tab-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-purple-500/25 text-purple-200 border border-purple-500/50 transition flex items-center gap-1.5">
             <span>🎹 1. MIDI-Editor &amp; Piano Roll</span>

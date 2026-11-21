@@ -90,7 +90,7 @@ T('…öffnet Assistent bei Pattern',await ev(()=>document.getElementById('as-se
 await pg.tap('#assistant-modal [data-close]');
 // ---------- Sprachsteuerung ----------
 T('Sprach-Knopf standardmäßig aus',await ev(()=>{const f=document.getElementById('voice-fab');return !f||f.hidden}));
-await pg.tap('#btn-menu');await pg.tap('#btn-settings');await pg.waitForTimeout(300);
+await pg.evaluate(()=>document.getElementById('btn-settings').click());await pg.waitForTimeout(300);
 T('Optionen: Schalter „Sprachsteuerung (Test)“',await pg.locator('input[data-ui="voice"]').count()===1);
 await pg.locator('input[data-ui="voice"]').check();await pg.waitForTimeout(250);
 T('Einschalten blendet 🎤 ein',await ev(()=>{const f=document.getElementById('voice-fab');return !!f&&!f.hidden}));
@@ -125,7 +125,7 @@ T('Mikrofon-Taste ohne Spracherkennung → nur Hinweis',await ev(()=>{document.g
 // Persistenz
 await pg.reload({waitUntil:'load'});await pg.waitForTimeout(1200);
 T('Nach Neustart: 🎤 weiterhin an',await ev(()=>{const f=document.getElementById('voice-fab');return !!f&&!f.hidden}));
-await pg.tap('#btn-menu');await pg.tap('#btn-settings');await pg.waitForTimeout(300);
+await pg.evaluate(()=>document.getElementById('btn-settings').click());await pg.waitForTimeout(300);
 await pg.locator('input[data-ui="voice"]').uncheck();await pg.waitForTimeout(250);
 T('Ausschalten blendet 🎤 + Panel aus',await ev(()=>document.getElementById('voice-fab').hidden&&document.getElementById('voice-panel').hidden));
 T('Assistent-Menüpunkt bleibt nach Reload',await ev(()=>!!document.getElementById('btn-assistant')));

@@ -7,12 +7,11 @@
 (function () {
   'use strict';
   const $ = id => document.getElementById(id);
-  const say = (m, k) => { try { if (typeof toast === 'function') toast(m, k || 'info'); } catch (_) {} };
+  const { esc, say } = window.SunUtil;
   const LS = 'sunshine.update';
-  let U = { auto: true, checked: 0, latest: null, dismissed: 0, dismissedLive: '', weekly: null }; try { Object.assign(U, JSON.parse(localStorage.getItem(LS) || '{}')); } catch (_) {}
+  let U = { auto: true, checked: 0, latest: null, dismissed: 0, dismissedLive: '', weekly: null }; SunStore.merge(U, LS);
   U.weekly = Object.assign({ on: true, last: 0, snooze: 0, pending: false, res: null }, U.weekly || {});
-  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const saveU = () => { try { localStorage.setItem(LS, JSON.stringify(U)); } catch (_) {} };
+  const saveU = () => SunStore.save(LS, U);
 
   /* ================================================================ Update */
   const B = window.SUNSHINE_BUILD || {};
@@ -124,11 +123,11 @@
 
   async function make(opts) {
     opts = opts || {}; const prog = opts.onProgress || (() => {});
-    if (typeof JSZip === 'undefined') throw new Error('Das ZIP-Modul (JSZip) ist nicht geladen.');
+    const JSZip = await SunLazy.zip().catch(() => { throw new Error('Das ZIP-Modul (JSZip) ist nicht geladen.'); });
     if (typeof indexedDB === 'undefined') throw new Error('IndexedDB ist nicht verfügbar.');
     const zip = new JSZip(), ctx = { n: 0, bytes: 0 };
     const names = (await listDbs()).filter(n => opts.all ? true : BASE.test(n));
-    const man = { format: 1, app: 'Sunshine@R Stem DAW Studio', build: BUILD, created: new Date().toISOString(), dbs: [], ls: {} };
+    const man = { format: 1, app: 'Sunshine@R DAW Studio', build: BUILD, created: new Date().toISOString(), dbs: [], ls: {} };
     let records = 0;
     for (let i = 0; i < names.length; i++) {
       const name = names[i]; prog('Datenbank ' + (i + 1) + '/' + names.length + ': ' + name);
@@ -171,7 +170,7 @@
   }
   function mkStores(db, d) { d.stores.forEach(s => { if (db.objectStoreNames.contains(s.name)) return; const os = db.createObjectStore(s.name, s.keyPath == null ? { autoIncrement: !!s.autoIncrement } : { keyPath: s.keyPath, autoIncrement: !!s.autoIncrement }); (s.indexes || []).forEach(ix => { try { os.createIndex(ix.name, ix.keyPath, { unique: !!ix.unique, multiEntry: !!ix.multiEntry }); } catch (_) {} }); }); }
   async function inspect(file) {
-    if (typeof JSZip === 'undefined') throw new Error('Das ZIP-Modul (JSZip) ist nicht geladen.');
+    const JSZip = await SunLazy.zip().catch(() => { throw new Error('Das ZIP-Modul (JSZip) ist nicht geladen.'); });
     let zip; try { zip = await JSZip.loadAsync(file); } catch (_) { throw new Error('Das ist keine gültige ZIP-Datei.'); } const mf = zip.file('manifest.json'); if (!mf) throw new Error('Das ist keine Sunshine-Sicherung (manifest.json fehlt).');
     const man = JSON.parse(await mf.async('string')); if (man.format !== 1 || !Array.isArray(man.dbs)) throw new Error('Unbekanntes Sicherungsformat.');
     return { zip, man };
@@ -308,7 +307,7 @@
       }
     });
   }
-  new MutationObserver(ms => { for (const m of ms) m.addedNodes.forEach(n => { if (n.nodeType !== 1) return; const ph = n.id === 'up-sec' ? n : (n.querySelector && n.querySelector('#up-sec')); if (ph && !ph.dataset.done) { ph.dataset.done = '1'; section(ph); } }); }).observe(document.body || document.documentElement, { childList: true, subtree: true });
+  SunDOM.mount('up-sec', ph => section(ph));
 
   function boot() {
     if (!U.weekly.last) { U.weekly.last = Date.now(); saveU(); }   // erste Sicherung frühestens in 7 Tagen

@@ -4,8 +4,7 @@
 (function () {
   'use strict';
   const $ = id => document.getElementById(id);
-  const say = (m, k) => { try { if (typeof toast === 'function') toast(m, k || 'info'); } catch (_) {} };
-  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const { esc, say } = window.SunUtil;
   const K_E = 'sunshine.errlog', K_P = 'sunshine.perf', K_A = 'sunshine.alive', MAXE = 40;
   const mbf = b => Math.round(b / 1048576);
   const dt = ts => { try { const d = new Date(ts), p = n => String(n).padStart(2, '0'); return p(d.getDate()) + '.' + p(d.getMonth() + 1) + '. ' + p(d.getHours()) + ':' + p(d.getMinutes()); } catch (_) { return ''; } };
@@ -107,7 +106,7 @@
       </div>`;
     const q = s => ph.querySelector(s);
     const paint = () => {
-      if (!ph.isConnected) { clearInterval(iv); return; }
+      if (!ph.isConnected) { SunTick.stop(iv); return; }
       const m = memory(), c = { ok: 'text-emerald-300', warn: 'text-amber-300', high: 'text-rose-300' }[m.level];
       const el = q('[data-hl-mem]'); el.className = 'text-xs font-mono ' + c; el.textContent = '≈ ' + m.mb + ' MB' + (m.deviceGB ? ' · Gerät ≈ ' + m.deviceGB + ' GB' : '');
       q('[data-hl-memtxt]').innerHTML = m.tracks ? 'Audio im Speicher: ' + m.tracks + ' Puffer, ' + m.seconds + ' s' + (m.top.length ? ' · größte: ' + m.top.slice(0, 3).map(x => esc(x.name) + ' ' + mbf(x.bytes) + ' MB').join(', ') : '') + (m.level !== 'ok' ? '<br><span class="' + c + '">' + esc(TIP) + '</span>' : '') : 'Noch kein Audio geladen.';
@@ -115,7 +114,7 @@
       q('[data-hl-start]').textContent = prevCrash ? 'Der vorige Start endete vermutlich unerwartet (' + dt(prevCrash.t) + ').' : 'Der vorige Start wurde sauber beendet.';
       const last = q('[data-hl-last]'); if (E.length) { last.classList.remove('hidden'); last.innerHTML = E.slice(-3).reverse().map(e => esc(dt(e.t) + (e.c > 1 ? ' ×' + e.c : '') + ' · ' + e.m)).join('<br>'); } else last.classList.add('hidden');
     };
-    const iv = setInterval(paint, 4000); paint();
+    const iv = SunTick.every(4000, paint); paint();
     ph.addEventListener('change', e => { if (e.target.matches('[data-hl-perf]')) { setPerf(e.target.checked); say(e.target.checked ? 'Sparmodus an.' : 'Sparmodus aus.', 'info'); } });
     ph.addEventListener('click', async e => {
       const t = e.target.closest('button'); if (!t) return;
@@ -125,8 +124,8 @@
       else if (t.matches('[data-hl-fps]')) { t.disabled = true; const r = q('[data-hl-fpsres]'); r.classList.remove('hidden'); r.textContent = 'Messe …'; const x = await fpsTest(2000); t.disabled = false; const v = x.fps >= 55 ? 'flüssig' : x.fps >= 40 ? 'in Ordnung' : 'ruckelig'; r.innerHTML = '<b>' + x.fps + ' Bilder/s</b> (' + v + '; längste Lücke ' + x.worst + ' ms)' + (x.fps < 45 && !perfOn() ? '<br>Tipp: Sparmodus einschalten.' : ''); }
     });
   }
-  new MutationObserver(ms => { for (const m of ms) m.addedNodes.forEach(n => { if (n.nodeType !== 1) return; const ph = n.id === 'hl-sec' ? n : (n.querySelector && n.querySelector('#hl-sec')); if (ph && !ph.dataset.done) { ph.dataset.done = '1'; section(ph); } }); }).observe(document.body || document.documentElement, { childList: true, subtree: true });
-  function boot() { setInterval(watch, 20000); setTimeout(watch, 4000); }
+  SunDOM.mount('hl-sec', ph => section(ph));
+  function boot() { SunTick.every(20000, watch, { hidden: true }); setTimeout(watch, 4000); }
   window.Health = { memory, report, errors: () => E.slice(), log: logMsg, clear: () => { E = []; saveE(); }, setPerf, perfOn, fpsTest, previousCrash: () => prevCrash, watch, _tip: TIP };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 })();

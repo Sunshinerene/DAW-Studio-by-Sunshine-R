@@ -11,41 +11,104 @@ html[data-theme="classic"]{--fx-rgb2:139 92 246;--fx-rgb3:16 185 129}
 .fx-rel{position:relative}
 html[data-fx="on"]:not([data-fx-edge="off"]) .fx-edge::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:3}
 /* Glühen: weicher, atmender Innenschein */
-html[data-fx="on"][data-fx-edge="glow"] .fx-edge::after{box-shadow:inset 0 0 0 1px rgb(var(--fx-rgb)/.85),inset 0 0 28px rgb(var(--fx-rgb)/.55),inset 0 0 70px rgb(var(--fx-rgb2)/.22);opacity:calc(.28 + .5*var(--fx-k));animation:fx-breathe 4.4s ease-in-out infinite}
-@keyframes fx-breathe{0%,100%{opacity:calc(.18 + .38*var(--fx-k))}50%{opacity:calc(.4 + .6*var(--fx-k))}}
+html[data-fx="on"][data-fx-edge="glow"] .fx-edge::after{box-shadow:inset 0 0 0 1px rgb(var(--fx-rgb)/.85),inset 0 0 28px rgb(var(--fx-rgb)/.55),inset 0 0 70px rgb(var(--fx-rgb2)/.22);opacity:calc((.28 + .5*var(--fx-k))*var(--fx-lv));animation:fx-breathe calc(4.4s / var(--fx-s,1)) ease-in-out infinite}
+@keyframes fx-breathe{0%,100%{opacity:calc((.18 + .38*var(--fx-k))*var(--fx-lv))}50%{opacity:calc((.4 + .6*var(--fx-k))*var(--fx-lv))}}
 /* Lichtstrahl: ein Lichtpunkt läuft um den Rand */
-html[data-fx="on"][data-fx-edge="beam"] .fx-edge::after{padding:1.5px;background:conic-gradient(from var(--fx-angle),transparent 0 58%,rgb(var(--fx-rgb2)/.9) 76%,rgb(var(--fx-rgb)) 90%,transparent 100%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude;opacity:calc(.4 + .6*var(--fx-k));animation:fx-spin 7s linear infinite}
+html[data-fx="on"][data-fx-edge="beam"] .fx-edge::after{padding:1.5px;background:conic-gradient(from var(--fx-angle),transparent 0 58%,rgb(var(--fx-rgb2)/.9) 76%,rgb(var(--fx-rgb)) 90%,transparent 100%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude;opacity:calc((.4 + .6*var(--fx-k))*var(--fx-lv));animation:fx-spin calc(7s / var(--fx-s,1)) steps(168) infinite}
 @keyframes fx-spin{to{--fx-angle:360deg}}
 /* Linie: schmale Lichtlinie wandert am oberen Rand (bei Kopfleiste unten) */
-html[data-fx="on"][data-fx-edge="line"] .fx-edge::after{inset:0 0 auto 0;height:2px;border-radius:0;background:linear-gradient(90deg,transparent,rgb(var(--fx-rgb)),rgb(var(--fx-rgb2)),transparent) -60% 0/55% 100% no-repeat;opacity:calc(.45 + .55*var(--fx-k));animation:fx-sweep 3.6s linear infinite}
+html[data-fx="on"][data-fx-edge="line"] .fx-edge::after{inset:0 0 auto 0;height:2px;border-radius:0;background:linear-gradient(90deg,transparent,rgb(var(--fx-rgb)),rgb(var(--fx-rgb2)),transparent) -60% 0/55% 100% no-repeat;opacity:calc((.45 + .55*var(--fx-k))*var(--fx-lv));animation:fx-sweep calc(3.6s / var(--fx-s,1)) steps(86) infinite}
 html[data-fx="on"][data-fx-edge="line"] header.fx-edge::after,html[data-fx="on"][data-fx-edge="line"] #bottom-nav.fx-edge::after{top:auto;bottom:0}
 @keyframes fx-sweep{to{background-position:165% 0}}
 
 /* --- Fenster (Dialoge, scrollend): Schein über box-shadow --- */
-html[data-fx="on"]:not([data-fx-edge="off"]) .fx-win{animation:fx-win 4.4s ease-in-out infinite}
-html[data-fx="on"][data-fx-edge="beam"] .fx-win{animation-name:fx-win-beam;animation-duration:7s}
+html[data-fx="on"]:not([data-fx-edge="off"]) .fx-win{animation:fx-win calc(4.4s / var(--fx-s,1)) ease-in-out infinite}
+html[data-fx="on"][data-fx-edge="beam"] .fx-win{animation-name:fx-win-beam;animation-duration:calc(7s / var(--fx-s,1))}
 html[data-fx="on"][data-fx-edge="line"] .fx-win{box-shadow:inset 0 2px 0 rgb(var(--fx-rgb)/calc(.5 + .5*var(--fx-k))),0 24px 60px rgba(0,0,0,.55)!important;animation:none}
 @keyframes fx-win{0%,100%{box-shadow:0 0 0 1px rgb(var(--fx-rgb)/.35),0 0 18px rgb(var(--fx-rgb)/.18),0 24px 60px rgba(0,0,0,.55)}50%{box-shadow:0 0 0 1px rgb(var(--fx-rgb)/.8),0 0 40px rgb(var(--fx-rgb)/.5),0 24px 60px rgba(0,0,0,.55)}}
 @keyframes fx-win-beam{0%,100%{box-shadow:0 0 0 1px rgb(var(--fx-rgb)/.7),0 0 34px rgb(var(--fx-rgb)/.45),0 24px 60px rgba(0,0,0,.55)}50%{box-shadow:0 0 0 1px rgb(var(--fx-rgb2)/.7),0 0 34px rgb(var(--fx-rgb2)/.45),0 24px 60px rgba(0,0,0,.55)}}
 
 /* --- Flächen-Effekte: nur große Bereiche (Kopfleiste, Spuren, Editor-Fenster, Navigation) – kein Overlay über der ganzen App --- */
-html{--fx-m:1}
+html{--fx-m:1;--fx-s:1;--fx-lv:1;--fx-lvl:0}
+html[data-fx-mode="music"]{--fx-lv:calc(.3 + .7*var(--fx-lvl))}
 html[data-fx-live="1"]{--fx-m:.55}
-html[data-fx="on"]:not([data-fx-full="off"]) .fx-edge::before{content:"";position:absolute;left:0;right:0;top:0;height:min(100%,var(--fx-h,190px));border-radius:inherit;pointer-events:none;z-index:2;opacity:calc(.22 + .6*var(--fx-k));-webkit-mask-image:linear-gradient(#000 45%,transparent);mask-image:linear-gradient(#000 45%,transparent)}
-html[data-fx="on"] header.fx-edge,html[data-fx="on"] #bottom-nav.fx-edge{--fx-h:100%}
+html[data-fx="on"]:not([data-fx-full="off"]) .fx-edge::before{content:"";position:absolute;left:0;right:0;top:0;height:min(100%,var(--fx-h,190px));border-radius:inherit;pointer-events:none;z-index:2;opacity:calc((.22 + .6*var(--fx-k))*var(--fx-lv));-webkit-mask-image:linear-gradient(#000 45%,transparent);mask-image:linear-gradient(#000 45%,transparent)}
+html[data-fx="on"] header.fx-edge,html[data-fx="on"] #bottom-nav.fx-edge,html[data-fx="on"] #hm-dock.fx-edge,html[data-fx="on"] #pl-dock.fx-edge{--fx-h:100%}
 /* Aurora: weiche Farbwolken driften quer durch die Fläche */
-html[data-fx="on"][data-fx-full="aurora"] .fx-edge::before{background:radial-gradient(60% 130% at 30% 0,rgb(var(--fx-rgb)/.75),transparent 70%),radial-gradient(55% 130% at 70% 0,rgb(var(--fx-rgb2)/.7),transparent 70%),radial-gradient(50% 120% at 50% 0,rgb(var(--fx-rgb3)/.55),transparent 70%);background-size:220% 100%,180% 100%,260% 100%;background-repeat:no-repeat;animation:fx-drift calc(20s*var(--fx-m)) ease-in-out infinite alternate}
+html[data-fx="on"][data-fx-full="aurora"] .fx-edge::before{background:radial-gradient(60% 130% at 30% 0,rgb(var(--fx-rgb)/.75),transparent 70%),radial-gradient(55% 130% at 70% 0,rgb(var(--fx-rgb2)/.7),transparent 70%),radial-gradient(50% 120% at 50% 0,rgb(var(--fx-rgb3)/.55),transparent 70%);background-size:220% 100%,180% 100%,260% 100%;background-repeat:no-repeat;animation:fx-drift calc(20s*var(--fx-m) / var(--fx-s,1)) steps(240) infinite alternate}
 @keyframes fx-drift{from{background-position:0% 0,100% 0,50% 0}to{background-position:100% 0,0% 0,0% 0}}
 /* Equalizer: schmale Lichtbalken hängen von der Oberkante und wippen */
-html[data-fx="on"][data-fx-full="eq"] .fx-edge::before{--fx-h:100px;height:min(100%,100px);opacity:calc(.1 + .36*var(--fx-k));background:linear-gradient(90deg,rgb(var(--fx-rgb)/.9) 0 30%,transparent 30%) 0 0/14px 30% repeat-x,linear-gradient(90deg,rgb(var(--fx-rgb2)/.85) 0 22%,transparent 22%) 5px 0/21px 55% repeat-x,linear-gradient(90deg,rgb(var(--fx-rgb3)/.8) 0 18%,transparent 18%) 9px 0/29px 40% repeat-x;animation:fx-eq calc(2.6s*var(--fx-m)) ease-in-out infinite}
-html[data-fx="on"][data-fx-full="eq"] header.fx-edge::before,html[data-fx="on"][data-fx-full="eq"] #bottom-nav.fx-edge::before{--fx-h:80px;height:80px}
+html[data-fx="on"][data-fx-full="eq"] .fx-edge::before{--fx-h:100px;height:min(100%,100px);opacity:calc((.1 + .36*var(--fx-k))*var(--fx-lv));background:linear-gradient(90deg,rgb(var(--fx-rgb)/.9) 0 30%,transparent 30%) 0 0/14px 30% repeat-x,linear-gradient(90deg,rgb(var(--fx-rgb2)/.85) 0 22%,transparent 22%) 5px 0/21px 55% repeat-x,linear-gradient(90deg,rgb(var(--fx-rgb3)/.8) 0 18%,transparent 18%) 9px 0/29px 40% repeat-x;animation:fx-eq calc(2.6s*var(--fx-m) / var(--fx-s,1)) steps(12) infinite}
+html[data-fx="on"][data-fx-full="eq"] header.fx-edge::before,html[data-fx="on"][data-fx-full="eq"] #bottom-nav.fx-edge::before,html[data-fx="on"][data-fx-full="eq"] #hm-dock.fx-edge::before,html[data-fx="on"][data-fx-full="eq"] #pl-dock.fx-edge::before{--fx-h:80px;height:80px}
 @keyframes fx-eq{0%,100%{background-size:14px 22%,21px 62%,29px 36%}25%{background-size:14px 72%,21px 26%,29px 66%}50%{background-size:14px 40%,21px 82%,29px 22%}75%{background-size:14px 86%,21px 36%,29px 56%}}
 /* Funken: kleine Lichtpunkte steigen auf */
-html[data-fx="on"][data-fx-full="sparks"] .fx-edge::before{background:radial-gradient(circle,rgb(var(--fx-rgb)) 0 1.3px,transparent 2.4px) 0 0/46px 70px,radial-gradient(circle,rgb(var(--fx-rgb2)) 0 1px,transparent 2.2px) 17px 31px/61px 90px,radial-gradient(circle,rgb(var(--fx-rgb3)) 0 1.5px,transparent 2.6px) 9px 12px/83px 110px;animation:fx-rise calc(9s*var(--fx-m)) linear infinite}
+html[data-fx="on"][data-fx-full="sparks"] .fx-edge::before{background:radial-gradient(circle,rgb(var(--fx-rgb)) 0 1.3px,transparent 2.4px) 0 0/46px 70px,radial-gradient(circle,rgb(var(--fx-rgb2)) 0 1px,transparent 2.2px) 17px 31px/61px 90px,radial-gradient(circle,rgb(var(--fx-rgb3)) 0 1.5px,transparent 2.6px) 9px 12px/83px 110px;animation:fx-rise calc(9s*var(--fx-m) / var(--fx-s,1)) steps(216) infinite}
 @keyframes fx-rise{from{background-position:0 0,17px 31px,9px 12px}to{background-position:0 -70px,17px -59px,9px -98px}}
 /* Wellen: ein weicher Wellensaum läuft über die Oberkante */
-html[data-fx="on"][data-fx-full="waves"] .fx-edge::before{--fx-h:46px;height:46px;opacity:calc(.14 + .45*var(--fx-k));background:linear-gradient(90deg,rgb(var(--fx-rgb)),rgb(var(--fx-rgb2)),rgb(var(--fx-rgb3)));-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='46'%3E%3Cpath d='M0 20Q45 2 90 20T180 20V0H0Z' fill='%23000'/%3E%3C/svg%3E") 0 0/180px 46px repeat-x;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='46'%3E%3Cpath d='M0 20Q45 2 90 20T180 20V0H0Z' fill='%23000'/%3E%3C/svg%3E") 0 0/180px 46px repeat-x;animation:fx-wave calc(7s*var(--fx-m)) linear infinite}
+html[data-fx="on"][data-fx-full="waves"] .fx-edge::before{--fx-h:46px;height:46px;opacity:calc((.14 + .45*var(--fx-k))*var(--fx-lv));background:linear-gradient(90deg,rgb(var(--fx-rgb)),rgb(var(--fx-rgb2)),rgb(var(--fx-rgb3)));-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='46'%3E%3Cpath d='M0 20Q45 2 90 20T180 20V0H0Z' fill='%23000'/%3E%3C/svg%3E") 0 0/180px 46px repeat-x;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='46'%3E%3Cpath d='M0 20Q45 2 90 20T180 20V0H0Z' fill='%23000'/%3E%3C/svg%3E") 0 0/180px 46px repeat-x;animation:fx-wave calc(7s*var(--fx-m) / var(--fx-s,1)) steps(168) infinite}
 @keyframes fx-wave{to{-webkit-mask-position:180px 0;mask-position:180px 0}}
-html[data-fx="on"][data-fx-full="waves"] header.fx-edge::before,html[data-fx="on"][data-fx-full="waves"] #bottom-nav.fx-edge::before{--fx-h:46px}
+html[data-fx="on"][data-fx-full="waves"] header.fx-edge::before,html[data-fx="on"][data-fx-full="waves"] #bottom-nav.fx-edge::before,html[data-fx="on"][data-fx-full="waves"] #hm-dock.fx-edge::before,html[data-fx="on"][data-fx-full="waves"] #pl-dock.fx-edge::before{--fx-h:46px}
+/* --- Weitere Rand-Stile: Doppelstrahl · Regenbogen · Lauflinien · Rahmen (Ring über ::after, gleiche Technik wie der Lichtstrahl) --- */
+html[data-fx="on"][data-fx-edge="dual"] .fx-edge::after{padding:1.5px;background:conic-gradient(from var(--fx-angle),transparent 0 18%,rgb(var(--fx-rgb2)/.9) 30%,rgb(var(--fx-rgb)) 38%,transparent 48%,transparent 68%,rgb(var(--fx-rgb2)/.9) 80%,rgb(var(--fx-rgb)) 88%,transparent 98%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude;opacity:calc((.4 + .6*var(--fx-k))*var(--fx-lv));animation:fx-spin calc(8s / var(--fx-s,1)) steps(192) infinite}
+html[data-fx="on"][data-fx-edge="rainbow"] .fx-edge::after{padding:1.5px;background:conic-gradient(from var(--fx-angle),rgb(var(--fx-rgb)),rgb(var(--fx-rgb2)),rgb(var(--fx-rgb3)),rgb(var(--fx-rgb)));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude;opacity:calc((.45 + .55*var(--fx-k))*var(--fx-lv));animation:fx-spin calc(10s / var(--fx-s,1)) steps(240) infinite}
+html[data-fx="on"][data-fx-edge="dash"] .fx-edge::after{padding:2px;background:repeating-conic-gradient(from var(--fx-angle),rgb(var(--fx-rgb)) 0 5deg,transparent 5deg 14deg);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude;opacity:calc((.4 + .6*var(--fx-k))*var(--fx-lv));animation:fx-spin calc(14s / var(--fx-s,1)) steps(336) infinite}
+html[data-fx="on"][data-fx-edge="frame"] .fx-edge::after{padding:1.5px;background:linear-gradient(135deg,rgb(var(--fx-rgb)),rgb(var(--fx-rgb2)),rgb(var(--fx-rgb3)));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude;opacity:calc((.4 + .55*var(--fx-k))*var(--fx-lv));animation:fx-breathe calc(5.5s / var(--fx-s,1)) ease-in-out infinite}
+html[data-fx="on"]:is([data-fx-edge="dual"],[data-fx-edge="rainbow"],[data-fx-edge="dash"],[data-fx-edge="frame"]) .fx-win{animation-name:fx-win-beam;animation-duration:calc(7s / var(--fx-s,1))}
+
+/* --- Bewegung: Animiert (Standard) · Zur Musik · Starr --- */
+html[data-fx-mode="music"]:not([data-fx-live="1"]) .fx-edge::before,html[data-fx-mode="music"]:not([data-fx-live="1"]) .fx-edge::after,html[data-fx-mode="music"]:not([data-fx-live="1"]) .fx-win{animation-play-state:paused}
+html[data-fx-mode="static"] .fx-edge::before,html[data-fx-mode="static"] .fx-edge::after{animation:none!important}
+html[data-fx-mode="static"][data-fx="on"]:not([data-fx-edge="off"]) .fx-win{animation:none;box-shadow:0 0 0 1px rgb(var(--fx-rgb)/.6),0 0 26px rgb(var(--fx-rgb)/.3),0 24px 60px rgba(0,0,0,.55)}
+html[data-fx-mode="static"][data-fx-edge="glow"] .fx-edge::after{opacity:calc(.3 + .5*var(--fx-k))}
+html[data-fx-mode="static"][data-fx-edge="frame"] .fx-edge::after{opacity:calc(.45 + .5*var(--fx-k))}
+html[data-fx-mode="static"][data-fx-edge="line"] .fx-edge::after{background-position:50% 0}
+
+/* --- Nur die sichtbare Ansicht animiert: Startseite · Player · DAW --- */
+html[data-fx-view="home"] .fx-edge:not(.fx-h)::before,html[data-fx-view="home"] .fx-edge:not(.fx-h)::after,
+html[data-fx-view="player"] .fx-edge:not(.fx-p)::before,html[data-fx-view="player"] .fx-edge:not(.fx-p)::after,
+html[data-fx-view="daw"] .fx-edge:is(.fx-h,.fx-p)::before,html[data-fx-view="daw"] .fx-edge:is(.fx-h,.fx-p)::after{animation-play-state:paused}
+/* --- Wo sichtbar (Optionen): einzelne Ansichten abschalten --- */
+html[data-fx-no-daw="1"] .fx-edge:not(.fx-h):not(.fx-p)::before,html[data-fx-no-daw="1"] .fx-edge:not(.fx-h):not(.fx-p)::after,
+html[data-fx-no-home="1"] .fx-h::before,html[data-fx-no-home="1"] .fx-h::after,
+html[data-fx-no-player="1"] .fx-p::before,html[data-fx-no-player="1"] .fx-p::after{display:none!important}
+/* --- Hat die Dockbar ihren eigenen Effekt (Optionen → Dockbar-Effekt), ersetzt der den Rand-Effekt --- */
+html[data-dockfx="on"] #bottom-nav.fx-edge::before,html[data-dockfx="on"] #bottom-nav.fx-edge::after{display:none!important}
+/* --- Leistungsstufen (SunPerf): 1 = Flächen-Effekte stehen still, 2 = alle Rand-Animationen stehen still --- */
+html[data-perf="1"] .fx-edge::before{animation-play-state:paused}
+html[data-perf="2"] .fx-edge::before,html[data-perf="2"] .fx-edge::after,html[data-perf="2"] .fx-win{animation-play-state:paused}
 @media (prefers-reduced-motion:reduce){.fx-edge::before,.fx-edge::after,.fx-win{animation:none!important}}
-html[data-fx-pause="1"] .fx-edge::before,html[data-fx-pause="1"] .fx-edge::after{animation-play-state:paused}
+html[data-fx-pause="1"] .fx-edge::before,html[data-fx-pause="1"] .fx-edge::after,html[data-fx-pause="1"] .fx-win{animation-play-state:paused}
+
+/* ===== 1.41: Seiten der Fenster – Rand-Effekt nur an gewählten Seiten (Standard: unten) =====
+   Gilt für Bereiche, Karten, Dialoge und (ab 1.42) auch für die Leisten (Kopf, Navigation, Player-Kopfzeile).
+   Fehlt data-fx-sides (alle vier Seiten gewählt), bleibt das bisherige Aussehen unverändert. */
+html{--fxs-t:inset 0 0 0 0 transparent;--fxs-r:inset 0 0 0 0 transparent;--fxs-b:inset 0 0 0 0 transparent;--fxs-l:inset 0 0 0 0 transparent;
+  --fxw-t0:0 0 0 0 transparent;--fxw-r0:0 0 0 0 transparent;--fxw-b0:0 0 0 0 transparent;--fxw-l0:0 0 0 0 transparent;
+  --fxw-t1:0 0 0 0 transparent;--fxw-r1:0 0 0 0 transparent;--fxw-b1:0 0 0 0 transparent;--fxw-l1:0 0 0 0 transparent}
+/* Glühen: je Seite eine feine Linie plus weicher Schein nach innen */
+html[data-fx-sides~="t"]{--fxs-t:inset 0 1px 0 0 rgb(var(--fx-rgb)/.85),inset 0 32px 24px -14px rgb(var(--fx-rgb)/.55),inset 0 64px 40px -30px rgb(var(--fx-rgb2)/.22)}
+html[data-fx-sides~="r"]{--fxs-r:inset -1px 0 0 0 rgb(var(--fx-rgb)/.85),inset -32px 0 24px -14px rgb(var(--fx-rgb)/.55),inset -64px 0 40px -30px rgb(var(--fx-rgb2)/.22)}
+html[data-fx-sides~="b"]{--fxs-b:inset 0 -1px 0 0 rgb(var(--fx-rgb)/.85),inset 0 -32px 24px -14px rgb(var(--fx-rgb)/.55),inset 0 -64px 40px -30px rgb(var(--fx-rgb2)/.22)}
+html[data-fx-sides~="l"]{--fxs-l:inset 1px 0 0 0 rgb(var(--fx-rgb)/.85),inset 32px 0 24px -14px rgb(var(--fx-rgb)/.55),inset 64px 0 40px -30px rgb(var(--fx-rgb2)/.22)}
+html[data-fx-sides][data-fx="on"][data-fx-edge="glow"] .fx-edge::after{box-shadow:var(--fxs-t),var(--fxs-r),var(--fxs-b),var(--fxs-l)}
+/* Ring-Stile (Lichtstrahl · Doppelstrahl · Regenbogen · Lauflinien · Rahmen): nur schmale Bänder an den gewählten Seiten sichtbar */
+html[data-fx-sides][data-fx="on"]:is([data-fx-edge="beam"],[data-fx-edge="dual"],[data-fx-edge="rainbow"],[data-fx-edge="dash"],[data-fx-edge="frame"]) .fx-edge::after{-webkit-clip-path:var(--fxs-clip);clip-path:var(--fxs-clip)}
+/* Linie: oben, wenn „Oben“ gewählt ist, sonst unten */
+html[data-fx-sides]:not([data-fx-sides~="t"])[data-fx="on"][data-fx-edge="line"] .fx-edge::after{top:auto;bottom:0}
+/* Dialoge (.fx-win): Schein nach außen nur an den gewählten Seiten */
+html[data-fx-sides~="t"]{--fxw-t0:0 -1px 0 0 rgb(var(--fx-rgb)/.35),0 -26px 22px -12px rgb(var(--fx-rgb)/.18);--fxw-t1:0 -1px 0 0 rgb(var(--fx-rgb)/.8),0 -34px 34px -14px rgb(var(--fx-rgb)/.5)}
+html[data-fx-sides~="r"]{--fxw-r0:1px 0 0 0 rgb(var(--fx-rgb)/.35),26px 0 22px -12px rgb(var(--fx-rgb)/.18);--fxw-r1:1px 0 0 0 rgb(var(--fx-rgb)/.8),34px 0 34px -14px rgb(var(--fx-rgb)/.5)}
+html[data-fx-sides~="b"]{--fxw-b0:0 1px 0 0 rgb(var(--fx-rgb)/.35),0 26px 22px -12px rgb(var(--fx-rgb)/.18);--fxw-b1:0 1px 0 0 rgb(var(--fx-rgb)/.8),0 34px 34px -14px rgb(var(--fx-rgb)/.5)}
+html[data-fx-sides~="l"]{--fxw-l0:-1px 0 0 0 rgb(var(--fx-rgb)/.35),-26px 0 22px -12px rgb(var(--fx-rgb)/.18);--fxw-l1:-1px 0 0 0 rgb(var(--fx-rgb)/.8),-34px 0 34px -14px rgb(var(--fx-rgb)/.5)}
+@keyframes fx-win-s{0%,100%{box-shadow:var(--fxw-t0),var(--fxw-r0),var(--fxw-b0),var(--fxw-l0),0 24px 60px rgba(0,0,0,.55)}50%{box-shadow:var(--fxw-t1),var(--fxw-r1),var(--fxw-b1),var(--fxw-l1),0 24px 60px rgba(0,0,0,.55)}}
+html[data-fx-sides][data-fx="on"]:not([data-fx-edge="off"]):not([data-fx-edge="line"]) .fx-win{animation-name:fx-win-s}
+html[data-fx-sides][data-fx-mode="static"][data-fx="on"]:not([data-fx-edge="off"]):not([data-fx-edge="line"]) .fx-win{animation:none;box-shadow:var(--fxw-t1),var(--fxw-r1),var(--fxw-b1),var(--fxw-l1),0 24px 60px rgba(0,0,0,.55)}
+html[data-fx-sides]:not([data-fx-sides~="t"])[data-fx="on"][data-fx-edge="line"] .fx-win{box-shadow:inset 0 -2px 0 rgb(var(--fx-rgb)/calc(.5 + .5*var(--fx-k))),0 24px 60px rgba(0,0,0,.55)!important}
+
+/* ===== 1.42: Seiten gelten wirklich überall ===== */
+/* Linie: bei gewähltem „Oben“ auch an Kopfleiste und Navigation oben (die Leisten-Regel setzt sonst unten) */
+html[data-fx-sides~="t"][data-fx="on"][data-fx-edge="line"] .fx-edge::after{top:0!important;bottom:auto!important}
+/* Das große Werkzeug-Fenster füllt den Bildschirm – dort nur der Rand, keine Flächen-Effekte */
+#bw-root.fx-edge::before{display:none!important}
+/* Hat eine Dockbar den eigenen Dockbar-Effekt, ersetzt der den Rand-Effekt (auch Player und Startseite) */
+html[data-dockfx="on"] :is(#pl-dock,#hm-dock).fx-edge::before,html[data-dockfx="on"] :is(#pl-dock,#hm-dock).fx-edge::after{display:none!important}

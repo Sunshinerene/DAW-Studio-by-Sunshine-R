@@ -226,7 +226,7 @@
       const track=dawState.tracks.find(t=>t.id===trackId); if(!track) return;
       if(!Array.isArray(track.fx)) track.fx=[];
       document.getElementById('track-fx-modal')?.remove();
-      const overlay=document.createElement('div'); overlay.id='track-fx-modal'; overlay.className='fixed inset-0 z-[100] bg-black/80 flex items-end sm:items-center justify-center p-2 sm:p-5';
+      const overlay=document.createElement('div'); overlay.id='track-fx-modal'; overlay.className='fixed inset-0 z-[var(--z-dialog)] bg-black/80 flex items-end sm:items-center justify-center p-2 sm:p-5';
       const options=suggestedFxForTrack(track);
       const cards=track.fx.map((fx,i)=>{
         const meta=FX_CATALOG[fx.type]; if(!meta) return '';

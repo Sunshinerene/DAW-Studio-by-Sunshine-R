@@ -3,18 +3,27 @@
      * REAL-TIME ANIMATION LOOP (PLAYHEAD, CLOCK, METERS, FFT SPECTRUM)
      * ============================================================================
      */
+    /* Leerlauf-Sparen: Solange nichts spielt, nicht aufnimmt und der Mixer nicht offen ist, gibt es nichts zu zeichnen.
+       Dann ruht die Zeichenschleife; der gemeinsame Takt (SunTick) schaut alle 250 ms nach, jede Eingabe weckt sie sofort. */
+    let uiIdle = false;
+    const uiBuf = new Uint8Array(128);
+    const uiBusy = () => dawState.isPlaying || dawState.isRecordingMic || dawState.activeTab === 'mixer';
+    const uiWake = () => { if (uiIdle) { uiIdle = false; requestAnimationFrame(uiAnimationTick); } };
+    function uiNext() { if (uiBusy()) requestAnimationFrame(uiAnimationTick); else uiIdle = true; }
+    ['pointerdown', 'keydown', 'touchstart'].forEach(ev => document.addEventListener(ev, uiWake, true));
+    SunTick.every(250, () => { if (uiIdle && uiBusy()) uiWake(); });
     function uiAnimationTick() {
       if (dawState.isPlaying) {
         updateClockLCD();
         renderAllTrackCanvases();
-        if (dawState.activeTab === 'midi') drawPianoRoll();
+        if (dawState.activeTab === 'midi' || (window.DockWin && DockWin.isOpen('midi'))) drawPianoRoll();
       }
 
       if (audioEngine.ctx) {
-        const buf = new Uint8Array(128);
+        const buf = uiBuf;
 
         // Update Vertical Mixer Meters
-        if (dawState.activeTab === 'mixer') {
+        if (dawState.activeTab === 'mixer' || (window.DockWin && DockWin.isOpen('mixer'))) {
           dawState.tracks.forEach(tr => {
             const node = audioEngine.channelNodes[tr.id];
             const el = document.getElementById(`vmix-meter-${tr.id}`);
@@ -69,7 +78,7 @@
         }
       }
 
-      requestAnimationFrame(uiAnimationTick);
+      uiNext();
     }
 
     function drawSpectrumAnalyzer(analyser) {

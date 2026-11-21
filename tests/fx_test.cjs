@@ -26,11 +26,11 @@ const o=await bef('header.sticky');T('Fläche „Aus“: kein ::before (Rand ble
 for(const e of ['beam','line']){await ev(e=>FX.set({edge:e},false),e);await pg.waitForTimeout(100);const a=await aft('#bottom-nav');T('Rand „'+e+'“ aktiv',e==='beam'?a.anim==='fx-spin':a.anim==='fx-sweep',JSON.stringify(a));}
 await ev(()=>FX.set({edge:'off'},false));T('Rand „Aus“: kein ::after',['none','normal'].includes((await aft('header.sticky')).content));
 // ---- KEIN seitlicher Überstand / Versatz – alle 16 Kombinationen, mehrfach über die Animation gemessen
-const bad=[];
+const bad2=[];
 for(const e of ['off','glow','beam','line'])for(const f of ['off','aurora','eq','sparks','waves']){await ev(([e,f])=>FX.set({on:true,edge:e,full:f,k:100},false),[e,f]);
  for(let i=0;i<4;i++){await pg.waitForTimeout(220);const m=await ev(()=>({sx:scrollX,sw:document.documentElement.scrollWidth,iw:innerWidth,l:document.querySelector('header.sticky').getBoundingClientRect().left,r:innerWidth-document.querySelector('header.sticky').getBoundingClientRect().right,bl:document.body.getBoundingClientRect().left}));
-  if(m.sx!==0||m.sw>m.iw||Math.abs(m.l-m.r)>1.5||m.bl!==0)bad.push([e,f,JSON.stringify(m)]);}}
-T('Kein Überstand, kein Versatz, Kopfleiste mittig – 20 Kombinationen × 4 Messungen (Hochformat)',bad.length===0,bad.slice(0,3).join(' || '));
+  if(m.sx!==0||m.sw>m.iw||Math.abs(m.l-m.r)>1.5||m.bl!==0)bad2.push([e,f,JSON.stringify(m)]);}}
+T('Kein Überstand, kein Versatz, Kopfleiste mittig – 20 Kombinationen × 4 Messungen (Hochformat)',bad2.length===0,bad2.slice(0,3).join(' || '));
 // ---- Musik: lebendiger
 await ev(()=>FX.set({on:true,edge:'glow',full:'aurora',react:true},false));
 await ev(()=>{dawState.isPlaying=true});await pg.waitForTimeout(900);T('Beim Abspielen: data-fx-live=1 und schnellere Animation',await ev(()=>document.documentElement.dataset.fxLive==='1'&&parseFloat(getComputedStyle(document.querySelector('#drop-zone-wrapper > .bg-daw-panel'),'::before').animationDuration)<12));
@@ -39,7 +39,7 @@ await ev(()=>{dawState.isPlaying=false;FX.set({react:true},false)});
 await ev(()=>FX.set({on:false},false));await pg.waitForTimeout(100);T('Hauptschalter aus: alles weg',await ev(()=>['header.sticky','#drop-zone-wrapper > .bg-daw-panel','#bottom-nav'].every(s=>{const e=document.querySelector(s);return ['none','normal'].includes(getComputedStyle(e,'::before').content)&&['none','normal'].includes(getComputedStyle(e,'::after').content)})));
 // ---- Optionen
 await ev(()=>document.getElementById('btn-menu').click());await pg.waitForTimeout(200);await ev(()=>document.getElementById('btn-settings').click());await pg.waitForTimeout(500);
-T('Optionen: Abschnitt „Effekte“ – Schalter AUS, 4 Rand- und 5 Flächen-Stile, Stärke, Musik-Schalter',await ev(()=>{const s=document.getElementById('fx-sec');return !!s&&!s.querySelector('[data-fx-on]').checked&&s.querySelectorAll('#fx-edge-row button').length===4&&s.querySelectorAll('#fx-full-row button').length===5&&!!s.querySelector('[data-fx-k]')&&!!s.querySelector('[data-fx-react]')&&/Flächen-Effekte/.test(s.textContent)&&!/Vollflächig/.test(s.textContent)}));
+T('Optionen: Abschnitt „Effekte“ – Schalter AUS, Voreinstellungen, 8 Rand- und 5 Flächen-Stile, 3 Bewegungsarten, Stärke, Tempo, Musik-Schalter',await ev(()=>{const s=document.getElementById('fx-sec');return !!s&&!s.querySelector('[data-fx-on]').checked&&s.querySelectorAll('#fx-edge-row button').length===8&&s.querySelectorAll('#fx-preset-row button').length===8&&s.querySelectorAll('#fx-mode-row button').length===3&&!!s.querySelector('[data-fx-s]')&&s.querySelectorAll('#fx-full-row button').length===5&&!!s.querySelector('[data-fx-k]')&&!!s.querySelector('[data-fx-react]')&&/Flächen-Effekte/.test(s.textContent)&&!/Vollflächig/.test(s.textContent)}));
 await ev(()=>document.getElementById('fx-sec').scrollIntoView());await pg.screenshot({path:path.join(SHOT,'fx2_opt.png')});
 await ev(()=>{const i=document.querySelector('[data-fx-on]');i.checked=true;i.dispatchEvent(new Event('change',{bubbles:true}))});await pg.waitForTimeout(150);
 T('Schalter in Optionen schaltet ein',await ev(()=>document.documentElement.dataset.fx==='on'));

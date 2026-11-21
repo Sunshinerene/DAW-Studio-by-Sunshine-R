@@ -6,8 +6,8 @@
 (function () {
   'use strict';
   const LS = 'sunshine.layout', html = document.documentElement;
-  let st = { cutout: false }; try { Object.assign(st, JSON.parse(localStorage.getItem(LS) || '{}')); } catch (_) {}
-  const save = () => { try { localStorage.setItem(LS, JSON.stringify(st)); } catch (_) {} };
+  let st = { cutout: false }; SunStore.merge(st, LS);
+  const save = () => SunStore.save(LS, st);
   const apply = () => html.setAttribute('data-cutout', st.cutout ? '1' : '0');
   apply();
 
@@ -26,7 +26,7 @@
   ['resize', 'orientationchange'].forEach(e => window.addEventListener(e, () => { guard(); setTimeout(guard, 300); }));
   if (window.visualViewport) visualViewport.addEventListener('resize', guard);
   document.addEventListener('sunshine-fx', () => setTimeout(guard, 50));
-  setInterval(guard, 1500);
+  SunTick.every(1500, guard);
 
   function probe() {   // gemessene Sicherheitsabstände (so wie der Browser sie meldet)
     const d = document.createElement('div');
@@ -60,7 +60,7 @@
       out.classList.remove('hidden');
     });
   }
-  new MutationObserver(ms => { for (const m of ms) m.addedNodes.forEach(n => { if (n.nodeType !== 1) return; const ph = n.id === 'ly-sec' ? n : (n.querySelector && n.querySelector('#ly-sec')); if (ph && !ph.dataset.done) { ph.dataset.done = '1'; section(ph); } }); }).observe(document.body || html, { childList: true, subtree: true });
+  SunDOM.mount('ly-sec', ph => section(ph));
 
   window.Layout = { get: () => Object.assign({}, st), set: p => { Object.assign(st, p); save(); apply(); guard(); }, guard, measure, _fixes: () => fixes };
 })();

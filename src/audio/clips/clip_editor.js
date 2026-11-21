@@ -4,9 +4,7 @@
   if (!window.ClipModel) return;
   const CM = window.ClipModel;
   const $ = id => document.getElementById(id);
-  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-  const say = (m, k) => { try { toast(m, k || 'info'); } catch (_) {} };
+  const { esc, clamp, say } = window.SunUtil;
   const push = () => { try { window.__dawPushUndo && window.__dawPushUndo(); } catch (_) {} };
 
   const E = { open: false, id: null, tool: 'move', sel: null, multi: [], multiMode: false, mode: 'clips', param: 'vol', apSel: null, snap: 'beat', pps: 40, view: 0, dirty: true, drag: null, pointers: new Map(), pinch: null, resetArmed: false };
@@ -27,14 +25,14 @@
 #clip-editor[hidden]{display:none!important}
 body.ce-open #toast-container,body.ce-open #toast-container *{pointer-events:none!important}
 body.ce-open #toast-container>:not(:last-child){display:none!important}
-#clip-editor{position:fixed;inset:0;z-index:125;background:#070b14;color:#e2e8f0;display:flex;flex-direction:column}
+#clip-editor{position:fixed;inset:0;z-index:var(--z-editor);background:#070b14;color:#e2e8f0;display:flex;flex-direction:column}
 #clip-editor .ce-row{display:flex;gap:6px;align-items:center;padding:6px 10px;flex-wrap:wrap}
-#clip-editor .ce-btn{min-height:44px;min-width:44px;padding:0 12px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#e2e8f0;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
+#clip-editor .ce-btn{min-height:44px;min-width:44px;padding:0 12px;border-radius:calc(12px * var(--rk,1));border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#e2e8f0;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
 #clip-editor .ce-btn:disabled{opacity:.35}
 #clip-editor .ce-btn[aria-pressed="true"]{background:rgba(var(--acc-rgb,255,170,40),.24);border-color:rgba(var(--acc-rgb,255,170,40),.85);color:#fff3dc}
 #clip-editor .ce-sep{width:1px;height:28px;background:rgba(255,255,255,.14);margin:0 2px}
-#clip-editor select{min-height:44px;border-radius:12px;background:#0f172a;border:1px solid rgba(255,255,255,.16);color:#e2e8f0;padding:0 10px;font-size:13px}
-#clip-editor .ce-wrap{position:relative;flex:1;min-height:180px;margin:0 8px;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:#0b1220}
+#clip-editor select{min-height:44px;border-radius:calc(12px * var(--rk,1));background:#0f172a;border:1px solid rgba(255,255,255,.16);color:#e2e8f0;padding:0 10px;font-size:13px}
+#clip-editor .ce-wrap{position:relative;flex:1;min-height:180px;margin:0 8px;border-radius:calc(14px * var(--rk,1));overflow:hidden;border:1px solid rgba(255,255,255,.12);background:#0b1220}
 #clip-editor canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
 #clip-editor .ce-info{padding:4px 12px;font-size:11px;color:#94a3b8;min-height:28px}
 #clip-editor .ce-msg[hidden]{display:none!important}

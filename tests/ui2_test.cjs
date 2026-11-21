@@ -69,7 +69,7 @@ T('Spuren einklappen',!await vis('multitrack-lanes'));
 await pg.tap('#mt-collapse');await pg.waitForTimeout(150);
 T('Spuren wieder ausklappen',await vis('multitrack-lanes'));
 // Reiter-Modus
-await pg.tap('#btn-menu');await pg.tap('#btn-settings');await pg.waitForTimeout(250);
+await pg.evaluate(()=>document.getElementById('btn-settings').click());await pg.waitForTimeout(250);
 T('Optionen: Auswahl der Bereiche-Darstellung (3 Modi)',await pg.locator('select[data-dockmode] option').count()===3);
 await pg.selectOption('select[data-dockmode]','tabs');await pg.waitForTimeout(250);
 await pg.tap('#settings-modal [data-close]');

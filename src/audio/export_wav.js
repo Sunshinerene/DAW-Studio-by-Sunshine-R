@@ -3,9 +3,12 @@
      * MASTER WAV EXPORT (OFFLINE RENDERING OF FULL ARRANGEMENT, MIDI & DSP)
      * ============================================================================
      */
-    async function exportMasterWav() {
-      const btn = document.getElementById('btn-export-wav');
-      const lbl = document.getElementById('lbl-export-wav');
+    window.__exportMix = (o) => exportMasterWav(o);
+    async function exportMasterWav(opts) {
+      if (!opts || opts.type) opts = {};
+      const stubEl = () => ({ classList: { add() {}, remove() {} }, textContent: '' });
+      const btn = opts.returnBuffer ? stubEl() : document.getElementById('btn-export-wav');
+      const lbl = opts.returnBuffer ? stubEl() : document.getElementById('lbl-export-wav');
       btn.classList.add('opacity-70', 'pointer-events-none');
       lbl.textContent = 'Rendere WAV...';
 
@@ -13,21 +16,21 @@
         const sr = 44100;
         const totalBars = audioEngine.getTotalArrangementBars();
         const secPer16th = (60 / dawState.bpm) / 4;
-        const totalSec = totalBars * 16 * secPer16th;
+        const fullSec = totalBars * 16 * secPer16th;
+        const totalSec = opts.endSec ? Math.min(fullSec, Math.max(0.5, opts.endSec)) : fullSec;
         const totalSamples = Math.ceil(totalSec * sr);
 
         const offCtx = new OfflineAudioContext(2, totalSamples, sr);
         const masterGain = offCtx.createGain();
-        masterGain.gain.value = dawState.masterGainVal;
+        masterGain.gain.value = opts.dry ? 1 : dawState.masterGainVal * Math.pow(10, (dawState.masterTrimDb || 0) / 20);
 
         const limiter = offCtx.createDynamicsCompressor();
-        limiter.threshold.value = -1.0;
+        limiter.threshold.value = dawState.limiterDb == null ? -1.0 : dawState.limiterDb;
         limiter.ratio.value = 16;
         limiter.attack.value = 0.0015;
         limiter.release.value = 0.07;
 
-        masterGain.connect(limiter);
-        limiter.connect(offCtx.destination);
+        if (opts.dry) masterGain.connect(offCtx.destination); else { masterGain.connect(limiter); limiter.connect(offCtx.destination); }
 
         const revConv = offCtx.createConvolver();
         revConv.buffer = createStereoImpulse(offCtx, 1.7, 2.5);
@@ -41,7 +44,7 @@
         const offNodes = {};
 
         dawState.tracks.forEach(tr => {
-          const audible = anySolo ? tr.solo : !tr.mute;
+          const audible = (anySolo ? tr.solo : !tr.mute) && (!opts.onlyIds || opts.onlyIds.indexOf(tr.id) >= 0);
           const input = offCtx.createGain();
           const vcOn = dawState.vocalRackActive && (tr.vocalCleanup || tr.type === 'mic');
           const lowCut = offCtx.createBiquadFilter();
@@ -85,17 +88,22 @@
           scGain.connect(secGate);
           secGate.connect(panner);
           panner.connect(fader);
-          fader.connect(masterGain);
-          if ((tr.type === 'audio' || tr.type === 'stem' || tr.type === 'mic') && vcOn) fader.connect(revConv);
+          const autoGain = offCtx.createGain(); fader.connect(autoGain); autoGain.connect(masterGain);
+          const panAuto = offCtx.createConstantSource(); panAuto.offset.value = 0; panAuto.connect(panner.pan); panAuto.start();
+          const filtAuto = offCtx.createConstantSource(); filtAuto.offset.value = 0; filtAuto.connect(lowCut.frequency); filtAuto.start();
+          if ((tr.type === 'audio' || tr.type === 'stem' || tr.type === 'mic') && vcOn) autoGain.connect(revConv);
 
-          offNodes[tr.id] = { input, scGain, secGate };
+          offNodes[tr.id] = { input, scGain, secGate, autoGain, panAuto, filtAuto };
+          try { AutoModel.scheduleOffline(tr, offNodes[tr.id], totalSec); } catch (aerr) { console.warn('[Export-Automation]', aerr); }
         });
 
         // Schedule Audio Buffers
         const trimSec = dawState.startOffsetMs / 1000;
         dawState.tracks.forEach(tr => {
+          if (Array.isArray(tr.clips) && offNodes[tr.id]) { ClipModel.scheduleOffline(offCtx, tr, offNodes[tr.id].input, totalSec); return; }
           const buf = dawState.buffers[tr.id];
           if (!buf) return;
+          if (buf.__parked) { if (window.Saver && Saver.needed().indexOf(String(tr.id)) >= 0) buf._need(); return; }   /* entladen (Speicher-Sparer): nur wenn hörbar ist es ein Fehler */
           const usable = Math.max(0.2, buf.duration - trimSec);
           const fillLoop = usable < totalSec - 4 * (60 / dawState.bpm); // nur deutlich kürzere Spuren wiederholen
           let cursor = 0;
@@ -110,7 +118,7 @@
         });
 
         // Schedule all 16th steps across totalBars
-        const totalSteps = totalBars * 16;
+        const totalSteps = Math.min(totalBars * 16, Math.ceil(totalSec / secPer16th - 1e-6));
         for (let s = 0; s < totalSteps; s++) {
           const t = s * secPer16th;
           const step32 = s % 32;
@@ -204,12 +212,15 @@
         }
 
         if (offCtx.__spessaRec && offCtx.__spessaRec.length) lbl.textContent = 'Rendere SoundFont-Spuren …';
+        if (opts.onlyIds && offCtx.__spessaRec) offCtx.__spessaRec = offCtx.__spessaRec.filter(it => opts.onlyIds.indexOf(it.ref.trackId) >= 0);
         try { await SpessaEngine.renderOffline(offCtx); }
         catch (spErr) { console.warn('[SpessaSynth] Export-Vorbereitung fehlgeschlagen:', spErr); }
         lbl.textContent = 'Rendere WAV...';
         const rendered = await offCtx.startRendering();
-        const blob = encodeWav16Bit(rendered);
-        const filename = `Sunshine-R_Stem_DAW_Pro_${dawState.bpm}BPM.wav`;
+        if (opts.returnBuffer) return (opts.startSec > 0 || opts.endSec) ? window.__sliceBuf(rendered, opts.startSec || 0, opts.endSec) : rendered;
+        let blob = encodeWav16Bit(rendered);
+        let filename = `Sunshine-R_Stem_DAW_Pro_${dawState.bpm}BPM.wav`;
+        try { if (window.Cover && Cover.hasTags()) { const _m = await Cover.exportMeta(); if (_m) blob = Cover.tagWav(blob, _m); const _fb = Cover.fileBase(); if (_fb) filename = _fb + '.wav'; } } catch (_e) { console.warn('Tags:', _e); }
         const status = await saveOrShareBlob(blob, filename);
         if (status === 'saved-documents') {
           toast(`Master WAV gespeichert unter Dokumente/SunshineDAW/${filename}`, 'success');

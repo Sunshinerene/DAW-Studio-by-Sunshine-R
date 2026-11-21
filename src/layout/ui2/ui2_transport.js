@@ -20,7 +20,7 @@
   function boot() {
     icons(); syncTransport();
     ['btn-loop', 'btn-metronome', 'btn-play', 'btn-stop'].forEach(id => { const b = $(id); if (b) b.addEventListener('click', () => setTimeout(syncTransport, 0)); });
-    setInterval(syncTransport, 400);
+    SunTick.every(400, syncTransport);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
   window.addEventListener('load', () => { icons(); syncTransport(); setTimeout(icons, 300); });

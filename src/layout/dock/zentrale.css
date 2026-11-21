@@ -1,0 +1,34 @@
+/* ===== Zentrale – letzte Seite der Dockbars (1.40) ===== */
+.zt{flex:1 1 0;min-width:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:2px;align-items:stretch;align-self:stretch;height:var(--dk-pane,68px)}
+.zt-b{min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:4px 0;border:0;background:transparent;color:rgba(255,255,255,.82);border-radius:calc(16px * var(--rk,1));font:inherit;font-size:10.5px;line-height:1.1;text-align:center;-webkit-tap-highlight-color:transparent}
+.zt-b span{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.zt-b svg{flex:none}
+.zt-b:active{transform:scale(.94);background:rgba(255,255,255,.08)}
+.zt-b.on{color:var(--td-dot,rgb(var(--daw-accent)));background:rgb(var(--daw-accent)/.16)}
+.zt-b.on span{font-weight:800}
+html[data-theme=studio] .zt-b{border-radius:calc(8px * var(--rk,1))}
+html[data-radius="sharp"] .zt-b{border-radius:8px}
+/* Scroll-Leiste für Player und Startseite (wie die DAW-Leiste: einrasten, wischen) */
+.zt-scroll{display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;scrollbar-width:none;touch-action:pan-x}
+.zt-scroll::-webkit-scrollbar{display:none}
+.zt-pane{flex:0 0 100%;min-width:0;scroll-snap-align:start;scroll-snap-stop:always;box-sizing:border-box;padding:0 10px;height:var(--dk-pane,68px);display:flex;flex-direction:column;justify-content:center}
+.zt-pane>.hd{width:100%}
+.zt-dots{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:center;gap:0;pointer-events:none;z-index:1}
+.zt-dots[hidden]{display:none}
+.zt-dots button{pointer-events:auto;position:relative;width:26px;height:14px;padding:0;border:0;background:none}
+.zt-dots button::after{content:"";position:absolute;left:10.5px;top:4.5px;width:5px;height:5px;border-radius:50%;background:#fff;opacity:.35}
+.zt-dots button.on::after{opacity:1;background:var(--td-dot,rgb(var(--daw-accent)))}
+/* Pfeil-Umschalter (DAW-Leiste, Zentrale-Seite) */
+.zt-sw{flex:0 0 32px;display:flex;align-items:center;justify-content:center;border:0;background:transparent;color:rgb(255 255 255 / .55);padding:0;min-height:54px;border-radius:calc(18px * var(--rk,1))}
+.zt-sw:active{background:rgba(255,255,255,.08)}
+@media (max-width:760px){
+  #bottom-nav .td-zt{align-items:center;gap:2px}
+  #bottom-nav .td-zt .zt{height:auto;min-height:54px}
+}
+/* Alte Einzel-Knöpfe entfallen, wo die Zentrale erreichbar ist (die Elemente bleiben im Dokument) */
+html.zt-on #pl-root .pl-top [data-pl="close"],html.zt-on #pl-root .pl-top [data-pl="fb"],html.zt-on #pl-root .pl-top [data-pl="opts"]{display:none!important}
+html.zt-on #home-root .hm-top #hm-back,html.zt-on #home-root .hm-top #hm-fb,html.zt-on #home-root .hm-top #hm-help,html.zt-on #home-root .hm-tiles #hm-opts,html.zt-on #home-root .hm-tiles #hm-player{display:none!important}
+html.zt-on #home-root .hm-top{display:none}
+html.tp-dock #file-menu #btn-home,html.tp-dock #file-menu #btn-player,html.tp-dock #file-menu #btn-feedback,html.tp-dock #file-menu #btn-settings{display:none!important}
+html.zt-on #home-root .hm-tiles #hm-import{grid-column:1/-1}
+[data-sv-row] [data-sv].on{background:rgb(var(--daw-accent)/.2);border-color:rgb(var(--daw-accent));color:#fff}

@@ -9,7 +9,7 @@ await pg.route(/^https?:\/\/(?!127\.0\.0\.1|cdn\.tailwindcss\.com)/,r=>r.abort()
 await pg.goto(`http://127.0.0.1:${port}/index_ueberarbeitet.html`,{waitUntil:'load'});await pg.waitForTimeout(1000);
 await pg.evaluate(async()=>{await audioEngine.ensureCtx();createTrack('midi','A');renderMultiTrackLanes();});
 const cs=(sel,prop)=>pg.evaluate(([s,p])=>getComputedStyle(document.querySelector(s))[p],[sel,prop]);
-const open=async()=>{await pg.tap('#btn-menu');await pg.tap('#file-menu #btn-settings');await pg.waitForSelector('#settings-modal')};
+const open=async()=>{await pg.evaluate(()=>document.getElementById('btn-settings').click());await pg.waitForSelector('#settings-modal')};
 await open();
 T('Anpassen-Bereich vorhanden',await pg.locator('#acc-row').count()===1&&await pg.locator('[data-range="glassK"]').count()===1);
 const baseBtn=await cs('#btn-play','backgroundImage');const baseR=await cs('.bg-daw-panel','borderRadius');

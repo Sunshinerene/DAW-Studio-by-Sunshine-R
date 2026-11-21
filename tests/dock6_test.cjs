@@ -7,14 +7,14 @@ let ok=0,bad=0;const T=(n,c,x)=>{if(c){ok++;console.log('PASS',n)}else{bad++;con
 (async()=>{await new Promise(r=>srv.listen(0,'127.0.0.1',r));const port=srv.address().port;const b=await chromium.launch();
 const mk=async(q,init,routeFn)=>{const ctx=await b.newContext({viewport:{width:393,height:852},isMobile:true,hasTouch:true});const pg=await ctx.newPage();pg.__errs=[];pg.on('pageerror',e=>pg.__errs.push(e.message));
  await pg.route(/^https?:\/\/(?!127\.0\.0\.1)/,r=>routeFn?routeFn(r):r.abort());
- await pg.addInitScript(i=>{try{if(!sessionStorage.__i){sessionStorage.__i=1;localStorage.setItem('sunshine.home','off');localStorage.setItem('sunshine.news','{"seen":"1.30"}');if(i)Object.keys(i).forEach(k=>localStorage.setItem(k,i[k]))}}catch(e){}},init||null);
+ await pg.addInitScript(i=>{try{if(!sessionStorage.__i){sessionStorage.__i=1;localStorage.setItem('sunshine.home','off');localStorage.setItem('sunshine.news','{"seen":"1.42"}');if(i)Object.keys(i).forEach(k=>localStorage.setItem(k,i[k]))}}catch(e){}},init||null);
  await pg.goto(`http://127.0.0.1:${port}/index_ueberarbeitet.html${q||''}`,{waitUntil:'load'});await pg.waitForTimeout(1200);return pg};
 let pg=await mk('',{'sunshine.player':'{"bg":true,"vol":1}'},null);const ev=(f,a)=>pg.evaluate(f,a);
 const cp=require('child_process');const FX='/tmp/fx129_t';fs.rmSync(FX,{recursive:true,force:true});fs.mkdirSync(FX,{recursive:true});
 const files=[['eins',300],['zwei',400]].map(([n,f])=>{cp.execSync(`ffmpeg -y -loglevel error -f lavfi -i "sine=frequency=${f}:duration=20" -c:a libmp3lame -metadata title=${n} -metadata artist=Band_A "${n}.mp3"`,{cwd:FX});return FX+'/'+n+'.mp3'});
-// --- Leiste mit drei Seiten
+// --- Leiste mit vier Seiten (ab 1.40 mit Zentrale)
 const a=await ev(()=>{const n=document.getElementById('bottom-nav');return {on:n.classList.contains('td-on'),panes:n.querySelectorAll('.td-scroll>*').length,pl:!!n.querySelector('.td-pl'),sw:['btn-td-tabs','btn-td-tp','btn-td-pl','btn-td-back'].map(i=>!!document.getElementById(i)),pane:n.dataset.pane,btns:[...n.querySelectorAll('.td-pl [data-hd]')].map(b=>b.dataset.hd).join(),h:n.getBoundingClientRect().height}});
-T('DAW-Leiste hat drei Seiten (Transport, Bereiche, Player)',a.on&&a.panes===3&&a.pl&&a.pane==='tp',a);
+T('DAW-Leiste hat vier Seiten (Transport, Bereiche, Player, Zentrale)',a.on&&a.panes===4&&a.pl&&a.pane==='tp',a);
 T('Player-Seite: Zufall/Zurück/Play/Weiter/Wiederholen wie im Player',a.btns==='shuffle,prev,toggle,next,repeat',a);
 T('Leiste nicht höher als 110 px',a.h<=110,a);
 await ev(()=>TpDock.go('pl',true));await pg.waitForTimeout(500);

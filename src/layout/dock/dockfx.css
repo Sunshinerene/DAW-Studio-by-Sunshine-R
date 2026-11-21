@@ -1,0 +1,7 @@
+/* ===== Dockbar-Effekte – Optionen-Vorschau ===== */
+.dfx-where{display:flex;flex-wrap:wrap;gap:6px}
+.dfx-chk{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 12px;border-radius:calc(12px * var(--rk,1));border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);font-size:12px;font-weight:700;cursor:pointer}
+.dfx-chk input{width:18px;height:18px}
+.dfx-pv{position:relative;height:64px;border-radius:calc(18px * var(--rk,1));background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:space-around;padding:0 18px}
+.dfx-pv>span{width:26px;height:26px;border-radius:var(--r-circle,50%);background:rgba(255,255,255,.14)}
+.dfx-pv>.dfx-big{width:38px;height:38px;background:rgb(var(--daw-accent)/.85)}

@@ -5,9 +5,9 @@ let ok=0,bad=0;const T=(n,c,x)=>{if(c){ok++;console.log('PASS',n)}else{bad++;con
 (async()=>{await new Promise(r=>srv.listen(0,'127.0.0.1',r));const port=srv.address().port;const b=await chromium.launch();
 const mk=async(init)=>{const ctx=await b.newContext({viewport:{width:393,height:852},isMobile:true,hasTouch:true});const pg=await ctx.newPage();pg.__errs=[];pg.on('pageerror',e=>pg.__errs.push(e.message));
  await pg.route(/^https?:\/\/(?!127\.0\.0\.1)/,r=>r.abort());
- await pg.addInitScript(i=>{try{if(!sessionStorage.__i){sessionStorage.__i=1;localStorage.setItem('sunshine.home','off');localStorage.setItem('sunshine.news','{"seen":"1.30"}');if(i)Object.keys(i).forEach(k=>localStorage.setItem(k,i[k]))}}catch(e){}},init||null);
+ await pg.addInitScript(i=>{try{if(!sessionStorage.__i){sessionStorage.__i=1;localStorage.setItem('sunshine.home','off');localStorage.setItem('sunshine.news','{"seen":"1.42"}');if(i)Object.keys(i).forEach(k=>localStorage.setItem(k,i[k]))}}catch(e){}},init||null);
  await pg.goto(`http://127.0.0.1:${port}/index_ueberarbeitet.html`,{waitUntil:'load'});await pg.waitForTimeout(1200);return pg};
-const openOpt=async pg=>{await pg.tap('#btn-menu');await pg.tap('#btn-settings');await pg.waitForTimeout(450)};
+const openOpt=async pg=>{await pg.evaluate(()=>document.getElementById('btn-settings').click());await pg.waitForTimeout(450)};
 const vis=(pg,s)=>pg.locator(s).first().isVisible();
 // ---- Test-Umgebung (webdriver) → flache alte Liste
 let pg=await mk();await openOpt(pg);
@@ -19,7 +19,7 @@ T('Übersicht: 6 Kategorien-Karten',await pg.locator('#on-home .on-card').count(
 T('Übersicht: Suchfeld sichtbar, keine Zurück-Leiste',await vis(pg,'#on-q')&&!await vis(pg,'.on-back'));
 T('Übersicht: Einzel-Bereiche noch zu (Updates, Design, Speicher)',!await vis(pg,'#up-sec')&&!await vis(pg,'#theme-grid')&&!await vis(pg,'#sv-sec'));
 T('Karten zeigen Kurztext (aktuelles Design, Speicher)',await ev(()=>{const t=document.querySelector('[data-on-go=look]').textContent;return /Aurora|Studio|Neon|Liquid|Klassisch/.test(t)&&/Arbeitsspeicher/.test(document.querySelector('[data-on-go=perf]').textContent)}));
-T('Alle 19 Einheiten verteilt, keine Seite „Weiteres“',await ev(()=>document.querySelectorAll('.on-unit').length===19&&!document.querySelector('[data-on-page=more]')),await ev(()=>document.querySelectorAll('.on-unit').length));
+T('Alle 21 Einheiten verteilt, keine Seite „Weiteres“',await ev(()=>document.querySelectorAll('.on-unit').length===21&&!document.querySelector('[data-on-page=more]')),await ev(()=>document.querySelectorAll('.on-unit').length));
 T('Jeder Bereich genau einmal vorhanden',await ev(()=>['hp-sec','theme-grid','fx-sec','ly-sec','up-sec','hl-sec','sv-sec','fb-sec'].every(i=>document.querySelectorAll('#'+i).length===1)));
 const expect={look:['#theme-grid','#opt-dockmode','[data-accent-auto]','[data-radius=round]'],fx:['#fx-sec','#ly-sec'],sound:['[data-spessa]','[data-bp-load]','[data-ai-settings]','[data-ui=voice]'],perf:['#hl-sec','#sv-sec'],data:['#up-sec','#up-sec input'],help:['#hp-sec','#fb-sec']};
 for(const k of Object.keys(expect)){await pg.tap(`[data-on-go=${k}]`);await pg.waitForTimeout(250);

@@ -1,4 +1,34 @@
 
+    /* ===== Ebenen (z-index): EINE Liste für alle Fenster, Leisten und Meldungen =====
+       Von unten nach oben. Wer eine neue Ebene braucht, trägt sie HIER ein und benutzt var(--z-…) – keine neuen Zahlen im Code.
+       Gleiche Zahl = gleiche Ebene (bewusst: bei Gleichstand entscheidet die Reihenfolge im Dokument).
+       Kleine Werte (0–10) innerhalb einer Komponente (Cover, Spielfeld, Leiste) bleiben im jeweiligen Modul. */
+    :root {
+      --z-header: 40;        /* Kopfleiste */
+      --z-bigwin: 42;        /* Großfenster Editor / Drums / Vocal / Mixer */
+      --z-nav: 45;           /* untere Leiste */
+      --z-mini: 46;          /* Mini-Player */
+      --z-menu: 50;          /* Dateimenü */
+      --z-fab: 70;           /* schwebender KI-Knopf */
+      --z-fab-panel: 71;     /* KI-Schnellfenster darüber */
+      --z-dialog: 100;       /* kleine Dialoge: Spur-Aktionen, Instrumente/FX, Import */
+      --z-dialog-2: 110;     /* Dialoge: Muster-Generator, SoundFont; Startseite */
+      --z-dialog-3: 120;     /* Dialoge: Design-Auswahl, KI */
+      --z-editor: 125;       /* Clip-Editor */
+      --z-dialog-4: 130;     /* KI-Assistent (über den KI-Dialogen) */
+      --z-window: 140;       /* Vollfenster: Lautheit, Export, „Alle Projekte“, Mixer-Großansicht */
+      --z-window-2: 145;     /* Vollfenster: Kreativ */
+      --z-sheet: 150;        /* Projektbibliothek, Startseiten-Blatt */
+      --z-news: 155;         /* „Was ist neu“ */
+      --z-player: 156;       /* Player */
+      --z-over-player: 157;  /* Optionen über dem Player, Cover-Editor */
+      --z-feedback: 158;     /* Feedback (auch über Player und Optionen) */
+      --z-help: 160;         /* Anleitung, Handbuch */
+      --z-toast: 200;        /* Meldungen und Angebote */
+      --z-intro: 210;        /* Start-Intro */
+      --z-max: 2147483000;   /* ganz oben (Liquid-Glanz) */
+    }
+
     /* Base DAW Styling & Scrollbars */
     body {
       background-color: #090c12;
@@ -17,7 +47,7 @@
     }
     ::-webkit-scrollbar-thumb {
       background: #28334a;
-      border-radius: 9999px;
+      border-radius: var(--r-pill,999px);
     }
     ::-webkit-scrollbar-thumb:hover {
       background: #38bdf8;
@@ -29,7 +59,7 @@
       appearance: none;
       background: #0b0f18;
       height: 5px;
-      border-radius: 999px;
+      border-radius: var(--r-pill,999px);
       border: 1px solid #28334a;
       outline: none;
       cursor: pointer;
@@ -149,7 +179,7 @@
       header.sticky > div { flex-direction: column; }
       header.sticky > div > div:first-child { flex-direction: column; align-items: stretch; }
       header.sticky .border-r { border-right: 0; padding-right: 0; }
-      #drop-zone-wrapper > .bg-daw-panel { border-radius: 12px; }
+      #drop-zone-wrapper > .bg-daw-panel { border-radius: calc(12px * var(--rk,1)); }
       #multitrack-lanes .grid.grid-cols-12 { display:flex; flex-direction:column; }
       #multitrack-lanes .grid.grid-cols-12 > .col-span-12 { width:100%; }
       #multitrack-lanes .grid.grid-cols-12 > .relative { width:100%; }

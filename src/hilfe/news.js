@@ -8,10 +8,10 @@
   const B = window.SUNSHINE_BUILD || {};
   const V = String(B.v || (LOG[0] && LOG[0].v) || '');
   const KEY = 'sunshine.news';
-  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const { esc } = window.SunUtil;
   const cmp = (a, b) => { const x = String(a).split('.').map(Number), y = String(b).split('.').map(Number); for (let i = 0; i < Math.max(x.length, y.length); i++) { const d = (x[i] || 0) - (y[i] || 0); if (d) return d < 0 ? -1 : 1; } return 0; };
-  let S = { seen: null }; try { Object.assign(S, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (_) {}
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (_) {} };
+  let S = { seen: null }; SunStore.merge(S, KEY);
+  const save = () => SunStore.save(KEY, S);
   if (S.seen === null) {   // erste Nutzung dieses Merkers: Bestandsnutzer (haben schon sunshine.*-Einstellungen) sehen die Neuerungen, frische Installationen nicht
     let had = false; try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (/^sunshine\./.test(k) && k !== KEY) { had = true; break; } } } catch (_) {}
     S.seen = had ? '0' : V; save();

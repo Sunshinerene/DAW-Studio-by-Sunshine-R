@@ -3,39 +3,38 @@
   'use strict';
   if (!window.Loudness || !window.AutoModel) return;
   const $ = id => document.getElementById(id);
-  const say = (m, k) => { try { toast(m, k || 'info'); } catch (_) {} };
-  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const { clamp, say } = window.SunUtil;
   const L = window.Loudness;
   const fmt = (v, d = 1) => v === -Infinity || v == null || !isFinite(v) ? '−∞' : (v < 0 ? '−' : '') + Math.abs(v).toFixed(d);
   let root = null, raf = 0, tap = null, busy = false, cancel = false, target = L.TARGETS[0].id, specA = '', specB = '';
   const hist = [], mem = { maxM: -Infinity, peak: -Infinity };
 
   const CSS = `
-#lm-root{position:fixed;inset:0;z-index:140;background:rgba(0,0,0,.72);backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center}
+#lm-root{position:fixed;inset:0;z-index:var(--z-window);background:rgba(0,0,0,.72);backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center}
 #lm-root[hidden]{display:none!important}
-#lm-root .lm-card{width:100%;max-width:520px;max-height:94vh;overflow:auto;-webkit-overflow-scrolling:touch;border-radius:20px 20px 0 0;border:1px solid #334155;background:#0f172a;color:#e2e8f0;padding:14px 14px max(18px,env(safe-area-inset-bottom));font-family:inherit}
+#lm-root .lm-card{width:100%;max-width:520px;max-height:94vh;overflow:auto;-webkit-overflow-scrolling:touch;border-radius:calc(20px * var(--rk,1)) calc(20px * var(--rk,1)) 0 0;border:1px solid #334155;background:#0f172a;color:#e2e8f0;padding:14px 14px max(18px,env(safe-area-inset-bottom));font-family:inherit}
 #lm-root h3{margin:0;font-size:16px;font-weight:800}
 #lm-root .lm-sec{margin-top:14px;border-top:1px solid rgba(255,255,255,.08);padding-top:12px}
 #lm-root .lm-sec>b{display:block;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:#94a3b8;margin-bottom:8px}
 #lm-root .lm-meters{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-#lm-root .lm-m{border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:8px;background:rgba(255,255,255,.04);text-align:center}
+#lm-root .lm-m{border:1px solid rgba(255,255,255,.12);border-radius:calc(12px * var(--rk,1));padding:8px;background:rgba(255,255,255,.04);text-align:center}
 #lm-root .lm-m span{display:block;font-size:10px;color:#94a3b8}
 #lm-root .lm-m strong{font-size:20px;font-variant-numeric:tabular-nums}
-#lm-root .lm-btn{min-height:46px;padding:0 14px;border-radius:12px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.07);color:#e2e8f0;font-weight:700;font-size:13px}
+#lm-root .lm-btn{min-height:46px;padding:0 14px;border-radius:calc(12px * var(--rk,1));border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.07);color:#e2e8f0;font-weight:700;font-size:13px}
 #lm-root .lm-btn.pri{background:#f59e0b;border-color:#f59e0b;color:#1c1100}
 #lm-root .lm-btn:disabled{opacity:.45}
-#lm-root select{min-height:44px;border-radius:12px;background:#0b1220;border:1px solid rgba(255,255,255,.18);color:#e2e8f0;padding:0 10px;font-size:13px;width:100%}
+#lm-root select{min-height:44px;border-radius:calc(12px * var(--rk,1));background:#0b1220;border:1px solid rgba(255,255,255,.18);color:#e2e8f0;padding:0 10px;font-size:13px;width:100%}
 #lm-root .lm-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
 #lm-root .lm-res{display:grid;grid-template-columns:1fr auto;gap:4px 10px;font-size:13px;margin-top:10px}
 #lm-root .lm-res span:nth-child(odd){color:#94a3b8}
 #lm-root .lm-res span:nth-child(even){text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
-#lm-root .lm-verdict{margin-top:10px;padding:10px;border-radius:12px;font-size:13px;font-weight:700}
+#lm-root .lm-verdict{margin-top:10px;padding:10px;border-radius:calc(12px * var(--rk,1));font-size:13px;font-weight:700}
 #lm-root .lm-verdict.ok{background:rgba(16,185,129,.16);color:#6ee7b7}
 #lm-root .lm-verdict.warn{background:rgba(245,158,11,.16);color:#fcd34d}
 #lm-root label.lm-sl{display:flex;flex-direction:column;gap:2px;font-size:12px;color:#94a3b8;margin-top:8px}
 #lm-root label.lm-sl b{color:#fde68a}
 #lm-root input[type=range]{width:100%;min-height:30px}
-#lm-root canvas{width:100%;height:190px;border-radius:12px;background:#090c12;border:1px solid rgba(255,255,255,.1);display:block}
+#lm-root canvas{width:100%;height:190px;border-radius:calc(12px * var(--rk,1));background:#090c12;border:1px solid rgba(255,255,255,.1);display:block}
 #lm-root .lm-note{font-size:11px;color:#94a3b8;margin-top:6px;line-height:1.45}`;
 
   window.__lmCSS = CSS;

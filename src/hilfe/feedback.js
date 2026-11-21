@@ -9,8 +9,7 @@
   const MAIL = '/*FEEDBACK_TO*/';
   const EMBED = /*PREVIEW*/{ "title": "", "items": [], "kinds": [] }/*END*/;
   const REPO = /^[\w.-]+\/[\w.-]+$/.test(String(B.repo || '')) ? B.repo : '';
-  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const say = (m, k) => { try { if (typeof toast === 'function') toast(m, k || 'info'); } catch (_) {} };
+  const { esc, say } = window.SunUtil;
   const jget = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (_) { return d; } };
   const jset = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} };
   const hash = s => { let h = 5381; s = String(s); for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0; return String(h >>> 0); };
@@ -69,9 +68,10 @@
   let FS = Object.assign({ cat: 'bug', text: '', area: 'auto', contact: '', dev: true, log: true }, jget(KF, {}));
   const saveFS = () => jset(KF, FS);
   const CATS = [['bug', '🐞', 'Fehler'], ['idea', '💡', 'Idee'], ['note', '💬', 'Anmerkung'], ['love', '❤️', 'Lob'], ['ask', '❓', 'Frage']];
-  const AREAS = [['auto', 'automatisch erkennen'], ['Startseite', 'Startseite'], ['Spuren', 'Spuren / Arrangement'], ['MIDI-Editor', 'MIDI-Editor & Piano Roll'], ['Drums', 'Drums & FX'], ['Vocal', 'Vocal & Mikrofon'], ['Mixer', 'Mixer & Master'], ['Export', 'Export / Speichern'], ['Update', 'Update & Sicherung'], ['Design', 'Design & Bedienung'], ['Sonstiges', 'Sonstiges']];
+  const AREAS = [['auto', 'automatisch erkennen'], ['Startseite', 'Startseite'], ['Player', 'Player & Klang'], ['Spuren', 'Spuren / Arrangement'], ['MIDI-Editor', 'MIDI-Editor & Piano Roll'], ['Drums', 'Drums & FX'], ['Vocal', 'Vocal & Mikrofon'], ['Mixer', 'Mixer & Master'], ['Export', 'Export / Speichern'], ['Update', 'Update & Sicherung'], ['Design', 'Design & Bedienung'], ['Sonstiges', 'Sonstiges']];
   function areaAuto() {
     try { const w = window.BigWin && BigWin.current(); if (w) return { midi: 'MIDI-Editor', drums: 'Drums', vocals: 'Vocal', mixer: 'Mixer' }[w] || w; } catch (_) {}
+    try { if (window.Player && Player.isOpen && Player.isOpen()) return 'Player'; } catch (_) {}
     try { if (window.Home && Home.isOpen && Home.isOpen()) return 'Startseite'; } catch (_) {}
     return 'Spuren';
   }
@@ -88,6 +88,7 @@
     o = o || FS; const cat = CATS.find(c => c[0] === o.cat) || CATS[0]; const area = o.area === 'auto' ? areaAuto() : o.area;
     const L = ['Sunshine@R DAW Studio – Feedback', 'Art: ' + cat[1] + ' ' + cat[2], 'Bereich: ' + area, 'Version: ' + (B.v || '?'), '', String(o.text || '').trim() || '(kein Text)'];
     if (o.contact && o.contact.trim()) { L.push('', 'Rückmeldung an: ' + o.contact.trim()); }
+    if (area === 'Player') { L.push('', '--- Player ---'); try { Player.report().forEach(x => L.push(x)); } catch (_) { L.push('– keine Angaben –'); } }
     if (o.dev) { L.push('', '--- Geräte- und Versionsangaben ---'); deviceLines().forEach(x => L.push(x)); }
     if (o.log) {
       let errs = []; try { errs = Health.errors(); } catch (_) {}
@@ -124,6 +125,7 @@
   function onKey(e) { if (e.key === 'Escape') { e.stopPropagation(); close(); } }
   function open(pre) {
     close(); if (pre && typeof pre === 'object') { if (pre.cat) FS.cat = pre.cat; if (pre.text != null) FS.text = pre.text; }
+    FS.area = (pre && pre.area) || 'auto';   /* jede neue Meldung erkennt den Bereich neu (aus dem Player: Player) */
     const r = document.createElement('div'); r.id = 'fb-root'; r.setAttribute('role', 'dialog'); r.setAttribute('aria-modal', 'true'); r.setAttribute('aria-label', 'Feedback');
     const hasMail = !!MAIL;
     r.innerHTML = `<div class="fb-top"><h2>💬 Feedback</h2><button type="button" class="fb-x" data-fb="close">Schließen</button></div>
@@ -182,9 +184,9 @@
       else if (e.target.closest('[data-fb-prev]')) { const t = e.target.closest('[data-fb-prev]'); t.disabled = true; await fetchLive(true); t.disabled = false; try { News.open(); } catch (_) {} }
     });
   }
-  new MutationObserver(ms => { for (const m of ms) m.addedNodes.forEach(n => { if (n.nodeType !== 1) return; const ph = n.id === 'fb-sec' ? n : (n.querySelector && n.querySelector('#fb-sec')); if (ph && !ph.dataset.done) { ph.dataset.done = '1'; section(ph); } if (n.id === 'file-menu' || (n.querySelector && n.querySelector('#file-menu'))) menuItem(); }); }).observe(document.body || document.documentElement, { childList: true, subtree: true });
+  SunDOM.mount('fb-sec', ph => section(ph)); SunDOM.on('#file-menu', () => menuItem());
   function boot() {
-    menuItem(); let tries = 0; const iv = setInterval(() => { menuItem(); if ($('btn-feedback') || ++tries > 20) clearInterval(iv); }, 500);
+    menuItem(); let tries = 0; const iv = SunTick.every(500, () => { menuItem(); if ($('btn-feedback') || ++tries > 20) SunTick.stop(iv); }, { hidden: true });
     setTimeout(() => { fetchLive(false).then(r => { try { const h = $('hm-update'); if (r.ok && !r.cached && h && window.Home && Home.isOpen && Home.isOpen() && window.Update) Update.onHome(h); } catch (_) {} }); }, 5000);
     document.addEventListener('click', e => { const x = e.target.closest && e.target.closest('#hm-fb'); if (x) open(); });
   }

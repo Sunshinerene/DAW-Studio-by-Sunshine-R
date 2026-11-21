@@ -29,5 +29,30 @@ html{overflow-x:hidden;max-width:100%}
 body{overflow-x:clip;max-width:100%}
 html,body{background-color:rgb(var(--daw-bg,9 12 18));margin:0;overscroll-behavior:none;-webkit-tap-highlight-color:transparent}
 body{padding-left:var(--sal);padding-right:var(--sar)}
-@media (max-width:900px){#bottom-nav{left:calc(12px + var(--sal))!important;right:calc(12px + var(--sar))!important}}
+@media (max-width:900px){#bottom-nav{left:calc(var(--sx,6px) + var(--sal))!important;right:calc(var(--sx,6px) + var(--sar))!important}}
 #home-root,.hm-sheet-bg{padding-left:var(--sal);padding-right:var(--sar)}
+
+/* ===== 1.39: alle Fenster der DAW-Seite gleich breit (Kopf, Spuren, Werkzeuge, Dock): seitlicher Abstand überall --sx ===== */
+header.sticky{margin-left:var(--sx,6px);margin-right:var(--sx,6px);padding-left:6px!important;padding-right:6px!important;border-left-width:1px;border-right-width:1px;border-radius:0 0 calc(18px * var(--rk,1)) calc(18px * var(--rk,1))}
+body > section#drop-zone-wrapper,body > section#bw-launch,body > section.bw-dock{padding-left:var(--sx,6px);padding-right:var(--sx,6px)}
+/* Hinter Player und Startseite bleibt die Seite stehen (kein Mitwischen der DAW im Hintergrund) */
+html.pl-open,html.pl-open body,html.hm-open,html.hm-open body{overflow:hidden!important;overscroll-behavior:none}
+/* Kopfzeile bleibt auch bei schmalen Handys in einer Zeile: Anzeige-Feld und Werkzeugreihe mit etwas weniger Abstand */
+header.sticky .font-mono.bg-black\/70{padding-left:8px;padding-right:8px;gap:7px}
+header.sticky .font-mono.bg-black\/70 .text-\[9px\],header.sticky #lcd-position{white-space:nowrap}
+header.sticky #input-bpm{width:40px}
+header.sticky #hdr-actions{gap:4px}
+/* LCD-Anzeige darf auf schmalen Handys schrumpfen statt über den Rand zu laufen */
+header.sticky .font-mono.bg-black\/70{max-width:100%;box-sizing:border-box;min-width:0}
+@media (max-width:420px){
+  header.sticky .font-mono.bg-black\/70{padding-left:6px;padding-right:6px;gap:5px}
+  header.sticky .font-mono.bg-black\/70 .text-\[9px\]{font-size:8px;letter-spacing:-.02em}
+  header.sticky #lcd-position,header.sticky #lcd-time,header.sticky #lcd-total,header.sticky #input-bpm{font-size:11px}
+  header.sticky #input-bpm{width:34px}
+  header.sticky #btn-tap-tempo{padding-left:6px;padding-right:6px}
+}
+@media (max-width:370px){
+  header.sticky .font-mono.bg-black\/70{gap:4px;padding-left:4px;padding-right:4px}
+  header.sticky .font-mono.bg-black\/70 .text-\[9px\]{font-size:7px}
+  header.sticky #lcd-position,header.sticky #lcd-time,header.sticky #lcd-total,header.sticky #input-bpm{font-size:10px}
+}

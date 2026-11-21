@@ -14,14 +14,15 @@ T(tag+'Menü zu am Anfang',await pg.locator('#file-menu').isHidden());
 await pg.click('#btn-menu');
 T(tag+'Menü offen',await pg.locator('#file-menu').isVisible());
 T(tag+'aria-expanded true',(await pg.getAttribute('#btn-menu','aria-expanded'))==='true');
-for(const id of ['btn-export-midi','btn-settings','btn-reset'])T(tag+id+' im Menü sichtbar',await pg.locator('#file-menu #'+id).isVisible());
+for(const id of ['btn-export-midi','btn-reset'])T(tag+id+' im Menü sichtbar',await pg.locator('#file-menu #'+id).isVisible());
+const mobil=/mobil/.test(tag);T(tag+'btn-settings im Menü '+(mobil?'weg (Zentrale der Dockbar ersetzt ihn)':'sichtbar'),(await pg.locator('#file-menu #btn-settings').isVisible())===!mobil);
 for(const id of ['btn-undo','btn-import-files','btn-save-project','btn-open-projects','btn-export-wav','btn-menu'])T(tag+id+' in Leiste sichtbar',await pg.locator('#'+id).isVisible());
 // Escape
 await pg.keyboard.press('Escape');T(tag+'Escape schließt',await pg.locator('#file-menu').isHidden());
 // Außenklick
 await pg.click('#btn-menu');await pg.mouse.click(mobile?200:640,mobile?30:600);T(tag+'Außenklick schließt',await pg.locator('#file-menu').isHidden());
 // Optionen
-await pg.click('#btn-menu');await pg.click('#file-menu #btn-settings');await pg.waitForTimeout(300);
+await pg.click('#btn-menu');if(mobile)await pg.evaluate(()=>document.getElementById('btn-settings').click());else await pg.click('#file-menu #btn-settings');await pg.waitForTimeout(300);
 T(tag+'Optionen-Dialog öffnet',await pg.locator('#settings-modal').count()>0);
 T(tag+'Menü schließt nach Optionen',await pg.locator('#file-menu').isHidden());
 await pg.evaluate(()=>document.getElementById('settings-modal')?.remove());

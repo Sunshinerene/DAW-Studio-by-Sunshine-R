@@ -6,9 +6,9 @@
   'use strict';
   const $ = id => document.getElementById(id);
   const LS = 'sunshine.help';
-  let HS = { seen: false }; try { Object.assign(HS, JSON.parse(localStorage.getItem(LS) || '{}')); } catch (_) {}
-  const saveHS = () => { try { localStorage.setItem(LS, JSON.stringify(HS)); } catch (_) {} };
-  const say = (m, k) => { try { if (typeof toast === 'function') toast(m, k || 'info'); } catch (_) {} };
+  let HS = { seen: false }; SunStore.merge(HS, LS);
+  const saveHS = () => SunStore.save(LS, HS);
+  const { say } = window.SunUtil;
   const ic = n => (window.Icons && Icons.paths[n]) ? `<svg viewBox="0 0 24 24" aria-hidden="true">${Icons.paths[n]}</svg>` : '';
   const shown = e => { if (!e || !e.isConnected || e.hidden) return false; const r = e.getBoundingClientRect(), c = getComputedStyle(e); return r.width > 2 && r.height > 2 && c.display !== 'none' && c.visibility !== 'hidden'; };
   const q1 = s => { try { return document.querySelector(s); } catch (_) { return null; } };
@@ -16,6 +16,8 @@
 
   /* ================================================================== Helfer für Schritte */
   const menuEl = () => $('file-menu'), menuBtn = () => $('btn-menu');
+  /* Am Handy sitzen Optionen & Co. in der „Zentrale“ der Dockbar (statt im ☰-Menü) */
+  const dockOpts = () => { try { return document.documentElement.classList.contains('tp-dock') ? document.querySelector('#bottom-nav [data-zt=opts]') : null; } catch (_) { return null; } };
   const openMenu = () => { const m = menuEl(), b = menuBtn(); if (m && b && m.hidden) b.click(); };
   const closeMenu = () => { const m = menuEl(), b = menuBtn(); if (m && b && !m.hidden) b.click(); };
   const openWin = k => { try { if (window.DockWin && DockWin.mode !== 'tabs') DockWin.setOpen(k, true, false); else if (typeof switchBottomTab === 'function') switchBottomTab(k); } catch (_) {} };
@@ -35,8 +37,8 @@
     save: { icon: 'save', title: 'Speichern', sel: '#btn-save-project', text: 'Speichert still unter dem aktuellen Projektnamen (ohne Namen fragt die App einmal nach). Beim Wechsel zur Startseite oder in ein anderes Projekt wird automatisch mitgesichert.' },
     master: { icon: 'download', title: 'Master exportieren', sel: '#btn-export-wav', text: 'Rechnet das ganze Projekt zu einer <b>WAV-Datei</b> zusammen. Stems einzeln, einen Bereich oder Opus findest du im Menü unter <b>Export</b>.' },
     menuBtn: { icon: 'menu', title: 'Das Menü', sel: '#btn-menu', tap: true, tapText: 'Tippe jetzt auf ☰ – oder auf „Weiter“.', text: 'Im Menü liegen die Werkzeuge, die nicht ständig im Weg sein sollen.' },
-    menuAll: { icon: 'menu', title: 'Alles Weitere im Menü', sel: '#file-menu', before: openMenu, text: '<b>Startseite</b> · <b>Projekt-Einstellungen</b> · <b>.MID-Export</b> · <b>Export</b> (Stems, Bereich, Format) · <b>Lautheit &amp; Spektrum</b> · <b>Tonart &amp; Tempo</b> · <b>Beat-Slicer</b> · <b>Strukturmarker</b> · <b>Import-Assistent</b> · <b>KI-Assistent</b> · <b>Assistent</b> (Chat) · <b>Optionen</b> · <b>Anleitung</b>.' },
-    settings: { icon: 'gear', title: 'Optionen', sel: '#btn-settings', before: openMenu, text: 'Die Optionen sind in <b>Kategorien</b> geordnet (mit Suchfeld oben): Design, Effekte, Klang &amp; KI, Leistung &amp; Speicher, Updates &amp; Sicherung, Hilfe. Auch diese Anleitung startest du von dort.' },
+    menuAll: { icon: 'menu', title: 'Alles Weitere im Menü', sel: '#file-menu', before: openMenu, text: '<b>Startseite</b> · <b>Projekt-Einstellungen</b> · <b>.MID-Export</b> · <b>Export</b> (Stems, Bereich, Format) · <b>Lautheit &amp; Spektrum</b> · <b>Tonart &amp; Tempo</b> · <b>Beat-Slicer</b> · <b>Strukturmarker</b> · <b>Import-Assistent</b> · <b>KI-Assistent</b> · <b>Assistent</b> (Chat) · <b>Optionen</b> · <b>Anleitung</b> (am Handy stattdessen in der Dockbar unter „Zentrale“).' },
+    settings: { icon: 'gear', title: 'Optionen', sel: () => dockOpts() || q1('#btn-settings'), before: () => { if (dockOpts()) { closeMenu(); try { TpDock.go('zt', true); } catch (_) {} } else openMenu(); }, text: 'Am Handy: Dockbar nach links wischen bis <b>Zentrale</b> – dort sind auch <b>Feedback</b>, <b>Anleitung</b>, <b>Startseite</b> und <b>Player</b>. Die Optionen sind in <b>Kategorien</b> geordnet (mit Suchfeld oben): Design, Effekte, Klang &amp; KI, Leistung &amp; Speicher, Updates &amp; Sicherung, Hilfe. Auch diese Anleitung startest du von dort.' },
     assist: { icon: 'compass', title: 'Import-Assistent', sel: '#btn-import-assist', before: openMenu, text: 'Nach dem Laden führt er dich durch: <b>Tempo</b> übernehmen, <b>Takt 1</b> ausrichten, <b>Tonart</b> erkennen, <b>Farben nach Rolle</b> und eine <b>Start-Mischung</b>. Du kannst jeden Vorschlag annehmen oder „Später“ wählen.' },
     exportAll: { icon: 'pack', title: 'Export: Stems, Bereich, Format', sel: '#btn-export-all', before: openMenu, text: 'Hier exportierst du alle Stems als <b>ZIP</b>, nur einen <b>Bereich</b> oder im Format <b>Opus</b>. MP3 ist im Browser/der App nicht möglich – Opus ist der kleine, moderne Ersatz.' },
     keytempo: { icon: 'wave', title: 'Tonart &amp; Tempo', sel: '#btn-key-tempo', before: openMenu, text: '<b>Tonart erkennen</b>, Spuren <b>transponieren</b> und das <b>Tempo angleichen</b> (die Tonhöhe bleibt dabei gleich) – praktisch, wenn Stems aus verschiedenen Songs zusammenpassen sollen.' },
@@ -50,7 +52,7 @@
     win_drums: { icon: 'drum', title: 'Drums, 808 &amp; FX', sel: () => winTarget('drums'), before: () => openWin('drums'), text: '16-Step-Sequencer mit Presets (Techno, Trance, Boom-Bap, Trap), Kick-Synthesizer, <b>Bass/808</b>-Engine sowie <b>FX &amp; Transitions</b> wie Noise Riser, Sub Impact und Rev Crash.' },
     win_vocals: { icon: 'mic', title: 'Vocal-Cleanup &amp; Mikrofon', sel: () => winTarget('vocals'), before: () => openWin('vocals'), text: 'Das <b>Vocal-Rack</b> poliert Suno-Stimmen (an/aus über „Rack“), darunter nimmst du mit dem <b>Mikrofon</b> auf – mit Vorzähler.' },
     win_mixer: { icon: 'slidersV', title: 'Mixer &amp; Master', sel: () => winTarget('mixer'), before: () => openWin('mixer'), text: 'Alle Kanäle als Fader mit Pegel, dazu <b>Busse</b> und der <b>Master-Ausgang</b> mit Spitzenpegel.' },
-    nav: { icon: 'menu', title: 'Untere Leiste', sel: () => firstShown('#bottom-nav'), text: 'Am Handy liegt hier der <b>Transport</b> (Play, Stopp, Loop, Klick). <b>Wische nach links</b> (oder tippe den kleinen Pfeil) zu <b>Spuren</b>, <b>Editor</b>, <b>Drums</b>, <b>Vocal</b> und <b>Mixer</b> – und wieder zurück.', skipIfMissing: true },
+    nav: { icon: 'menu', title: 'Untere Leiste', sel: () => firstShown('#bottom-nav'), before: () => { closeMenu(); try { TpDock.go('tp', true); } catch (_) {} }, text: 'Am Handy liegt hier der <b>Transport</b> (Play, Stopp, Loop, Klick). <b>Wische nach links</b> (oder tippe einen der kleinen Punkte unten) zu <b>Spuren</b>, <b>Editor</b>, <b>Drums</b>, <b>Vocal</b> und <b>Mixer</b>, dann zur <b>Player-Steuerung</b> und ganz rechts zur <b>Zentrale</b> (Startseite, DAW, Player, Feedback, Optionen, Anleitung) – und wieder zurück.', skipIfMissing: true },
     done: { icon: 'check', title: 'Geschafft!', text: 'Du kennst jetzt die wichtigsten Stellen. Mehr Details, Tipps und Hilfe bei Problemen findest du im <b>Handbuch</b>: <b>☰ → Anleitung</b> oder <b>Optionen → Anleitung</b>. Dort startet jedes Kapitel auf Wunsch einen kurzen Mini-Rundgang.', last: true }
   };
   const TOURS = {
@@ -119,6 +121,8 @@
     if (el) {
       const r0 = el.getBoundingClientRect(); const tall = r0.height > vh * .55;
       if (r0.top < 8 || r0.bottom > vh - 8) { try { el.scrollIntoView({ block: tall ? 'start' : 'center' }); } catch (_) {} }
+      /* Passt die Karte weder unter noch über das Element (z. B. eine hohe Spur), wird das Element nach oben geschoben, damit darunter Platz bleibt */
+      else if (!tall) { const need = card.offsetHeight + 26, rr = el.getBoundingClientRect(); if (rr.bottom + need > vh && rr.top - need < 0 && rr.top > 12) { try { window.scrollBy(0, rr.top - 12); } catch (_) {} } }
     }
     if (!el) { ring.hidden = true; setB('t', 0, 0, vw, vh); ['b', 'l', 'r', 'h'].forEach(k => setB(k, 0, 0, 0, 0)); card.style.top = Math.max(16, (vh - card.offsetHeight) / 2) + 'px'; card.style.bottom = 'auto'; return; }
     const r = el.getBoundingClientRect(), pad = 6, x = Math.max(0, r.left - pad), y = Math.max(0, r.top - pad), w = Math.min(vw - x, r.width + pad * 2), h = Math.min(vh - y, r.height + pad * 2);
@@ -177,7 +181,7 @@
       <h4>Clip-Editor (Edit)</h4><p>Zwei Modi: <b>Clips</b> und <b>Automation</b>.</p><ul><li><b>Verschieben</b>: Clip antippen, ziehen; zwei Finger zoomen.</li><li><b>Zuschneiden</b>: Rand ziehen – der Clip wird nur verdeckt, nicht gelöscht.</li><li><b>Teilen</b>: auf den Clip tippen.</li><li><b>Schleife</b>: rechten Rand über das Ende ziehen.</li><li>Pegel, Ein- und Ausblenden (Fades) pro Clip über die Regler.</li><li><b>Automation</b>: Lautstärke, Pan und Filter als Kurve; Punkte setzen, ziehen, löschen.</li></ul>
       <p>Die Hinweiszeile unten im Editor erklärt immer das gerade aktive Werkzeug.</p>${show('Zeig es mir', 'lanes')}` },
     { id: 'transport', icon: 'timer', title: 'Abspielen, Tempo &amp; Klick', sum: 'Play, Loop, Metronom, BPM, TAP', body: `
-      <ul><li><b>Play / Pause</b> auch mit <kbd>Leertaste</kbd>; <b>Stopp</b> springt zum Anfang.</li><li><b>Loop</b> wiederholt Arrangement bzw. Loop-Bereich.</li><li><b>Drei Seiten</b> in der unteren Leiste (Handy): Transport, Bereiche und <b>Player</b> – nach links/rechts wischen. Spielt der Player, springt die Leiste zur Player-Seite, startet die DAW, zurück zum Transport. Unter <b>Optionen → Untere Leiste</b> gibt es „Tasten passend zum Leistenstil“ und „Scrollbalken anzeigen“.</li><li><b>Leistenstil</b>: Unter <b>Optionen → Untere Leiste</b> wählst du „Wie das Design“, „Glas“, „Flach“, „Leuchtend“ oder „Dezent“ – gilt auch für die Dockbar des Players.</li><li><b>Klick</b> = Metronom.</li><li><b>Am Handy</b> liegen Play, Stopp, Loop und Klick in der <b>unteren Leiste</b>. Wische dort nach links (oder tippe den kleinen Pfeil) zu Spuren · Editor · Drums · Vocal · Mixer, nach rechts zurück zum Transport. Optionen → Design &amp; Aussehen → Untere Leiste: abschaltbar, dann liegt der Transport wieder oben.</li><li><b>BPM</b> (60–180) eintippen oder mit <b>TAP</b> mehrfach im Takt tippen.</li><li>Die Anzeige zeigt Takt : Schlag : Step sowie Zeit und Länge.</li><li><kbd>Strg</kbd>+<kbd>Z</kbd> / <kbd>Strg</kbd>+<kbd>Y</kbd> machen rückgängig/wiederherstellen (Tastatur).</li></ul>${show('Zeig es mir', 'transport')}` },
+      <ul><li><b>Play / Pause</b> auch mit <kbd>Leertaste</kbd>; <b>Stopp</b> springt zum Anfang.</li><li><b>Loop</b> wiederholt Arrangement bzw. Loop-Bereich.</li><li><b>Drei Seiten</b> in der unteren Leiste (Handy): Transport, Bereiche und <b>Player</b> – nach links/rechts wischen. Spielt der Player, springt die Leiste zur Player-Seite, startet die DAW, zurück zum Transport. Unter <b>Optionen → Untere Leiste</b> gibt es „Tasten passend zum Leistenstil“ und „Scrollbalken anzeigen“.</li><li><b>Leistenstil</b>: Unter <b>Optionen → Untere Leiste</b> wählst du „Wie das Design“, „Glas“, „Flach“, „Leuchtend“ oder „Dezent“ – gilt auch für die Dockbar des Players.</li><li><b>Klick</b> = Metronom.</li><li><b>Am Handy</b> liegen Play, Stopp, Loop und Klick in der <b>unteren Leiste</b>. Wische dort nach links (oder tippe einen der kleinen Punkte unten) zu Spuren · Editor · Drums · Vocal · Mixer, nach rechts zurück zum Transport. Optionen → Design &amp; Aussehen → Untere Leiste: abschaltbar, dann liegt der Transport wieder oben.</li><li><b>BPM</b> (60–180) eintippen oder mit <b>TAP</b> mehrfach im Takt tippen.</li><li>Die Anzeige zeigt Takt : Schlag : Step sowie Zeit und Länge.</li><li><kbd>Strg</kbd>+<kbd>Z</kbd> / <kbd>Strg</kbd>+<kbd>Y</kbd> machen rückgängig/wiederherstellen (Tastatur).</li></ul>${show('Zeig es mir', 'transport')}` },
     { id: 'midi', icon: 'piano', title: 'MIDI-Editor &amp; Piano Roll', sum: 'Noten, Skalen, Generatoren, Audio-to-MIDI', body: `
       <h4>Großansicht &amp; Werkzeug-Gruppen</h4><ul><li>Klavier/Piano Roll, Drums, Vocal und Mixer öffnen in einem <b>eigenen Fenster</b> über den Knöpfen unter den Spuren (oder die untere Leiste). Zweiter Tipp, <b>✕</b>, Zurück-Taste oder <kbd>Esc</kbd> schließen es wieder.</li><li>Im MIDI-Fenster zeigt die Leiste oben fünf <b>Gruppen</b>: <b>Raster</b>, <b>Tonart</b>, <b>Generator</b>, <b>Audio→MIDI</b>, <b>Klang</b>. Es ist immer nur die gewählte Gruppe sichtbar; die Wahl wird gemerkt.</li><li>Lieber die alte Darstellung? <b>Optionen → Bereiche (Editor, Drums, Vocal, Mixer)</b>: „Großes Fenster bei Bedarf“, „Untereinander, einklappbar“ oder „Reiter unter den Spuren“.</li></ul>
       <ul><li><b>Raster</b> 1/8, 1/16, 1/32; <b>Transponieren</b> −12 / −1 / +1 / +12.</li><li><b>Tonart und Skala</b> wählen und mit <b>Quantize Scale</b> alle Noten einrasten.</li><li><b>Arp / Pattern-Generator</b> wählen und <b>Generieren</b>; dazu 🎲 <b>Auto</b>, ✨ <b>Studio</b>, 🧬 <b>Variation</b>; <b>Leeren</b> löscht die Noten der Spur.</li><li><b>● MIDI Rec</b> nimmt von einem angeschlossenen MIDI-Keyboard auf (WebMIDI, z. B. per USB).</li><li><b>Klangfarbe / Oszillator-Preset</b> für die eingebaute Synth-Engine; über SoundFonts sind echte Instrumente möglich.</li></ul>
@@ -261,7 +265,7 @@
         <input class="hp-q" type="search" placeholder="Im Handbuch suchen …" aria-label="Im Handbuch suchen">
         <div class="hp-list">${CH.map(c => `<details data-id="${c.id}"><summary><span class="hp-ic">${ic(c.icon)}</span><span class="hp-st"><b>${c.title}</b><span class="s">${c.sum}</span></span></summary><div class="hp-body" data-o="">${c.body}</div></details>`).join('')}</div>
         <div class="hp-none" hidden>Dazu habe ich nichts gefunden. Versuche ein anderes Stichwort, z. B. „Export“, „Tempo“ oder „Mikrofon“.</div>
-        <div class="hp-foot">Sunshine@R Stem DAW Studio · Anleitung</div></div></div>`;
+        <div class="hp-foot">Sunshine@R DAW Studio · Anleitung</div></div></div>`;
     r.querySelectorAll('.hp-body').forEach(b => b.dataset.o = b.innerHTML);
     document.body.appendChild(r); MAN = r;
     r.addEventListener('click', e => {
@@ -301,7 +305,7 @@
       <button type="button" data-hp="man" class="text-left rounded-2xl p-3 border border-slate-700 bg-slate-900"><div class="text-sm font-bold">📖 Handbuch</div><div class="text-[11px] text-slate-400 mt-0.5">Alle Funktionen, durchsuchbar</div></button></div>`;
     ph.addEventListener('click', e => { const b = e.target.closest('[data-hp]'); if (!b) return; const ov = ph.closest('#settings-modal'); if (ov) ov.remove(); if (b.dataset.hp === 'tour') startTour('rundgang'); else openManual(); });
   }
-  new MutationObserver(ms => { for (const m of ms) m.addedNodes.forEach(n => { if (n.nodeType !== 1) return; const ph = n.id === 'hp-sec' ? n : (n.querySelector && n.querySelector('#hp-sec')); if (ph && !ph.dataset.done) { ph.dataset.done = '1'; optionsSection(ph); } }); }).observe(document.body, { childList: true, subtree: true });
+  SunDOM.mount('hp-sec', ph => optionsSection(ph));
 
   function onHome(el) { // Startseite: „Neu hier?“-Karte beim ersten Start
     if (!el) return; el.innerHTML = '';

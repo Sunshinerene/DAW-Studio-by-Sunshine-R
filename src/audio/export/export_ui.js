@@ -3,9 +3,7 @@
   'use strict';
   if (typeof window.__exportMix !== 'function') return;
   const $ = id => document.getElementById(id);
-  const say = (m, k) => { try { toast(m, k || 'info'); } catch (_) {} };
-  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const { esc, clamp, say } = window.SunUtil;
   const S = { what: 'master', range: 'all', from: 1, to: 8, fmt: 'wav16', withMaster: true, tags: true, pick: {}, busy: false, cancel: false };
   let root = null, opusOk = false;
 
@@ -185,10 +183,10 @@
   /* ------------------------------------------------------------------ Fenster */
   function build() {
     if (root) return;
-    const st = document.createElement('style'); st.textContent = (window.__lmCSS || '').replace(/#lm-root/g, '#ex-root') + '\n#ex-root .lm-seg{display:flex;gap:6px}#ex-root .lm-seg button{flex:1;min-height:46px;border-radius:12px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#e2e8f0;font-weight:700;font-size:12px}#ex-root .lm-seg button[aria-pressed="true"]{background:rgba(245,158,11,.22);border-color:#f59e0b;color:#fff3dc}#ex-root .ex-list label{display:flex;gap:10px;align-items:center;min-height:40px;font-size:13px}#ex-root .ex-list input{width:20px;height:20px}#ex-root .ex-bar{height:6px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden;margin-top:8px}#ex-root .ex-bar>div{height:100%;width:0;background:#f59e0b;transition:width .25s}#ex-root input[type=number]{min-height:44px;width:90px;border-radius:12px;background:#0b1220;border:1px solid rgba(255,255,255,.18);color:#e2e8f0;padding:0 10px}';
+    const st = document.createElement('style'); st.textContent = (window.__lmCSS || '').replace(/#lm-root/g, '#ex-root') + '\n#ex-root .lm-seg{display:flex;gap:6px}#ex-root .lm-seg button{flex:1;min-height:46px;border-radius:calc(12px * var(--rk,1));border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#e2e8f0;font-weight:700;font-size:12px}#ex-root .lm-seg button[aria-pressed="true"]{background:rgba(245,158,11,.22);border-color:#f59e0b;color:#fff3dc}#ex-root .ex-list label{display:flex;gap:10px;align-items:center;min-height:40px;font-size:13px}#ex-root .ex-list input{width:20px;height:20px}#ex-root .ex-bar{height:6px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden;margin-top:8px}#ex-root .ex-bar>div{height:100%;width:0;background:#f59e0b;transition:width .25s}#ex-root input[type=number]{min-height:44px;width:90px;border-radius:calc(12px * var(--rk,1));background:#0b1220;border:1px solid rgba(255,255,255,.18);color:#e2e8f0;padding:0 10px}';
     document.head.appendChild(st);
     root = document.createElement('div'); root.id = 'ex-root'; root.hidden = true; root.setAttribute('role', 'dialog');
-    root.style.cssText = 'position:fixed;inset:0;z-index:140;background:rgba(0,0,0,.72);backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center';
+    root.style.cssText = 'position:fixed;inset:0;z-index:var(--z-window);background:rgba(0,0,0,.72);backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center';
     root.innerHTML = `<div class="lm-card" aria-label="Export">
       <div style="display:flex;align-items:center;gap:8px"><h3 style="flex:1">📦 Export</h3><button type="button" class="lm-btn" data-ex="close" aria-label="Schließen">✕</button></div>
       <div class="lm-sec"><b>Was?</b><div class="lm-seg" id="ex-what"><button type="button" data-what="master" aria-pressed="true">Mix</button><button type="button" data-what="stems" aria-pressed="false">Einzelstems (ZIP)</button><button type="button" data-what="midi" aria-pressed="false">MIDI</button></div><div class="lm-note" id="ex-whatnote"></div></div>

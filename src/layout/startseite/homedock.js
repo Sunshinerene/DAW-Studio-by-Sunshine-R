@@ -15,7 +15,13 @@
 
   const CSS = `
 html{--dk-seek:18px;--dk-ic:40px;--dk-play:48px;--dk-pane:68px}
-.hm-dock{position:absolute;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom,0px));max-width:620px;margin:0 auto;padding:6px 10px 10px;z-index:6;color:#eef1ff}
+.hm-dock{position:absolute;left:var(--sx,6px);right:var(--sx,6px);bottom:0;max-width:736px;margin:0 auto;padding:6px 0 calc(6px + env(safe-area-inset-bottom,0px));z-index:6;color:#eef1ff;overflow:hidden}
+.hm-dock>.zt-scroll>.hd{width:auto}
+.hm-dk-snd .hm-chips{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.hm-dk-snd .hm-chips[hidden],.hm-dk-snd .hm-snote[hidden]{display:none}
+.hm-dk-snd .hm-chip{min-height:31px;padding:0 1px;font-size:10.5px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:calc(var(--ctl-r,12px) - 2px);border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#dfe3fb}
+.hm-dk-snd .hm-chip.on{background:rgb(var(--daw-accent)/.22);border-color:rgb(var(--daw-accent)/.85);color:#fff}
+.hm-dk-snd .hm-snote{font-size:11px;color:rgba(255,255,255,.66);text-align:center}
 .hm-dock[hidden]{display:none}
 .hm-dock.hd-in{animation:hd-in .4s cubic-bezier(.2,.9,.2,1)}
 @keyframes hd-in{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
@@ -24,17 +30,17 @@ html{--dk-seek:18px;--dk-ic:40px;--dk-play:48px;--dk-pane:68px}
 .hd .hd-open{flex:1;min-width:0;text-align:left;background:none;border:0;color:inherit;padding:2px 0;min-height:40px}
 .hd .hd-open b{display:block;font-size:14px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hd .hd-open small{display:block;font-size:11px;color:rgba(255,255,255,.66);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.hd .hd-src{flex:none;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:999px;border:1px solid var(--td-line);color:var(--td-dot)}
-.hd .hd-x{flex:none;width:36px;height:36px;border-radius:50%;border:0;background:none;color:rgba(255,255,255,.6);font-size:16px}
+.hd .hd-src{flex:none;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:var(--r-pill,999px);border:1px solid var(--td-line);color:var(--td-dot)}
+.hd .hd-x{flex:none;width:36px;height:36px;border-radius:var(--r-circle,50%);border:0;background:none;color:rgba(255,255,255,.6);font-size:16px}
 .hd .hd-seek{display:flex;align-items:center;gap:8px;height:var(--dk-seek);font-size:11px;color:rgba(255,255,255,.72);font-variant-numeric:tabular-nums}
 .hd .hd-seek input{flex:1;margin:0;min-width:0}
 .hd .hd-ctl{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:2px 0 0;padding:0 4px;height:var(--dk-play)}
-.hd .hd-ic{position:relative;width:var(--dk-ic);height:var(--dk-ic);border-radius:50%;border:0;background:none;color:#eef1ff;display:grid;place-items:center;flex:none}
+.hd .hd-ic{position:relative;width:var(--dk-ic);height:var(--dk-ic);border-radius:var(--r-circle,50%);border:0;background:none;color:#eef1ff;display:grid;place-items:center;flex:none}
 .hd .hd-ic[aria-pressed=true]{color:var(--td-dot,rgb(var(--daw-accent)));background:rgb(var(--daw-accent)/.16)}
 .hd .hd-ic b{position:absolute;right:8px;bottom:6px;font-size:10px;line-height:1;color:var(--td-dot,rgb(var(--daw-accent)))}
-.hd .hd-play{width:var(--dk-play);height:var(--dk-play);border-radius:50%;border:0;background:var(--td-dot,rgb(var(--daw-accent)));color:#10131c;display:grid;place-items:center;box-shadow:0 4px 16px var(--td-glow,rgb(var(--daw-accent)/.4));flex:none}
-html[data-theme=studio] .hd .hd-play{border-radius:14px}
-html[data-theme=studio] .hd .hd-ic{border-radius:10px}
+.hd .hd-play{width:var(--dk-play);height:var(--dk-play);border-radius:var(--r-circle,50%);border:0;background:var(--td-dot,rgb(var(--daw-accent)));color:#10131c;display:grid;place-items:center;box-shadow:0 4px 16px var(--td-glow,rgb(var(--daw-accent)/.4));flex:none}
+html[data-theme=studio] .hd .hd-play{border-radius:calc(14px * var(--rk,1))}
+html[data-theme=studio] .hd .hd-ic{border-radius:calc(10px * var(--rk,1))}
 html[data-theme=neon] .hd .hd-play{background:linear-gradient(135deg,#8a3dff,#19c3ff);color:#fff}
 html[data-theme=liquid] .hd .hd-play{background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,.18));color:#fff;border:1px solid rgba(255,255,255,.4)}
 .hd button:active{transform:scale(.94)}
@@ -48,11 +54,11 @@ html[data-theme=liquid] .hd .hd-play{background:linear-gradient(180deg,rgba(255,
 .hd-pane:not(.hd-none) .hd-idle{display:none}
 /* Startseite: Titelzeile unter dem Cover */
 .hm-cap{position:absolute;left:0;right:0;bottom:0;height:30px;display:flex;align-items:center;gap:8px;justify-content:center;padding:0 14px;z-index:3;pointer-events:auto}
-.hm-cap .hd-src{flex:none;font-size:9.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:999px;border:1px solid var(--td-line);color:var(--td-dot)}
+.hm-cap .hd-src{flex:none;font-size:9.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:var(--r-pill,999px);border:1px solid var(--td-line);color:var(--td-dot)}
 .hm-cap .hd-open{flex:0 1 auto;min-width:0;max-width:100%;text-align:center;background:none;border:0;color:#eef1ff;padding:0;display:flex;align-items:baseline;gap:8px;min-height:30px}
 .hm-cap .hd-open b{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .hm-cap .hd-open small{font-size:11px;color:rgba(255,255,255,.62);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:0 1 auto}
-.hm-cap .hd-x{flex:none;width:30px;height:30px;border-radius:50%;border:0;background:none;color:rgba(255,255,255,.6);font-size:14px}
+.hm-cap .hd-x{flex:none;width:30px;height:30px;border-radius:var(--r-circle,50%);border:0;background:none;color:rgba(255,255,255,.6);font-size:14px}
 `;
   const st = document.createElement('style'); st.id = 'hmdock-css'; st.textContent = CSS; document.head.appendChild(st);
 
@@ -134,6 +140,7 @@ html[data-theme=liquid] .hd .hd-play{background:linear-gradient(180deg,rgba(255,
 
   /* ---------- Startseite ---------- */
   let root = null, hctl = null, dock = null, stage = null, cvb = null, cv = null, mode = '', last = '', dismissed = false, shownMode = '', sig = '';
+  let strip = null, pEls = null, plPane = null, dawPane = null, paneKey = '', dkPane = '';
   function compute() {
     const d = dsx(), ps = plState();
     if (dawOn()) { last = 'daw'; dismissed = false; return 'daw'; }
@@ -146,8 +153,35 @@ html[data-theme=liquid] .hd .hd-play{background:linear-gradient(180deg,rgba(255,
   function build() {
     if (dock || !root) return;
     hctl = createCtl({ ids: true, capHost: $('hm-stage'), onClose() { if (mode === 'player') { try { P().pause(); } catch (_) {} } else if (mode === 'daw' && dawOn()) { const s = $('btn-stop'); if (s) s.click(); } dismissed = true; tick(); }, onOpenDaw() { if (window.Home && Home.close && $('hm-back') && !$('hm-back').hidden) Home.close(); } });
-    dock = hctl.el; dock.classList.add('hm-dock'); dock.id = 'hm-dock'; dock.hidden = true; dock.setAttribute('role', 'group'); dock.setAttribute('aria-label', 'Wiedergabe');
-    root.appendChild(dock); stage = $('hm-stage'); cv = $('hm-viz');
+    /* Dockbar wie in der DAW: wischbare Seiten – Playbar (nur wenn etwas läuft) · Klang · andere Playbar · Zentrale */
+    dock = document.createElement('div'); dock.className = 'hm-dock'; dock.id = 'hm-dock'; dock.setAttribute('role', 'group'); dock.setAttribute('aria-label', 'Dockbar');
+    strip = window.Zentrale ? Zentrale.strip(dock, { id: 'hm-dkscroll', dotsId: 'hm-dkdots', onPane(n, p) { dkPane = p ? p.id : ''; } }) : null;
+    const wrap = c => { const d = document.createElement('div'); d.className = c; return d; };
+    pEls = { play: hctl.el, snd: wrap('hm-dk-snd'), pl: wrap('hm-dk-other'), daw: wrap('hm-dk-other'), zt: wrap('hm-dk-zt') };
+    try { plPane = mountPane(pEls.pl, 'player'); dawPane = mountPane(pEls.daw, 'daw'); } catch (_) {}
+    try { if (window.Zentrale) { pEls.zt.appendChild(Zentrale.pane('home')); document.documentElement.classList.add('zt-on'); } } catch (_) {}
+    sndInit(pEls.snd);
+    root.appendChild(dock); stage = $('hm-stage'); cv = $('hm-viz'); paneKey = '\u0000';
+  }
+  /* Seite „Klang“: dieselben Voreinstellungen wie im Player (Techno, Bass …), hier direkt von der Startseite aus */
+  function sndInit(el) {
+    el.innerHTML = '<div class="hm-chips" role="radiogroup" aria-label="Klang-Voreinstellung"></div><div class="hm-snote" hidden></div>';
+    el.addEventListener('click', e => { const b = e.target.closest('[data-hm-preset]'); if (!b) return; try { P().preset(b.dataset.hmPreset); } catch (_) {} sndPaint(true); });
+  }
+  let sndSig = '';
+  function sndPaint(force) {
+    const el = pEls && pEls.snd; if (!el) return; const pl = P(), S = SND(); if (!pl || !S || !pl.settings) return;
+    const st = pl.settings(), key = (st.dsp ? st.preset : 'off') + '|' + el.isConnected; if (key === sndSig && !force) return; sndSig = key;
+    const box = el.querySelector('.hm-chips'), note = el.querySelector('.hm-snote');
+    if (!box.firstChild) box.innerHTML = S.PRESETS.map(q => '<button type="button" class="hm-chip" role="radio" data-hm-preset="' + q.id + '" aria-checked="false">' + q.name + '</button>').join('');
+    box.hidden = !st.dsp; note.hidden = st.dsp; note.textContent = st.dsp ? '' : 'Klang-Voreinstellungen sind in den Optionen ausgeschaltet.';
+    box.querySelectorAll('[data-hm-preset]').forEach(b => { const o = b.dataset.hmPreset === st.preset; b.setAttribute('aria-checked', String(o)); b.classList.toggle('on', o); });
+  }
+  /* Welche Seiten gibt es gerade? Läuft etwas: Playbar zuerst; sonst nur Klang und Zentrale */
+  function setPanes(m) {
+    if (!strip || !pEls) return; const lab = { play: m === 'daw' ? 'DAW-Wiedergabe' : 'Player-Wiedergabe', snd: 'Klang', pl: 'Player-Steuerung', daw: 'DAW-Steuerung', zt: 'Zentrale' };
+    const ids = m === 'daw' ? ['play', 'snd', 'pl', 'zt'] : m === 'player' ? ['play', 'snd', 'daw', 'zt'] : ['snd', 'zt'];
+    strip.set(ids.map(id => ({ id, el: pEls[id], label: lab[id] })));
   }
   function stageSetup() { if (!stage || !cv) return; if (!cvb && window.Cover && Cover.bind) { cvb = Cover.bind($('hm-cvhost'), { size: 140, data: coverData, live: () => liveNow() }); cvb.el.classList.add('hd-cvb'); } }
   const liveNow = () => (mode === 'daw' ? dawOn() : mode === 'player' ? !!(plState() && plState().playing) : false);
@@ -170,9 +204,11 @@ html[data-theme=liquid] .hd .hd-play{background:linear-gradient(180deg,rgba(255,
   function tick() {
     if (!root || root.hidden) return; build(); if (!dock) return;
     const m = compute(), changed = m !== mode; mode = m;
-    const on = !!m; dock.hidden = !on; root.classList.toggle('hm-hasdock', on);
+    const on = !!m; dock.hidden = false; root.classList.add('hm-hasdock'); root.classList.toggle('hm-hasstage', on);
     if (stage) { stage.hidden = !on; stage.classList.toggle('on', on); }
-    if (!on) { root.style.removeProperty('--hd-h'); root.style.removeProperty('--hs-h'); shownMode = ''; return; }
+    if (paneKey !== m) { const was = dkPane; paneKey = m; setPanes(m); if (m) { if (was !== 'play' && was !== 'snd') strip.goId('play', true); else if (was === 'snd') strip.goId('snd', true); } else strip.goId(was === 'snd' ? 'snd' : 'zt', true); }
+    sndPaint(false);
+    if (!on) { root.style.removeProperty('--hs-h'); shownMode = ''; const h0 = dock.offsetHeight; if (h0 && root.style.getPropertyValue('--hd-h') !== h0 + 'px') root.style.setProperty('--hd-h', h0 + 'px'); return; }
     if (shownMode !== m) { shownMode = m; dock.classList.remove('hd-in'); void dock.offsetWidth; dock.classList.add('hd-in'); stageSetup(); }
     hctl.render(m); const i = info(m);
     if (cvb) { cvb.set(i.cover || ''); attachViz(); const k = m + '|' + root.clientWidth + '|' + window.innerHeight; if (k !== sig || changed) { sig = k; fit(); } try { cvb.wake(); } catch (_) {} const s = SND(); if (s) s.wake(); }
@@ -181,7 +217,7 @@ html[data-theme=liquid] .hd .hd-play{background:linear-gradient(180deg,rgba(255,
 
   /* ---------- Untere DAW-Leiste: Seite „Player“ ---------- */
   const panes = new Set();
-  function mountPane(host) { const c = createCtl({ pane: true }); host.appendChild(c.el); panes.add(c); c.render('player'); return c; }
+  function mountPane(host, m) { m = m === 'daw' ? 'daw' : 'player'; const c = createCtl({ pane: true }); c.fixed = m; host.appendChild(c.el); panes.add(c); c.render(m); return c; }
   function unmountPane(c) { if (!c) return; panes.delete(c); try { c.el.remove(); } catch (_) {} }
 
   /* Wer läuft, bestimmt die Seite der unteren Leiste: Player startet → Player-Seite, DAW startet → DAW-Transport */
@@ -193,11 +229,21 @@ html[data-theme=liquid] .hd .hd-play{background:linear-gradient(180deg,rgba(255,
   }
 
   window.HmDock = {
-    onOpen(r) { root = r; build(); tick(); }, onClose() { },
+    onOpen(r) { root = r; build(); paneKey = '\u0000'; tick(); if (strip) strip.goId(mode ? 'play' : 'zt', true); }, onClose() { },
     mountPane, unmountPane, panes: () => panes.size,
-    mode: () => mode, tick, state: () => ({ mode, visible: !!(dock && !dock.hidden), last, dismissed }),
+    mode: () => mode, tick, state: () => ({ mode, visible: !!mode, dock: !!(dock && !dock.hidden), pane: dkPane, panes: strip ? strip.panes.map(p => p.id) : [], last, dismissed }),
+    goPane: (id, instant) => { if (strip) strip.goId(id, instant); },
     _reset() { last = ''; dismissed = false; mode = ''; tick(); }
   };
   window.addEventListener('resize', () => { sig = ''; });
-  setInterval(() => { try { watch(); root = root || $('home-root'); if (root && !root.hidden) tick(); panes.forEach(c => { if (c.el.isConnected) c.render('player'); }); } catch (e) { console.warn('[HmDock]', e); } }, 250);
+  /* Takt: 250 ms, solange etwas spielt, die Startseite offen ist oder gerade bedient wurde – sonst reicht 1x pro Sekunde */
+  let lastIn = Date.now();
+  ['pointerdown', 'keydown', 'touchstart'].forEach(ev => document.addEventListener(ev, () => { lastIn = Date.now(); if (dockTick) SunTick.rate(dockTick, 250); }, true));
+  const dockTick = SunTick.every(250, () => {
+    try {
+      watch(); root = root || $('home-root'); if (root && !root.hidden) tick(); panes.forEach(c => { if (c.el.isConnected) c.render(c.fixed || 'player'); });
+      const ps = plState(), busy = !!(ps && ps.playing) || dawOn() || (root && !root.hidden) || Date.now() - lastIn < 4000;
+      SunTick.rate(dockTick, busy ? 250 : 1000);
+    } catch (e) { console.warn('[HmDock]', e); }
+  });
 })();

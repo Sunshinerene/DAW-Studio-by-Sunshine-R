@@ -7,7 +7,7 @@
   const WINS = [['midi', '🎹', 'MIDI-Editor & Piano Roll'], ['drums', '🥁', 'Drum-, 808- & FX-Sequencer'], ['vocals', '🎙️', 'Vocal-Cleanup, Mic & FX'], ['mixer', '🎚️', 'Kanal-Mixer & Master']];
   const DEF = { mode: 'big', v: 2, open: { midi: true, drums: false, vocals: false, mixer: false }, mt: true };
   let st = (() => { try { const j = JSON.parse(localStorage.getItem(LS) || '{}'); if (j.v !== 2) { if (j.mode !== 'tabs') j.mode = 'big'; j.v = 2; } return Object.assign({}, DEF, j, { open: Object.assign({}, DEF.open, j.open || {}) }); } catch (_) { return JSON.parse(JSON.stringify(DEF)); } })();
-  const save = () => { try { localStorage.setItem(LS, JSON.stringify(st)); } catch (_) {} };
+  const save = () => SunStore.save(LS, st);
   let built = false, guard = false;
 
   function redraw(tab) {

@@ -58,6 +58,18 @@ TEILE = [
   "block",
   "<script>",
   [
+   "src/kern/bausteine.js"
+  ],
+  "</script>"
+ ],
+ [
+  "text",
+  "src/layout/grundgeruest/05b_trenner.html"
+ ],
+ [
+  "block",
+  "<script>",
+  [
    "src/kern/zustand_spuren.js",
    "src/layout/toast.js",
    "src/kern/helfer.js",

@@ -6,13 +6,12 @@
 (function () {
   'use strict';
   const $ = id => document.getElementById(id);
-  const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
-  const say = (m, k) => { try { if (typeof toast === 'function') toast(m, k); } catch (_) {} };
+  const { esc, say } = window.SunUtil;
   const LS = 'sunshine.player';
   let S = { bg: true, vol: 1, shuffle: false, repeat: 'off', dsp: true, viz: true, preset: 'flat', custom: [0, 0, 0, 0, 0], cvr: true, tags: true };
-  try { Object.assign(S, JSON.parse(localStorage.getItem(LS) || '{}')); } catch (_) {}
+  SunStore.merge(S, LS);
   if (!Array.isArray(S.custom) || S.custom.length !== 5) S.custom = [0, 0, 0, 0, 0];
-  const saveS = () => { try { localStorage.setItem(LS, JSON.stringify(S)); } catch (_) {} };
+  const saveS = () => SunStore.save(LS, S);
 
   /* ---------- WorkerTick ---------- */
   window.WorkerTick = {
@@ -89,14 +88,14 @@
 
   const extOf = n => ((String(n).match(/\.([a-z0-9]+)$/i) || [])[1] || '').toLowerCase();
   let stage = null;   // beim Wiederverbinden einer alten Sitzung: neue Titel werden erst gesammelt und dann zugeordnet
-  const pushAudio = (name, sub, size, get, key, head) => { const it = { id: ++nid, name, key: key || name, title: titleOf(name), sub, size: size || 0, dur: NaN, artist: '', album: '', genre: '', year: '', track: '', comment: '', fmt: '', cover: '', get }; if (head) it.head = head; (stage || list).push(it); };
+  const pushAudio = (name, sub, size, get, key, head, stream) => { const it = { id: ++nid, name, key: key || name, title: titleOf(name), sub, size: size || 0, dur: NaN, artist: '', album: '', genre: '', year: '', track: '', comment: '', fmt: '', cover: '', get }; if (head) it.head = head; if (stream) it.stream = stream; (stage || list).push(it); };
   async function addFiles(files, opt) {
     opt = opt || {}; files = [...(files || [])]; let n = 0, skipped = 0, folderName = '', srcName = ''; beginStage();
     if (opt.folder) files.sort((a, b) => String(a.webkitRelativePath || a.name).localeCompare(String(b.webkitRelativePath || b.name), undefined, { numeric: true }));
     for (const f of files) {
       const isZip = /\.zip$/i.test(f.name) || /zip/.test(f.type || '');
       if (isZip) {
-        if (typeof JSZip === 'undefined') { say('Das ZIP-Modul ist nicht geladen.', 'error'); continue; }
+        let JSZip; try { JSZip = await SunLazy.zip(); } catch (_) { say('Das ZIP-Modul ist nicht geladen.', 'error'); continue; }
         try {
           const z = await JSZip.loadAsync(f), es = [];
           z.forEach((p, en) => { if (!en.dir && AUDIO_RE.test(p) && !/(^|\/)(__MACOSX|\.)/.test(p)) es.push({ p, en }); });
@@ -115,7 +114,7 @@
     return finishAdd(n, opt.folder ? 0 : skipped, folderName);
   }
   async function addEntries(entries, folderName, handle, nat) {   // Dateien aus dem Ordner-Dialog (Browser oder Android-App) – lesen erst beim Abspielen
-    beginStage(); let n = 0; for (const e of entries) { pushAudio(e.name, e.sub, e.size, e.get, e.key, e.head); n++; } setSrc({ kind: 'dir', name: folderName }, n, handle || null, nat || null); return finishAdd(n, 0, folderName);
+    beginStage(); let n = 0; for (const e of entries) { pushAudio(e.name, e.sub, e.size, e.get, e.key, e.head, e.stream); n++; } setSrc({ kind: 'dir', name: folderName }, n, handle || null, nat || null); return finishAdd(n, 0, folderName);
   }
   async function finishAdd(n, skipped, folderName) {
     if (stage) return finishRelink(n);
@@ -134,14 +133,37 @@
   /* ---- Android-App: eigener Ordner-Dialog (Storage Access Framework), Freigabe bleibt nach dem Neustart erhalten ---- */
   const natOk = () => native() && !!plug();
   const b64u8 = b => { const bin = atob(b), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u; };
-  async function natBlob(uri, size, limit) {   // liest in Stücken (1,5 MB) über die Brücke; limit: nur den Anfang (für Tags)
-    const CH = 1536 * 1024, total = limit ? Math.min(size || limit, limit) : (size || 0), parts = []; let off = 0;
-    for (;;) {
-      const want = total ? Math.min(CH, total - off) : CH; if (want <= 0) break;
-      const r = await plug().readChunk({ uri, offset: off, length: want }), n = (r && r.n) | 0; if (n <= 0) break;
-      parts.push(b64u8(r.b64)); off += n; if (n < want) break;
+  /* Base64 → Bytes ohne Zeichen-Schleife auf dem Hauptthread (die Oberfläche bleibt flüssig); alter Weg als Rückfall */
+  async function b64buf(b) {
+    try { if (Uint8Array.fromBase64) return Uint8Array.fromBase64(b); } catch (_) {}
+    try { const r = await fetch('data:application/octet-stream;base64,' + b); return new Uint8Array(await r.arrayBuffer()); } catch (_) { return b64u8(b); }
+  }
+  /* Alter Weg (Rückfall): liest in Stücken (2 MB) über die Brücke; das nächste Stück wird schon angefragt, während das vorige umgewandelt wird.
+     limit: nur den Anfang (für Tags). cancel(): true → abbrechen (anderer Titel gewählt). prog(0..1): Fortschritt. */
+  async function natBlob(uri, size, limit, cancel, prog) {
+    const CH = 2048 * 1024, total = limit ? Math.min(size || limit, limit) : (size || 0), parts = [];
+    const want = o => total ? Math.min(CH, total - o) : CH;
+    let off = 0, w = want(0), pend = w > 0 ? plug().readChunk({ uri, offset: 0, length: w }) : null;
+    while (pend) {
+      const r = await pend, n = (r && r.n) | 0; if (n <= 0) break;
+      const o2 = off + n, w2 = n < w ? 0 : want(o2);
+      pend = w2 > 0 ? plug().readChunk({ uri, offset: o2, length: w2 }) : null;
+      parts.push(await b64buf(r.b64)); off = o2; w = w2;
+      if (prog && total) prog(off / total);
+      if (cancel && cancel()) { if (pend) pend.catch(() => {}); throw new Error('abgebrochen'); }
     }
     return new Blob(parts);
+  }
+  /* Neuer Weg: Die App kopiert die Datei nativ (schnell, ohne Brücke) in den Zwischenspeicher; abgespielt wird direkt von dort
+     (Spulen geht sofort, nichts liegt im Arbeitsspeicher). Gibt eine URL zurück oder wirft – dann greift der alte Weg. */
+  let natFast = true, lastErr = '';
+  async function natStream(uri, size, name) {
+    if (!natFast) throw new Error('kein direkter Weg');
+    try {
+      const cap = window.Capacitor; if (!cap || !cap.convertFileSrc) throw new Error('kein Dateizugriff');
+      const r = await plug().cacheFile({ uri, name, size: size || 0 }); if (!r || !r.path) throw new Error('kein Pfad');
+      return cap.convertFileSrc('file://' + r.path);
+    } catch (e) { if (/unimplemented|not implemented|is not a function/i.test(String((e && (e.code || e.message)) || e))) natFast = false; throw e; }
   }
   async function openNative(rec, o) {
     o = o || {};
@@ -150,7 +172,7 @@
       const r = await plug().listFolder({ uri: nat.uri });
       const files = ((r && r.files) || []).filter(f => AUDIO_RE.test(f.name)); files.sort((a, b) => String(a.name).localeCompare(String(b.name), undefined, { numeric: true }));
       if (!files.length) { if (!o.silent) say('In „' + nat.name + '“ wurden keine Audiodateien gefunden.', 'warn'); return 0; }
-      const out = files.map(f => { const parts = String(f.name).split('/'); return { name: f.name, key: f.name, sub: parts.length > 1 ? parts[parts.length - 2] : nat.name, size: +f.size || 0, get: () => natBlob(f.uri, +f.size || 0), head: () => natBlob(f.uri, +f.size || 0, 3 * 1048576) }; });
+      const out = files.map(f => { const parts = String(f.name).split('/'); return { name: f.name, key: f.name, sub: parts.length > 1 ? parts[parts.length - 2] : nat.name, size: +f.size || 0, get: (cancel, prog) => natBlob(f.uri, +f.size || 0, 0, cancel, prog), head: () => natBlob(f.uri, +f.size || 0, 3 * 1048576), stream: () => natStream(f.uri, +f.size || 0, f.name) }; });
       if (!o.relink && !isOff() && list.length) { if (!au.paused && o.fresh !== false) pause(); resetList(); }
       hint = { play: !!o.play, key: o.key || '' }; await addEntries(out, nat.name, null, { uri: nat.uri, name: nat.name }); return out.length;
     } catch (e) { if (!o.silent) say('Der Ordner lässt sich nicht lesen – bitte erneut wählen.', 'warn'); return 0; }
@@ -174,7 +196,13 @@
     const inp = $('pl-dir'); if (inp) inp.click(); return 0;
   }
   /* Tags + Längen der Dateien im Hintergrund nachtragen (nacheinander, damit der Player flüssig bleibt) */
-  let dq = false;
+  let dq = false, busyLoad = 0, idleW = [], loadGen = 0;
+  const quiet = () => !busyLoad, waitQuiet = () => quiet() ? Promise.resolve() : new Promise(r => idleW.push(r));
+  const wakeQuiet = () => { if (quiet()) { const w = idleW; idleW = []; w.forEach(f => f()); } };
+  const nap = ms => new Promise(r => setTimeout(r, ms));
+  /* Hintergrund-Scan wartet, solange gerade getippt/gewischt wird (Bedienung geht vor) */
+  let lastTouch = 0; try { document.addEventListener('pointerdown', () => { lastTouch = performance.now(); }, { capture: true, passive: true }); document.addEventListener('touchmove', () => { lastTouch = performance.now(); }, { capture: true, passive: true }); } catch (_) {}
+  const calm = async () => { let n = 0; while (performance.now() - lastTouch < 1200 && n++ < 40) await nap(250); };
   const subLine = t => [t.artist, t.album].filter(Boolean).join(' · ') || t.sub;
   function applyTags(t, m) {
     t.tagsDone = true; if (!m) return;
@@ -192,6 +220,8 @@
     try {
       for (const t of list) {
         if ((t.head ? (t.tagsDone || !S.tags) : (isFinite(t.dur) && (t.tagsDone || !S.tags))) || t.bad || t.size > 120 * 1048576) continue;
+        await waitQuiet();   // beim Laden eines Titels ruht der Hintergrund-Scan, beim Abspielen läuft er gemächlich weiter
+        await calm();
         try {
           const b = t.head ? await t.head() : await t.get();
           await readTags(t, b);
@@ -202,6 +232,7 @@
           }
         } catch (_) {}
         paintList();
+        if (!au.paused) await nap(1500);
       }
     } finally { dq = false; }
   }
@@ -214,7 +245,7 @@
      Android-App: Der Browser-Dialog liefert keine dauerhafte Freigabe – die Liste erscheint sofort, der Ordner wird mit einem Tipp erneut gewählt (Treffer über Dateinamen, dann geht es an derselben Stelle weiter). */
   const KV = {
     p: null,
-    open() { if (this.p) return this.p; this.p = new Promise(res => { try { const r = indexedDB.open('sunshine-player', 1); r.onupgradeneeded = () => { try { r.result.createObjectStore('kv'); } catch (_) {} }; r.onsuccess = () => res(r.result); r.onerror = () => res(null); r.onblocked = () => res(null); } catch (_) { res(null); } }); return this.p; },
+    open() { if (!this.p) this.p = SunIDB.open('player').catch(() => null); return this.p; },
     async get(k) { const db = await this.open(); if (!db) return null; return new Promise(res => { try { const q = db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result == null ? null : q.result); q.onerror = () => res(null); } catch (_) { res(null); } }); },
     async set(k, v) { const db = await this.open(); if (!db) return false; return new Promise(res => { try { const tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(v, k); tx.oncomplete = () => res(true); tx.onerror = () => res(false); tx.onabort = () => res(false); } catch (_) { res(false); } }); },
     async del(k) { const db = await this.open(); if (!db) return false; return new Promise(res => { try { const tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').delete(k); tx.oncomplete = () => res(true); tx.onerror = () => res(false); tx.onabort = () => res(false); } catch (_) { res(false); } }); }
@@ -316,19 +347,30 @@
     if (t.off) { try { au.pause(); } catch (_) {} render(); paintCover(); persist(); await onOffline(i, autoplay); return false; }
     try { au.pause(); } catch (_) {}
     if (url) { try { URL.revokeObjectURL(url); } catch (_) {} url = null; }
-    render();
+    render(); busyLoad++; loadGen++; t.wantPlay = !!autoplay; t.streamed = false;
     try {
-      const b = await t.get();
+      let su = null, b = null;
+      if (t.stream && !t.noStream) { try { su = await t.stream(); } catch (_) { su = null; } }   // direkter Weg (Android-App mit neuer Hülle)
       if (idx !== i) return false;   // inzwischen anderer Titel gewählt
-      if (!t.size) t.size = b.size;
-      url = URL.createObjectURL(typed(b, t.name)); au.src = url; au.load();
+      if (su) { t.streamed = true; t.via = 'direkt (native Kopie)'; au.src = su; au.load(); }
+      else {
+        let last = -1; const sub = $('pl-sub');
+        const prog = p => { const q = Math.round(p * 100); if (q !== last && cur() === t) { last = q; if (sub) sub.textContent = 'Lädt … ' + q + ' %'; } };
+        t.via = t.noStream ? 'Rückfall: ganze Datei geladen' : t.stream ? 'ganze Datei geladen (direkt nicht möglich)' : 'ganze Datei geladen';
+        b = await t.get(() => idx !== i, prog);
+        if (idx !== i) return false;
+        if (!t.size) t.size = b.size;
+        url = URL.createObjectURL(typed(b, t.name)); au.src = url; au.load();
+      }
       const rp = (resumeKey && resumeKey === (t.key || t.name)) ? resumePos : 0; resumePos = 0; resumeKey = '';
       if (rp > 0.5) au.addEventListener('loadedmetadata', () => { try { au.currentTime = Math.max(0, Math.min(rp, (au.duration || rp) - 0.5)); } catch (_) {} paintTime(); }, { once: true });
-      readTags(t, b); paintCover(); persist();
+      if (b) readTags(t, b); else if (t.head) t.head().then(h => readTags(t, h)).catch(() => {});
+      paintCover(); persist();
       if (autoplay) await play();
       else syncMedia();
       return true;
-    } catch (e) { t.bad = true; say('„' + t.title + '“ lässt sich nicht öffnen.', 'error'); render(); return false; }
+    } catch (e) { if (idx !== i) return false; t.bad = true; say('„' + t.title + '“ lässt sich nicht öffnen.', 'error'); render(); return false; }
+    finally { busyLoad--; wakeQuiet(); render(true); }
   }
   async function play() {
     if (!cur()) { if (list.length) await load(0, true); return; }
@@ -336,7 +378,8 @@
     try { if (typeof dawState !== 'undefined' && dawState.isPlaying) audioEngine.stop(false); } catch (_) {}   // DAW und Player nicht gleichzeitig
     try { if (S.dsp && SND()) { SND().set(S.preset, S.custom, true); SND().resume(); } } catch (_) {}
     try { if (cvb) cvb.wake(); } catch (_) {}
-    try { await au.play(); errRun = 0; } catch (e) { if (e && e.name === 'NotAllowedError') say('Zum Abspielen bitte auf Play tippen.', 'info'); else { const t = cur(); if (t) t.bad = true; say('Abspielen nicht möglich.', 'error'); } }
+    const g = loadGen;   // Fehler des direkten Wegs übernimmt der Rückfall im error-Ereignis (siehe unten)
+    try { await au.play(); errRun = 0; } catch (e) { if (g !== loadGen || (!(e && e.name === 'NotAllowedError') && cur() && cur().streamed && !cur().noStream)) return; if (e && e.name === 'NotAllowedError') say('Zum Abspielen bitte auf Play tippen.', 'info'); else { const t = cur(); if (t) t.bad = true; say('Abspielen nicht möglich.', 'error'); } }
   }
   const pause = () => { try { au.pause(); } catch (_) {} };
   const toggle = () => { if (au.paused) play(); else pause(); };
@@ -409,7 +452,9 @@
   au.addEventListener('timeupdate', () => { paintTime(); savePos(false); });
   au.addEventListener('ended', () => { if (S.repeat === 'one') { au.currentTime = 0; play(); } else next(true); });
   au.addEventListener('error', () => {
-    const t = cur(); if (!t || !au.src) return; t.bad = true; render();
+    const t = cur(); if (!t || !au.src) return;
+    if (t.streamed && !t.noStream) { t.noStream = true; t.streamed = false; say('Direktes Abspielen klappt nicht – die Datei wird geladen …', 'info'); load(idx, t.wantPlay); return; }   // einmaliger Rückfall auf den alten Weg
+    t.bad = true; lastErr = 'Wiedergabefehler (' + (au.error ? 'Code ' + au.error.code : '?') + ') bei Weg: ' + (t.via || '?') + ' · ' + new Date().toLocaleTimeString('de-DE'); render();
     if (++errRun < list.length && !au.paused === false) { say('„' + t.title + '“ nicht abspielbar – nächster Titel.', 'warn'); if (list.length > 1) next(true); }
     else say('„' + t.title + '“ nicht abspielbar.', 'error');
   });
@@ -460,6 +505,7 @@
     shuffle: '<path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22"/><path d="m18 2 4 4-4 4"/><path d="M2 6h1.9c1.5 0 2.9.9 3.6 2.2"/><path d="M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8"/><path d="m18 14 4 4-4 4"/>',
     repeat: '<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>',
     vol: '<path d="M11 5 6 9H2v6h4l5 4V5z" fill="currentColor"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/>',
+    chat: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1.1-4.6A8 8 0 1 1 21 12z"/>',
     x: '<path d="M18 6 6 18M6 6l12 12"/>', plus: '<path d="M5 12h14M12 5v14"/>', back: '<path d="m15 18-6-6 6-6"/>',
     note: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
     folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/>',
@@ -476,7 +522,7 @@
     root = document.createElement('div'); root.id = 'pl-root'; root.setAttribute('role', 'dialog'); root.setAttribute('aria-label', 'Player'); root.hidden = true;
     const addBtns = '<button type="button" class="pl-btn pl-pri" data-pl="add">' + svg('plus', 18) + '<span>Dateien</span></button><button type="button" class="pl-btn" data-pl="folder">' + svg('folder', 18) + '<span>Ordner</span></button>';
     root.innerHTML =
-      '<div class="pl-top"><button type="button" class="pl-btn" data-pl="close" aria-label="Player schließen">' + svg('back', 20) + '<span>Zurück</span></button><h2>Player</h2><button type="button" class="pl-btn pl-sq" data-pl="opts" aria-label="Optionen" title="Optionen">' + svg('gear', 20) + '</button><button type="button" class="pl-btn pl-pri" data-pl="add">' + svg('plus', 18) + '<span>Dateien</span></button></div>' +
+      '<div class="pl-top"><span class="pl-tl"><button type="button" class="pl-btn" data-pl="close" aria-label="Player schließen">' + svg('back', 20) + '<span>Zurück</span></button></span><h2>Player</h2><span class="pl-tr"><button type="button" class="pl-btn pl-sq" data-pl="fb" aria-label="Feedback senden" title="Feedback senden">' + svg('chat', 20) + '</button><button type="button" class="pl-btn pl-sq" data-pl="opts" aria-label="Optionen" title="Optionen">' + svg('gear', 20) + '</button></span></div>' +
       '<div class="pl-fixed" id="pl-fixed">' +
       '<div class="pl-hero" id="pl-hero"><div class="pl-vizbox" id="pl-vizbox"><canvas id="pl-viz" aria-hidden="true"></canvas></div><div class="pl-cvhost" id="pl-cv"></div><div class="pl-art" id="pl-art"><img src="assets/sunshine-r-app-icon.png" alt="" onerror="this.remove()"></div></div>' +
       '<div class="pl-now"><div class="pl-title" id="pl-title">Noch nichts ausgewählt</div><div class="pl-sub" id="pl-sub">Dateien, einen Ordner oder ein Suno-ZIP hinzufügen</div><div class="pl-meta" id="pl-meta"></div></div></div>' +
@@ -486,15 +532,16 @@
       '<div class="pl-bands" id="pl-bands" hidden>' + SND_BANDS() + '<button type="button" class="pl-link" data-pl="bandreset">Zurücksetzen</button></div>' +
       '<p class="pl-note" id="pl-snote"></p></section>' +
       '<div class="pl-off-bar" id="pl-offbar" hidden></div>' +
-      '<div class="pl-lh"><span id="pl-count">0 Titel</span><span class="pl-lhb"><button type="button" class="pl-link" data-pl="recent">Zuletzt</button><button type="button" class="pl-link" data-pl="folder">Ordner wählen</button><button type="button" class="pl-link" data-pl="clear">Liste leeren</button></span></div>' +
+      '<div class="pl-lh"><span id="pl-count">0 Titel</span><button type="button" class="pl-btn pl-pri pl-lhadd" data-pl="add">' + svg('plus', 18) + '<span>Dateien</span></button><span class="pl-lhb"><button type="button" class="pl-link" data-pl="recent">Zuletzt</button><button type="button" class="pl-link" data-pl="folder">Ordner wählen</button><button type="button" class="pl-link" data-pl="clear">Liste leeren</button></span></div>' +
       '<div id="pl-list" role="list"></div>' +
       '<div class="pl-empty" id="pl-empty"><p>Hier spielst du Audiodateien ab – direkt von deinem Gerät, ohne ein Projekt zu öffnen und ohne sie erst in die App zu laden.</p><p>Unterstützt: <b>WAV, MP3, M4A, OGG, FLAC</b> und <b>ZIP</b> (z. B. der Suno-Download). Titel, Künstler, Album und Cover werden aus den Dateien gelesen.</p><div class="pl-ebtns">' + addBtns + '</div></div>' +
       '<p class="pl-note" id="pl-note"></p></div>' +
       '<div class="pl-dock" id="pl-dock" role="group" aria-label="Wiedergabe"><div class="pl-dk-scroll" id="pl-dkscroll"><div class="pl-dk-pane" id="pl-dkp-ctl"><div class="pl-dk-seek"><span id="pl-cur">0:00</span><input type="range" class="daw-slider pl-seek" id="pl-seek" min="0" max="1000" value="0" step="1" aria-label="Position" disabled><span id="pl-dur">–:––</span></div>' +
       '<div class="pl-ctl"><button type="button" class="pl-ic" data-pl="shuffle" aria-label="Zufall" aria-pressed="false">' + svg('shuffle') + '</button><button type="button" class="pl-ic" data-pl="prev" aria-label="Zurück">' + svg('prev', 26) + '</button>' +
       '<button type="button" class="pl-play" data-pl="toggle" aria-label="Abspielen">' + svg('play', 30) + '</button><button type="button" class="pl-ic" data-pl="next" aria-label="Weiter">' + svg('next', 26) + '</button><button type="button" class="pl-ic" data-pl="repeat" aria-label="Wiederholen" aria-pressed="false">' + svg('repeat') + '<b id="pl-rep1" hidden>1</b></button></div></div>' +
-      '<div class="pl-dk-pane pl-dk-snd" id="pl-dkp-snd" aria-label="Klang-Vorauswahl"><div class="pl-chips" id="pl-chips" role="radiogroup" aria-label="Klang-Voreinstellung"></div></div></div>' +
-      '<div class="pl-dk-dots" id="pl-dkdots"><button type="button" data-dk="0" class="on" aria-label="Steuerung"></button><button type="button" data-dk="1" aria-label="Klang-Vorauswahl"></button></div></div>' +
+      '<div class="pl-dk-pane pl-dk-snd" id="pl-dkp-snd" aria-label="Klang-Vorauswahl"><div class="pl-chips" id="pl-chips" role="radiogroup" aria-label="Klang-Voreinstellung"></div></div>' +
+      '<div class="pl-dk-pane pl-dk-daw" id="pl-dkp-daw" aria-label="DAW-Steuerung"></div><div class="pl-dk-pane pl-dk-zt" id="pl-dkp-zt" aria-label="Zentrale"></div></div>' +
+      '<div class="pl-dk-dots" id="pl-dkdots"><button type="button" data-dk="0" class="on" aria-label="Steuerung"></button><button type="button" data-dk="1" aria-label="Klang-Vorauswahl"></button><button type="button" data-dk="2" aria-label="DAW-Steuerung"></button><button type="button" data-dk="3" aria-label="Zentrale"></button></div></div>' +
       '<div class="pl-rc" id="pl-rc" hidden></div>' +
       '<input type="file" id="pl-file" multiple accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.opus,.flac,.zip,application/zip" hidden>' +
       '<input type="file" id="pl-dir" webkitdirectory directory multiple hidden>';
@@ -507,7 +554,7 @@
       if (e.target.closest('[data-rcclose]') || e.target === $('pl-rc')) { $('pl-rc').hidden = true; return; }
       if (b) {
         const a = b.dataset.pl;
-        if (a === 'close') close(); else if (a === 'opts') openOpts(); else if (a === 'add') $('pl-file').click(); else if (a === 'folder') pickFolder(); else if (a === 'recent') showRecent(); else if (a === 'relink') relinkNow(); else if (a === 'toggle') toggle(); else if (a === 'next') next(false); else if (a === 'prev') prev();
+        if (a === 'close') close(); else if (a === 'opts') openOpts(); else if (a === 'fb') { try { if (window.Feedback) Feedback.open({ area: 'Player' }); } catch (_) {} } else if (a === 'add') $('pl-file').click(); else if (a === 'folder') pickFolder(); else if (a === 'recent') showRecent(); else if (a === 'relink') relinkNow(); else if (a === 'toggle') toggle(); else if (a === 'next') next(false); else if (a === 'prev') prev();
         else if (a === 'shuffle') { S.shuffle = !S.shuffle; history = []; saveS(); render(true); }
         else if (a === 'repeat') { S.repeat = S.repeat === 'off' ? 'all' : S.repeat === 'all' ? 'one' : 'off'; saveS(); render(true); }
         else if (a === 'clear') { if (list.length) clear(); }
@@ -527,8 +574,13 @@
     sk.addEventListener('change', () => { if (isFinite(au.duration)) seekTo(au.duration * sk.value / 1000); seeking = false; });
     const dks = $('pl-dkscroll'), dkd = $('pl-dkdots');
     const dkPane = () => Math.round(dks.scrollLeft / Math.max(1, dks.clientWidth));
-    const dkPaint = () => { const n = dkPane(); dkd.querySelectorAll('button').forEach((b, i) => b.classList.toggle('on', i === n)); dks.dataset.pane = String(n); $('pl-dkp-ctl').toggleAttribute('inert', n !== 0); $('pl-dkp-snd').toggleAttribute('inert', n !== 1); };
-    dks.addEventListener('scroll', () => { clearTimeout(dks._t); dks._t = setTimeout(dkPaint, 60); }, { passive: true });
+    const dkIds = ['pl-dkp-ctl', 'pl-dkp-snd', 'pl-dkp-daw', 'pl-dkp-zt'];
+    const dkPaint = rest => { const n = Math.max(0, Math.min(dkIds.length - 1, dkPane())); dkd.querySelectorAll('button').forEach((b, i) => b.classList.toggle('on', i === n)); dks.dataset.pane = String(n); if (rest !== false) dkIds.forEach((id, i) => $(id).toggleAttribute('inert', n !== i)); };
+    /* Seite „DAW“ (Playbar der DAW) und „Zentrale“ – dieselben Bausteine wie in der DAW-Leiste und auf der Startseite */
+    try { if (window.HmDock && HmDock.mountPane) root._dkDaw = HmDock.mountPane($('pl-dkp-daw'), 'daw'); } catch (_) {}
+    try { if (window.Zentrale) { $('pl-dkp-zt').appendChild(Zentrale.pane('player')); document.documentElement.classList.add('zt-on'); } } catch (_) {}
+    dks.addEventListener('scroll', () => { clearTimeout(dks._t); dks._t = setTimeout(() => dkPaint(false), 60); }, { passive: true });
+    try { if (window.Zentrale && Zentrale.settle) Zentrale.settle(dks, () => dkPaint(true)); } catch (_) {}
     dkd.addEventListener('click', e => { const b = e.target.closest('[data-dk]'); if (!b) return; dks.scrollTo({ left: +b.dataset.dk * dks.clientWidth, behavior: 'smooth' }); });
     dkPaint(); root._dkGo = n => { dks.scrollTo({ left: n * dks.clientWidth, behavior: 'auto' }); dkPaint(); };
     root.addEventListener('dragover', e => { e.preventDefault(); });
@@ -585,10 +637,23 @@
     $('pl-dur').textContent = isFinite(d) ? fmt(d) : '–:––';
     sk.style.setProperty('--pl-p', (sk.value / 10) + '%');
   }
+  /* Liste: Zeilen werden nur neu gebaut, wenn sich die Reihenfolge/Anzahl ändert. Sonst (z. B. Dauer vom Hintergrund-Scan, Wechsel des laufenden Titels) werden nur die geänderten Stellen angepasst –
+     so bleiben Zeilen mitten in einem Fingertipp erhalten, und 107 Titel kosten nicht bei jedem Scan-Schritt einen kompletten Neuaufbau. */
+  const subOf = t => esc(subLine(t)) + (t.size ? ' · ' + mb(t.size) : '') + (t.bad ? ' · nicht lesbar' : '');
+  const rowOf = (t, i) => '<div class="pl-row' + (i === idx ? ' on' : '') + (t.bad ? ' bad' : '') + (t.off ? ' off' : '') + '" role="listitem" data-pl-i="' + i + '"><span class="pl-n" data-k="' + (i === idx && !au.paused ? 'eq' : i + 1) + '">' + (i === idx && !au.paused ? '<i class="pl-eq"><u></u><u></u><u></u></i>' : (i + 1)) + '</span><span class="pl-t"><b>' + esc(t.title) + '</b><small>' + subOf(t) + '</small></span><span class="pl-d">' + fmt(t.dur) + '</span><button type="button" class="pl-rm" data-pl="rm" data-id="' + t.id + '" aria-label="Aus Liste entfernen">' + svg('x', 16) + '</button></div>';
   function paintList() {
     if (!root) return;
     const L = $('pl-list'); if (!L) return;
-    L.innerHTML = list.map((t, i) => '<div class="pl-row' + (i === idx ? ' on' : '') + (t.bad ? ' bad' : '') + (t.off ? ' off' : '') + '" role="listitem" data-pl-i="' + i + '"><span class="pl-n">' + (i === idx && !au.paused ? '<i class="pl-eq"><u></u><u></u><u></u></i>' : (i + 1)) + '</span><span class="pl-t"><b>' + esc(t.title) + '</b><small>' + esc(subLine(t)) + (t.size ? ' · ' + mb(t.size) : '') + (t.bad ? ' · nicht lesbar' : '') + '</small></span><span class="pl-d">' + fmt(t.dur) + '</span><button type="button" class="pl-rm" data-pl="rm" data-id="' + t.id + '" aria-label="Aus Liste entfernen">' + svg('x', 16) + '</button></div>').join('');
+    const key = list.map(t => t.id).join(',');
+    if (L.dataset.k !== key || L.children.length !== list.length) { L.innerHTML = list.map(rowOf).join(''); L.dataset.k = key; return; }
+    for (let i = 0; i < list.length; i++) {
+      const t = list[i], r = L.children[i], on = i === idx, eq = on && !au.paused, n = r.firstElementChild, tt = r.children[1], d = r.children[2];
+      r.classList.toggle('on', on); r.classList.toggle('bad', !!t.bad); r.classList.toggle('off', !!t.off);
+      const nk = eq ? 'eq' : String(i + 1); if (n.dataset.k !== nk) { n.dataset.k = nk; n.innerHTML = eq ? '<i class="pl-eq"><u></u><u></u><u></u></i>' : String(i + 1); }
+      const b = tt.firstElementChild, sm = tt.lastElementChild; if (b.textContent !== t.title) b.textContent = t.title;
+      const sh = subOf(t); if (sm.dataset.h !== sh) { sm.dataset.h = sh; sm.innerHTML = sh; }
+      const ds = fmt(t.dur); if (d.textContent !== ds) d.textContent = ds;
+    }
   }
   function render(light) {
     updMini();
@@ -649,9 +714,9 @@
     });
     ph.addEventListener('click', e => { if (e.target.closest('[data-pl-open]')) { const m = $('settings-modal'); if (m) m.remove(); open(); } });
   }
-  new MutationObserver(ms => { for (const m of ms) m.addedNodes.forEach(n => { if (n.nodeType !== 1) return; const ph = n.id === 'pl-sec' ? n : (n.querySelector && n.querySelector('#pl-sec')); if (ph && !ph.dataset.done) { ph.dataset.done = '1'; section(ph); } if (n.id === 'file-menu' || (n.querySelector && n.querySelector('#file-menu'))) menuItem(); }); }).observe(document.body || document.documentElement, { childList: true, subtree: true });
+  SunDOM.mount('pl-sec', ph => section(ph)); SunDOM.on('#file-menu', () => menuItem());
   function boot() {
-    menuItem(); hookDaw(); let tries = 0; const iv = setInterval(() => { menuItem(); hookDaw(); if (($('btn-player') && typeof audioEngine !== 'undefined' && audioEngine.__bg) || ++tries > 30) clearInterval(iv); }, 500);
+    menuItem(); hookDaw(); let tries = 0; const iv = SunTick.every(500, () => { menuItem(); hookDaw(); if (($('btn-player') && typeof audioEngine !== 'undefined' && audioEngine.__bg) || ++tries > 30) SunTick.stop(iv); }, { hidden: true });
     const hm = $('hm-player'); if (hm && !hm.__pl) { hm.__pl = 1; hm.onclick = () => open(); }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => { boot(); restore(); }); else { boot(); restore(); }
@@ -664,6 +729,16 @@
     _coverUrl: i => (list[i] && list[i].cover) || '',
     list: () => list.map(t => ({ id: t.id, title: t.title, sub: t.sub, artist: t.artist, album: t.album, genre: t.genre, year: t.year, track: t.track, fmt: t.fmt, hasCover: !!t.cover, size: t.size, dur: t.dur, bad: !!t.bad, off: !!t.off, key: t.key })),
     state: () => ({ idx, count: list.length, playing: !au.paused, time: au.currentTime, dur: au.duration, shuffle: S.shuffle, repeat: S.repeat, bg: S.bg, owner: Media.owner, preset: S.preset, dsp: S.dsp, viz: S.viz, cover: !!cvb }),
-    audio: au, media: Media, settings: () => Object.assign({}, S), isOpen: () => !!(root && !root.hidden), _dawSync: dawSync, hookDaw
+    /* Zeilen für den Feedback-Bericht: nur technische Angaben, keine Titel/Dateinamen */
+    report: () => {
+      const t = cur(), L = [], pad = n => String(n).padStart(2, '0'), tm = s => isFinite(s) ? Math.floor(s / 60) + ':' + pad(Math.round(s % 60)) : '–';
+      L.push('Liste: ' + list.length + ' Titel' + (idx >= 0 ? ' · aktuell Nr. ' + (idx + 1) : '') + ' · Zufall ' + (S.shuffle ? 'an' : 'aus') + ' · Wiederholen ' + S.repeat);
+      if (t) L.push('Titel: ' + (t.fmt || '?') + ' · ' + (t.size ? (t.size / 1048576).toFixed(1) + ' MB' : 'Größe unbekannt') + ' · Dauer ' + tm(t.dur) + ' · Laden: ' + (t.via || 'noch nicht geladen') + (t.bad ? ' · als fehlerhaft markiert' : '') + (t.off ? ' · offline/nicht erreichbar' : ''));
+      L.push('Wiedergabe: ' + (au.paused ? 'pausiert' : 'läuft') + ' bei ' + tm(au.currentTime) + ' · Puffer bereit: ' + (au.readyState >= 3 ? 'ja' : 'nein (Status ' + au.readyState + ')') + (au.error ? ' · Medienfehler Code ' + au.error.code : ''));
+      L.push('Klang: ' + (S.dsp ? S.preset : 'aus') + ' · Hintergrund-Wiedergabe: ' + (S.bg ? 'an' : 'aus') + ' · Direktweg: ' + (natFast ? 'verfügbar/unbekannt' : 'nicht verfügbar'));
+      if (lastErr) L.push('Letzter Fehler: ' + lastErr);
+      return L;
+    },
+    audio: au, media: Media, preset: id => setPreset(id), settings: () => Object.assign({}, S), isOpen: () => !!(root && !root.hidden), _dawSync: dawSync, hookDaw
   };
 })();

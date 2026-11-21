@@ -5,13 +5,11 @@
 (function () {
   'use strict';
   const $ = id => document.getElementById(id);
-  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const say = (m, k) => { try { if (typeof toast === 'function') toast(m, k || 'info'); } catch (_) {} };
-  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const { esc, clamp, say } = window.SunUtil;
   const LS = 'sunshine.cover', LAST = 'sunshine.cover.last';
-  let S = { show: true, fx: 'ring', size: 'm', gain: 'norm', reach: 100, bright: 100, trans: 0 };
-  try { Object.assign(S, JSON.parse(localStorage.getItem(LS) || '{}')); } catch (_) {}
-    const saveS = () => { try { localStorage.setItem(LS, JSON.stringify(S)); } catch (_) {} };
+  let S = { show: true, fx: 'ring', size: 'm', gain: 'norm', reach: 100, bright: 100, trans: 0, speed: 100, thick: 100, color: 'theme', mode: 'music' };
+  SunStore.merge(S, LS);
+    const saveS = () => SunStore.save(LS, S);
   const lastTags = () => { try { return JSON.parse(localStorage.getItem(LAST) || '{}') || {}; } catch (_) { return {}; } };
   const COVER_PX = 512, THUMB_PX = 96, SMALL_PX = 300;
   const GENRES = ['Pop', 'Rock', 'Hip-Hop', 'Trap', 'R&B', 'Soul', 'Techno', 'House', 'Trance', 'Hard Trance', 'EDM', 'Dance', 'Drum & Bass', 'Dubstep', 'Lo-Fi', 'Ambient', 'Chill', 'Jazz', 'Klassik', 'Filmmusik', 'Schlager', 'Reggae', 'Latin', 'Metal', 'Punk', 'Indie', 'Folk', 'Country', 'Experimentell'];
@@ -172,20 +170,23 @@
 
   /* ---------------------------------------------------------------- Kopfbereich: Cover + Musik-Effekt rundherum */
   const FX = [['ring', 'Pegel-Ring'], ['dots', 'Punkte'], ['wave', 'Welle'], ['pulse', 'Puls'], ['orbit', 'Lauflicht'], ['frame', 'Rahmen'], ['glow', 'Leuchten'], ['both', 'Ring + Leuchten'], ['flick', 'Flackerlinien'], ['chase', 'Lauflinien'], ['blur', 'Blur-Rand'], ['light', 'Lichtkranz'], ['aura', 'Aura'], ['off', 'Aus']];
-  S.reach = clamp(+S.reach || 100, 50, 160); S.bright = clamp(+S.bright || 100, 40, 160); S.trans = clamp(+S.trans || 0, 0, 80);
-  const SIZES = { s: [40, 72], m: [52, 96], l: [64, 124] }, SIZES_D = { s: 52, m: 68, l: 84 }, GAINS = { soft: 0.7, norm: 1, hard: 1.4 };
-  if (!FX.some(f => f[0] === S.fx)) S.fx = 'ring'; if (!SIZES[S.size]) S.size = 'm'; if (!GAINS[S.gain]) S.gain = 'norm';
+  const COLORS = [['theme', 'Design'], ['accent', 'Akzent'], ['second', 'Zweitfarbe'], ['rainbow', 'Regenbogen']], MODES = [['music', 'Zur Musik'], ['anim', 'Animiert'], ['static', 'Starr']], GAINS = { soft: 0.7, norm: 1, hard: 1.4 };
+  /* Gemeinsame Prüfung der Effekt-Einstellungen (Cover UND Dockbars): ungültige oder fehlende Werte → Standard */
+  function cleanCfg(c) { c.reach = clamp(+c.reach || 100, 50, 160); c.bright = clamp(+c.bright || 100, 40, 160); c.trans = clamp(+c.trans || 0, 0, 80); c.speed = clamp(+c.speed || 100, 40, 220); c.thick = clamp(+c.thick || 100, 50, 220); if (!COLORS.some(x => x[0] === c.color)) c.color = 'theme'; if (!MODES.some(x => x[0] === c.mode)) c.mode = 'music'; if (!GAINS[c.gain]) c.gain = 'norm'; if (!FX.some(f => f[0] === c.fx)) c.fx = 'ring'; return c; }
+  cleanCfg(S);
+  const SIZES = { s: [40, 72], m: [52, 96], l: [64, 124] }, SIZES_D = { s: 52, m: 68, l: 84 };
+  if (!SIZES[S.size]) S.size = 'm';
   const html = document.documentElement;
   let slot = null, img = null, main = null, lastKey = '', raf = 0, poll = 0, buf = null, PAD = 7, SIZE = 60;
-  const previews = new Set(), binds = new Set();
+  const previews = new Set(), binds = new Set(), rims = new Set();
   const lerp = (a, b, t) => a + (b - a) * t;
   function themeCols() {   // Farben des gewählten Designs: Akzent + Zweitfarbe
     const read = n => { try { const v = getComputedStyle(html).getPropertyValue(n).trim().split(/[\s,\/]+/).map(Number); return v.length >= 3 && v.slice(0, 3).every(isFinite) ? v.slice(0, 3) : null; } catch (_) { return null; } };
     return { a: read('--daw-accent') || [255, 138, 26], b: read('--cv-c2') || [56, 189, 248] };
   }
   /* Umriss eines Rechtecks mit runden Ecken als Linienzug; sample(u, off) liefert Punkt + Normale bei Anteil u (0 = unten Mitte, im Uhrzeigersinn → links) */
-  function makeGeo(size, pad, R) {
-    R = clamp(R, 0, size / 2 - 0.5); const x0 = pad, y0 = pad, x1 = pad + size, y1 = pad + size, cx = pad + size / 2, v = [];
+  function makeGeo(size, pad, R, h) {
+    h = h || size; R = clamp(R, 0, Math.min(size, h) / 2 - 0.5); const x0 = pad, y0 = pad, x1 = pad + size, y1 = pad + h, cx = pad + size / 2, v = [];
     const line = (x, y, nx, ny) => v.push({ x, y, nx, ny });
     const arc = (ax, ay, a0, a1) => { for (let k = 0; k <= 8; k++) { const a = lerp(a0, a1, k / 8), c = Math.cos(a), s2 = Math.sin(a); v.push({ x: ax + R * c, y: ay + R * s2, nx: c, ny: s2 }); } };
     line(cx, y1, 0, 1); line(x0 + R, y1, 0, 1); arc(x0 + R, y1 - R, Math.PI / 2, Math.PI);
@@ -193,20 +194,21 @@
     line(x1 - R, y0, 0, -1); arc(x1 - R, y0 + R, Math.PI * 1.5, Math.PI * 2);
     line(x1, y1 - R, 1, 0); arc(x1 - R, y1 - R, 0, Math.PI / 2); line(cx, y1, 0, 1);
     const cum = [0]; for (let i = 1; i < v.length; i++) cum.push(cum[i - 1] + Math.hypot(v[i].x - v[i - 1].x, v[i].y - v[i - 1].y)); const len = cum[cum.length - 1] || 1;
-    return { len, R, size, pad, sample(u, off) {
+    return { len, R, size, h, pad, sample(u, off) {
       u = ((u % 1) + 1) % 1; const t = u * len; let lo = 0, hi = cum.length - 1; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (cum[m] <= t) lo = m; else hi = m; }
       const f = (t - cum[lo]) / ((cum[hi] - cum[lo]) || 1), A = v[lo], B = v[hi]; let nx = lerp(A.nx, B.nx, f), ny = lerp(A.ny, B.ny, f); const nl = Math.hypot(nx, ny) || 1; nx /= nl; ny /= nl;
       const x = lerp(A.x, B.x, f), y = lerp(A.y, B.y, f); return { x: x + nx * off, y: y + ny * off, nx, ny, d: Math.abs(u - 0.5) * 2 };
     } };
   }
   /* Ein Effekt-Zeichner: eigener Zustand (Pegel, Bass, Puls-Wellen, Lauflicht) + Zielfläche (Kopfbereich oder Vorschau in den Optionen) */
-  function FxView(canvas) { this.c = canvas; this.g = canvas.getContext('2d'); this.spec = new Float32Array(48); this.bass = 0; this.en = 0; this.pulses = []; this.orb = [0.0, 0.5]; this.t0 = 0; this.size = 60; this.pad = 7; this.rad = 10; this.geo = null; this.cols = themeCols(); this.hot = false; this.q = { br: 1, al: 1 }; this.run = 0; this.flk = new Float32Array(64); }
-  FxView.prototype.layout = function (size, pad, rad) {
-    this.size = size; this.pad = pad; this.rad = rad; this.geo = makeGeo(size, pad, rad); this.cols = themeCols(); const dpr = Math.min(window.devicePixelRatio || 1, 2), w = size + pad * 2;
-    this.c.style.width = this.c.style.height = w + 'px'; this.c.width = this.c.height = Math.round(w * dpr); this.g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  function FxView(canvas) { this.c = canvas; this.g = canvas.getContext('2d'); this.spec = new Float32Array(48); this.bass = 0; this.en = 0; this.pulses = []; this.orb = [0.0, 0.5]; this.t0 = 0; this.size = 60; this.h = 60; this.pad = 7; this.rad = 10; this.geo = null; this.cfg = null; this.dpr = 2; this.cols = themeCols(); this.hot = false; this.q = { br: 1, al: 1 }; this.run = 0; this.flk = new Float32Array(160); }
+  FxView.prototype.layout = function (size, pad, rad, h) {
+    h = h || size; this.size = size; this.h = h; this.pad = pad; this.rad = rad; this.geo = makeGeo(size, pad, rad, h); this.cols = themeCols(); const dpr = Math.min(window.devicePixelRatio || 1, this.dpr), w = size + pad * 2, hh = h + pad * 2;
+    this.c.style.width = w + 'px'; this.c.style.height = hh + 'px'; const cw = Math.round(w * dpr), ch = Math.round(hh * dpr);
+    if (this.c.width !== cw) this.c.width = cw; if (this.c.height !== ch) this.c.height = ch; this.g.setTransform(dpr, 0, 0, dpr, 0, 0);
   };
   FxView.prototype.feed = function (b, ts, dt, k) {   // b = Frequenzdaten (0–255) oder null → ausklingen
-    const sp = this.spec, n = sp.length;
+    const sp = this.spec, n = sp.length; dt *= clamp(((this.cfg || S).speed || 100) / 100, 0.4, 2.2);
     if (b) {
       for (let i = 0; i < n; i++) { const d = i / (n - 1), bin = 1 + Math.floor(Math.pow(d, 1.35) * (Math.min(b.length, 100) - 2)); const raw = Math.pow(((b[bin] || 0) + (b[bin + 1] || 0)) / 510, 1.25) * 1.25 * (0.78 + d * 0.65) * k, t = clamp(raw, 0, 1); sp[i] = t > sp[i] ? sp[i] + (t - sp[i]) * 0.65 : sp[i] * 0.86; }
       const bs = clamp((((b[1] || 0) + (b[2] || 0) + (b[3] || 0)) / 765) * k, 0, 1), prev = this.bass; this.bass = bs > prev ? prev + (bs - prev) * 0.6 : prev * 0.9;
@@ -215,29 +217,35 @@
     let e = 0; for (let i = 0; i < n; i++) e += sp[i]; this.en = lerp(this.en, e / n, 0.3);
     this.orb[0] = (this.orb[0] + dt * (0.1 + this.en * 1.1)) % 1; this.orb[1] = (this.orb[1] + dt * (0.1 + this.en * 1.1)) % 1;
     this.run = (this.run + dt * (0.05 + this.en * 0.8 + this.bass * 0.4)) % 1;
+    if (this.pulses.length) this.pulses = this.pulses.filter(t0 => ts - t0 < 700);   // alte Pulse verfallen hier, nicht nur beim Zeichnen – sonst bleibt „hot“ dauerhaft und die Schleife läuft nach dem Stopp weiter
     this.hot = !!b || this.en > 0.015 || this.bass > 0.02 || this.pulses.length > 0;
   };
-  FxView.prototype.col = function (d, a, l) {   // Farbe aus Akzent → Zweitfarbe; Helligkeit (q.br) und Transparenz (q.al) aus den Optionen
-    const c = this.cols, t = clamp(d, 0, 1), br = this.q.br, f = v => { v = lerp(c.a[v], c.b[v], t) + (l || 0); v = br >= 1 ? v + (255 - v) * (br - 1) : v * br; return Math.round(clamp(v, 0, 255)); };
+  FxView.prototype.col = function (d, a, l) {   // Farbe aus Akzent → Zweitfarbe; Helligkeit (q.br) und Transparenz (q.al) aus den Optionen; Farbmodus: Design · Akzent · Zweitfarbe · Regenbogen
+    const c = this.cols, md = this.q.cm; let t = clamp(d, 0, 1); const br = this.q.br;
+    if (md === 'rainbow') return hsl(t * 300 + this.run * 360, 90, clamp(58 * br + (l || 0) * 0.12, 28, 88), clamp(a * this.q.al, 0, 1).toFixed(3));
+    if (md === 'accent') t = 0; else if (md === 'second') t = 1;
+    const f = v => { v = lerp(c.a[v], c.b[v], t) + (l || 0); v = br >= 1 ? v + (255 - v) * (br - 1) : v * br; return Math.round(clamp(v, 0, 255)); };
     return `rgba(${f(0)},${f(1)},${f(2)},${clamp(a * this.q.al, 0, 1).toFixed(3)})`;
   };
-  FxView.prototype.rr = function (off) { const g = this.g, p = this.pad - off, s = this.size + off * 2, r = clamp(this.rad + off, 0, s / 2); g.beginPath(); g.moveTo(p + r, p); g.arcTo(p + s, p, p + s, p + s, r); g.arcTo(p + s, p + s, p, p + s, r); g.arcTo(p, p + s, p, p, r); g.arcTo(p, p, p + s, p, r); g.closePath(); };
+  FxView.prototype.sb = function (v) { return window.SunPerf && SunPerf.level() >= 1 ? 0 : v; };   // Weichzeichner (teuer) entfällt in den Sparstufen
+  FxView.prototype.rrp = function (off) { const g = this.g, p = this.pad - off, w = this.size + off * 2, h = this.h + off * 2, r = clamp(this.rad + off, 0, Math.min(w, h) / 2); g.moveTo(p + r, p); g.arcTo(p + w, p, p + w, p + h, r); g.arcTo(p + w, p + h, p, p + h, r); g.arcTo(p, p + h, p, p, r); g.arcTo(p, p, p + w, p, r); g.closePath(); };
+  FxView.prototype.rr = function (off) { this.g.beginPath(); this.rrp(off); };
   FxView.prototype.draw = function (fx, ts, live) {
-    const g = this.g, W = this.size + this.pad * 2, sp = this.spec, gap = 2.2, maxL = Math.max(2, this.pad - gap - 0.6), geo = this.geo, big = this.size >= 70, n = big ? 64 : 44;
-    this.q = { br: S.bright / 100, al: 1 - S.trans / 100 }; const ws = clamp(this.pad / 7, 0.7, 2.2);
-    g.clearRect(0, 0, W, W); if (!geo || fx === 'off') return; const C = this.cols, lv = d => sp[clamp(Math.round(d * (sp.length - 1)), 0, sp.length - 1)];
+    const C0 = this.cfg || S, g = this.g, W = this.size + this.pad * 2, H = this.h + this.pad * 2, sp = this.spec, gap = 2.2, maxL = Math.max(2, this.pad - gap - 0.6), geo = this.geo, big = this.size >= 70, wide = this.h !== this.size, n = wide ? clamp(Math.round(geo.len / 9), 44, 160) : (big ? 64 : 44);
+    this.q = { br: C0.bright / 100, al: 1 - C0.trans / 100, cm: C0.color }; const th = clamp((C0.thick || 100) / 100, 0.5, 2.2), ws = clamp(this.pad / 7, 0.7, 2.2) * th, spd = clamp((C0.speed || 100) / 100, 0.4, 2.2), tt = ts * spd;   // tt = Tempo-Zeit nur für Drehungen/Flackern (Pulse nutzen die echte Zeit)
+    g.clearRect(0, 0, W, H); if (!geo || fx === 'off') return; const C = this.cols, lv = d => sp[clamp(Math.round(d * (sp.length - 1)), 0, sp.length - 1)];
     const ring = () => { g.lineCap = 'round'; g.lineWidth = Math.max(1.8, geo.len / n * 0.46) * Math.min(ws, 1.5);
       for (let i = 0; i < n; i++) { const p = geo.sample((i + 0.5) / n, gap), v = live ? lv(p.d) : 0, L = 1.3 + v * maxL; g.strokeStyle = this.col(p.d, live ? 0.5 + v * 0.5 : 0.3, v * 40); g.beginPath(); g.moveTo(p.x, p.y); g.lineTo(p.x + p.nx * L, p.y + p.ny * L); g.stroke(); } };
-    const glow = () => { const k = live ? this.bass : 0.06; g.save(); g.shadowColor = this.col(0.2, 0.35 + k * 0.6); g.shadowBlur = 3 + k * this.pad * 1.7; g.strokeStyle = this.col(0.1, 0.35 + k * 0.55); g.lineWidth = 1.6; this.rr(1); g.stroke(); g.shadowColor = this.col(0.9, 0.25 + k * 0.5); g.shadowBlur = 2 + k * this.pad; g.strokeStyle = this.col(0.9, 0.12 + k * 0.4); g.lineWidth = 1; this.rr(2.5); g.stroke(); g.restore(); };
+    const glow = () => { const k = live ? this.bass : 0.06; g.save(); g.shadowColor = this.col(0.2, 0.35 + k * 0.6); g.shadowBlur = this.sb(3 + k * this.pad * 1.7); g.strokeStyle = this.col(0.1, 0.35 + k * 0.55); g.lineWidth = 1.6; this.rr(1); g.stroke(); g.shadowColor = this.col(0.9, 0.25 + k * 0.5); g.shadowBlur = this.sb(2 + k * this.pad); g.strokeStyle = this.col(0.9, 0.12 + k * 0.4); g.lineWidth = 1; this.rr(2.5); g.stroke(); g.restore(); };
     if (fx === 'ring') ring();
     else if (fx === 'glow') glow();
     else if (fx === 'both') { glow(); ring(); }
     else if (fx === 'dots') { for (let i = 0; i < n; i++) { const p = geo.sample((i + 0.5) / n, gap + 1), v = live ? lv(p.d) : 0, L = v * (maxL - 1.2); g.fillStyle = this.col(p.d, live ? 0.45 + v * 0.55 : 0.28, v * 40); g.beginPath(); g.arc(p.x + p.nx * L, p.y + p.ny * L, 1 + v * 1.5, 0, 6.2832); g.fill(); } }
     else if (fx === 'wave') {
-      const m = 72, off = []; for (let i = 0; i < m; i++) { const d = Math.abs((i + 0.5) / m - 0.5) * 2; off.push(live ? lv(d) : 0); } const sm = off.map((v, i) => (off[(i + m - 1) % m] + v * 2 + off[(i + 1) % m]) / 4);
+      const m = wide ? clamp(Math.round(geo.len / 6), 72, 220) : 72, off = []; for (let i = 0; i < m; i++) { const d = Math.abs((i + 0.5) / m - 0.5) * 2; off.push(live ? lv(d) : 0); } const sm = off.map((v, i) => (off[(i + m - 1) % m] + v * 2 + off[(i + 1) % m]) / 4);
       const pts = sm.map((v, i) => geo.sample((i + 0.5) / m, gap + 0.5 + v * (maxL - 0.5))); g.lineJoin = 'round';
       const path = () => { g.beginPath(); const mid = (a, b) => [(a.x + b.x) / 2, (a.y + b.y) / 2]; let s0 = mid(pts[m - 1], pts[0]); g.moveTo(s0[0], s0[1]); for (let i = 0; i < m; i++) { const q = pts[i], e = mid(q, pts[(i + 1) % m]); g.quadraticCurveTo(q.x, q.y, e[0], e[1]); } g.closePath(); };
-      path(); g.strokeStyle = this.col(0.1, 0.22 + this.en * 0.3); g.lineWidth = 4; g.stroke(); path(); let st = this.col(0.2, live ? 0.9 : 0.4); try { if (g.createConicGradient) { const cg = g.createConicGradient(ts / 2500, W / 2, W / 2); cg.addColorStop(0, this.col(0, 1)); cg.addColorStop(0.5, this.col(1, 1)); cg.addColorStop(1, this.col(0, 1)); st = cg; } } catch (_) {} g.strokeStyle = st; g.globalAlpha = live ? 0.95 : 0.45; g.lineWidth = 1.8; g.stroke(); g.globalAlpha = 1;
+      path(); g.strokeStyle = this.col(0.1, 0.22 + this.en * 0.3); g.lineWidth = 4; g.stroke(); path(); let st = this.col(0.2, live ? 0.9 : 0.4); try { if (g.createConicGradient) { const cg = g.createConicGradient(tt / 2500, W / 2, H / 2); cg.addColorStop(0, this.col(0, 1)); cg.addColorStop(0.5, this.col(1, 1)); cg.addColorStop(1, this.col(0, 1)); st = cg; } } catch (_) {} g.strokeStyle = st; g.globalAlpha = live ? 0.95 : 0.45; g.lineWidth = 1.8; g.stroke(); g.globalAlpha = 1;
     } else if (fx === 'pulse') {
       g.lineWidth = 1.6; if (!live || !this.pulses.length) { g.strokeStyle = this.col(0.1, 0.25); this.rr(gap); g.stroke(); }
       this.pulses.forEach(t0 => { const t = clamp((ts - t0) / 650, 0, 1), e = 1 - Math.pow(1 - t, 2); g.strokeStyle = this.col(t, (1 - t) * 0.95); g.lineWidth = 2.2 - t * 1.2; this.rr(gap + e * (maxL - 0.4)); g.stroke(); });
@@ -246,16 +254,16 @@
       const T = 22; this.orb.forEach((u0, k) => { for (let j = T; j >= 0; j--) { const u = u0 - j * 0.0075, p = geo.sample(u, gap + 1.4), a = Math.pow(1 - j / T, 2) * (live ? 0.95 : 0.45); g.fillStyle = this.col(k, a); g.beginPath(); g.arc(p.x, p.y, (j === 0 ? 2.1 : 1.7 - j / T * 1.1) + this.en * (j === 0 ? 1.6 : 0.6), 0, 6.2832); g.fill(); } });
     } else if (fx === 'frame') {
       const lw = 1.6 + (live ? this.en * 1.5 + this.bass * 1.2 : 0) * (maxL - 1), off = gap - 0.6 + lw / 2; let st = this.col(0, 0.8);
-      try { if (g.createConicGradient) { const cg = g.createConicGradient(ts / 1400, W / 2, W / 2); cg.addColorStop(0, this.col(0, 0.95)); cg.addColorStop(0.33, this.col(1, 0.95)); cg.addColorStop(0.66, this.col(0.5, 0.9)); cg.addColorStop(1, this.col(0, 0.95)); st = cg; } } catch (_) {}
+      try { if (g.createConicGradient) { const cg = g.createConicGradient(tt / 1400, W / 2, H / 2); cg.addColorStop(0, this.col(0, 0.95)); cg.addColorStop(0.33, this.col(1, 0.95)); cg.addColorStop(0.66, this.col(0.5, 0.9)); cg.addColorStop(1, this.col(0, 0.95)); st = cg; } } catch (_) {}
       g.strokeStyle = st; g.globalAlpha = live ? 1 : 0.45; g.lineWidth = lw; this.rr(off); g.stroke(); g.globalAlpha = 1;
     } else if (fx === 'flick' || fx === 'chase' || fx === 'blur' || fx === 'light' || fx === 'aura') {
       /* Neue Effekte: zeichnen nur außerhalb des Covers (Aussparung), damit das Bild nie überdeckt wird */
       const hit = live && this.pulses.length && ts - this.pulses[this.pulses.length - 1] < 60, en = live ? this.en : 0, bs = live ? this.bass : 0;
-      g.save(); g.beginPath(); g.rect(0, 0, W, W); { const p0 = this.pad, s0 = this.size, r0 = clamp(this.rad, 0, s0 / 2); g.moveTo(p0 + r0, p0); g.arcTo(p0 + s0, p0, p0 + s0, p0 + s0, r0); g.arcTo(p0 + s0, p0 + s0, p0, p0 + s0, r0); g.arcTo(p0, p0 + s0, p0, p0, r0); g.arcTo(p0, p0, p0 + s0, p0, r0); g.closePath(); } g.clip('evenodd');
+      g.save(); g.beginPath(); g.rect(0, 0, W, H); this.rrp(0); g.clip('evenodd');
       if (fx === 'flick') {   // dünne Linien, die im Takt aufblitzen und flackern
-        const m = big ? 56 : 40; g.lineCap = 'butt';
+        const m = wide ? clamp(Math.round(geo.len / 11), 40, 130) : (big ? 56 : 40); g.lineCap = 'butt';
         for (let i = 0; i < m; i++) { const p = geo.sample((i + 0.5) / m, gap), v = live ? lv(p.d) : 0; let f = this.flk[i] || 0; if (hit && Math.random() < 0.38) f = 1; f *= 0.82; this.flk[i] = f;
-          const tw = live ? (Math.sin(ts / (55 + (i % 7) * 17) + i * 1.9) > 0.35 ? 1 : 0.35) : 0.25, L = 1.4 + (v * 0.7 + f * 0.9) * maxL, a = live ? clamp(0.18 + v * 0.45 + f * 0.7, 0, 1) * tw : 0.2;
+          const tw = live ? (Math.sin(tt / (55 + (i % 7) * 17) + i * 1.9) > 0.35 ? 1 : 0.35) : 0.25, L = 1.4 + (v * 0.7 + f * 0.9) * maxL, a = live ? clamp(0.18 + v * 0.45 + f * 0.7, 0, 1) * tw : 0.2;
           g.strokeStyle = this.col(p.d, a, f * 50); g.lineWidth = 1.05 * Math.min(ws, 1.6) + f * 0.7; g.beginPath(); g.moveTo(p.x, p.y); g.lineTo(p.x + p.nx * L, p.y + p.ny * L); g.stroke(); }
       } else if (fx === 'chase') {   // Linienstücke laufen um das Cover, schneller bei mehr Energie
         g.lineCap = 'round'; g.lineJoin = 'round'; g.strokeStyle = this.col(0.1, live ? 0.16 : 0.12); g.lineWidth = 1; this.rr(gap + 1.3); g.stroke();
@@ -264,14 +272,14 @@
           g.strokeStyle = this.col(k / (G - 1), live ? 0.55 + bs * 0.4 : 0.4, bs * 40); g.lineWidth = (1.5 + bs * 1.2) * Math.min(ws, 1.5); g.stroke(); }
       } else if (fx === 'blur') {   // weicher, unscharfer Lichtsaum, der mit dem Bass „atmet“
         const k = live ? 0.28 + bs * 0.7 + en * 0.3 : 0.22; g.lineJoin = 'round';
-        [[1.0, 0.5, 0.15], [0.6, 0.65, 0.5], [0.28, 0.9, 0.85]].forEach(([bl, al, cd]) => { g.save(); g.shadowColor = this.col(cd, al * k * 1.3); g.shadowBlur = Math.min(this.pad * 1.15, this.pad * bl * (0.5 + k)); g.strokeStyle = this.col(cd, al * k); g.lineWidth = 1.2 + bl * this.pad * 0.55; this.rr(gap * 0.6 + bl * 0.8); g.stroke(); g.restore(); });
+        [[1.0, 0.5, 0.15], [0.6, 0.65, 0.5], [0.28, 0.9, 0.85]].forEach(([bl, al, cd]) => { g.save(); g.shadowColor = this.col(cd, al * k * 1.3); g.shadowBlur = this.sb(Math.min(this.pad * 1.15, this.pad * bl * (0.5 + k))); g.strokeStyle = this.col(cd, al * k); g.lineWidth = 1.2 + bl * this.pad * 0.55; this.rr(gap * 0.6 + bl * 0.8); g.stroke(); g.restore(); });
       } else if (fx === 'light') {   // wandernde Lichtflecken (Spotlights) am Rand
         g.globalCompositeOperation = 'lighter'; const N = 3;
         for (let k = 0; k < N; k++) { const u = this.run * (k % 2 ? -0.7 : 0.9) + k / N, p = geo.sample(u, this.pad * 0.5), r = this.pad * 0.62 * (1 + bs * 0.3 + en * 0.15), rg = g.createRadialGradient(p.x, p.y, 0, p.x, p.y, r), a = live ? 0.4 + bs * 0.55 + en * 0.3 : 0.32;
           rg.addColorStop(0, this.col(k / (N - 1), a)); rg.addColorStop(0.5, this.col(k / (N - 1), a * 0.3)); rg.addColorStop(1, this.col(k / (N - 1), 0)); g.fillStyle = rg; g.fillRect(p.x - r, p.y - r, r * 2, r * 2); }
         g.globalCompositeOperation = 'source-over'; g.strokeStyle = this.col(0.2, live ? 0.3 : 0.2); g.lineWidth = 1; this.rr(gap - 0.4); g.stroke();
       } else if (fx === 'aura') {   // mehrere weiche Schichten, die nach außen schwingen
-        for (let j = 0; j < 3; j++) { const k = live ? 0.16 + en * 0.45 + bs * 0.35 : 0.1, off = gap + j * (maxL / 3.2) * (0.8 + bs * 0.5), a = k * (1 - j * 0.28); g.save(); g.shadowColor = this.col(j / 2, a); g.shadowBlur = this.pad * 0.55; g.strokeStyle = this.col(j / 2, a); g.lineWidth = Math.max(1.4, maxL / 2.1) * (1 + bs * 0.5); this.rr(off); g.stroke(); g.restore(); }
+        for (let j = 0; j < 3; j++) { const k = live ? 0.16 + en * 0.45 + bs * 0.35 : 0.1, off = gap + j * (maxL / 3.2) * (0.8 + bs * 0.5), a = k * (1 - j * 0.28); g.save(); g.shadowColor = this.col(j / 2, a); g.shadowBlur = this.sb(this.pad * 0.55); g.strokeStyle = this.col(j / 2, a); g.lineWidth = Math.max(1.4, maxL / 2.1) * (1 + bs * 0.5); this.rr(off); g.stroke(); g.restore(); }
         this.pulses.forEach(t0 => { const t = clamp((ts - t0) / 700, 0, 1); g.strokeStyle = this.col(t, (1 - t) * 0.6); g.lineWidth = 2.4 * (1 - t) + 0.6; this.rr(gap + t * maxL); g.stroke(); }); this.pulses = this.pulses.filter(t0 => ts - t0 < 700);
       }
       g.restore();
@@ -316,26 +324,31 @@
     main.layout(SIZE, PAD, boxRadius(slot.querySelector('.cv-box'))); main.draw(S.fx, performance.now(), false); wake();
     previews.forEach(pv => pv.refresh && pv.refresh());
   }
-  let lastTs = 0;
+  let lastTs = 0; const CAPS = [28, 50, 100];   // Mindestabstand der Bilder in ms je Leistungsstufe (≈35 · 20 · 10 Bilder/s)
+  /* Ein Schritt für einen Zeichner – je nach Bewegung: „Zur Musik“ (Daten vom Aufrufer, ruht ohne Musik), „Animiert“ (läuft immer mit einem Beispiel-Beat) oder „Starr“ (steht still). Liefert true, solange weiter gezeichnet werden muss. */
+  function drive(v, cfg, isLive, getData, ts, dt, demo) {
+    const k = GAINS[cfg.gain] || 1, md = reduced() ? 'static' : (cfg.mode || 'music');
+    if (md === 'static') { if (!v.hot) return false; v.feed(null, ts, dt, k); v.draw(cfg.fx, ts, false); return v.hot; }
+    if (md === 'anim' || demo) { v.feed(synth(ts), ts, dt, k); v.draw(cfg.fx, ts, true); return true; }
+    const lv = isLive(), d = lv ? getData() : null; v.feed(d, ts, dt, k);
+    if (lv || v.hot) { v.draw(cfg.fx, ts, true); return true; } v.draw(cfg.fx, ts, false); return false;
+  }
   function frame(ts) {
-    raf = 0; const dt = lastTs ? Math.min(0.1, (ts - lastTs) / 1000) : 0.016; if (ts - lastTs < 28) { raf = requestAnimationFrame(frame); return; } lastTs = ts; let keep = false;
-    const k = GAINS[S.gain], an = analyser(), pl = playing();
-    if (slot && !slot.hidden && main && main.geo && S.fx !== 'off') {
-      let b = null; if (pl && an && !reduced()) { if (!buf || buf.length !== an.frequencyBinCount) buf = new Uint8Array(an.frequencyBinCount); an.getByteFrequencyData(buf); b = buf; }
-      main.feed(b, ts, dt, k); if (pl || main.hot) { main.draw(S.fx, ts, pl || main.hot); keep = true; } else main.draw(S.fx, ts, false);
-    }
-    previews.forEach(pv => { if (!pv.c.isConnected) { previews.delete(pv); return; } if (!pv.c.offsetParent) return; pv.feed(reduced() ? null : synth(ts), ts, dt, k); pv.draw(pv.fx || S.fx, ts, true); keep = true; });
+    raf = 0; const dt = lastTs ? Math.min(0.1, (ts - lastTs) / 1000) : 0.016; if (ts - lastTs < CAPS[Math.min(2, window.SunPerf ? SunPerf.level() : 0)]) { raf = requestAnimationFrame(frame); return; } lastTs = ts; let keep = false;
+    const an = analyser(), pl = playing(), master = () => { if (!buf || buf.length !== an.frequencyBinCount) buf = new Uint8Array(an.frequencyBinCount); an.getByteFrequencyData(buf); return buf; };
+    if (slot && !slot.hidden && main && main.geo && S.fx !== 'off') { main.cfg = S; if (drive(main, S, () => !!(pl && an), master, ts, dt)) keep = true; }
+    previews.forEach(pv => { if (!pv.c.isConnected) { previews.delete(pv); return; } if (!pv.c.offsetParent) return; const cf = pv.cfg || S, fx = pv.fx || cf.fx; if (drive(pv, Object.assign({}, cf, { fx }), null, null, ts, dt, true) && (cf.mode || 'music') !== 'static') keep = true; });
     binds.forEach(bd => {   // eingebundene Cover (z. B. im Player): Daten und „läuft“-Zustand liefert der Aufrufer
-      if (!bd.el.isConnected) { binds.delete(bd); return; } if (!bd.el.offsetParent || !bd.v.geo || S.fx === 'off') return;
-      const lv = bd.isLive(), d = lv && !reduced() ? bd.getData() : null; bd.v.feed(d, ts, dt, k);
-      if (lv || bd.v.hot) { bd.v.draw(S.fx, ts, true); keep = true; } else bd.v.draw(S.fx, ts, false);
+      if (!bd.el.isConnected) { binds.delete(bd); return; } if (!bd.el.offsetParent || !bd.v.geo || S.fx === 'off') return; bd.v.cfg = S;
+      if (drive(bd.v, S, bd.isLive, bd.getData, ts, dt)) keep = true;
     });
+    rims.forEach(r => { if (!r.host.isConnected) { rims.delete(r); return; } if (r.step(ts, dt)) keep = true; });
     if (keep && !document.hidden) raf = requestAnimationFrame(frame); else lastTs = 0;
   }
   function wake() { if (!raf && !document.hidden) raf = requestAnimationFrame(frame); }
   function start() {
     refresh();
-    poll = setInterval(() => { const p = proj(), k = p ? (p.id || '') + ':' + (p.cover ? p.cover.length : 0) : ''; if (k !== lastKey) { lastKey = k; refresh(); } if (playing() || previews.size || [...binds].some(b => b.isLive())) wake(); }, 500);
+    poll = SunTick.every(500, () => { const p = proj(), k = p ? (p.id || '') + ':' + (p.cover ? p.cover.length : 0) : ''; if (k !== lastKey) { lastKey = k; refresh(); } if (playing() || previews.size || [...binds].some(b => b.isLive()) || [...rims].some(r => r.needs())) wake(); });
     document.addEventListener('sunshine-project-changed', () => { lastKey = ''; setTimeout(refresh, 30); });
     window.addEventListener('resize', () => { clearTimeout(start._t); start._t = setTimeout(refresh, 120); });
     document.addEventListener('visibilitychange', () => { if (!document.hidden) wake(); });
@@ -398,32 +411,56 @@
   function coverBytes() { const p = proj(); return p && p.cover ? b64bytes(p.cover) : null; }
 
   /* ---------------------------------------------------------------- Optionen */
+  /* Gemeinsamer Baukasten für die Effekt-Einstellungen von Cover UND Dockbar: gleiche Regler, getrennte Werte.
+     ui.html(p) liefert die Bedienelemente (Attribute data-<p>-…), ui.wire(ph, p, cfg, onChange) verdrahtet sie und liefert mark() zum Nachziehen der Anzeige. */
+  const RNG = [['reach', 'Größe des Effekts', 50, 160], ['bright', 'Helligkeit', 40, 160], ['trans', 'Transparenz', 0, 80], ['speed', 'Tempo', 40, 220], ['thick', 'Linienstärke', 50, 220]];
+  const segHtml = (p, key, label, items) => `<div><div class="text-sm font-semibold mb-1.5">${label}</div><div class="cv-seg2" role="radiogroup" aria-label="${label}">${items.map(([k, l]) => `<button type="button" role="radio" data-${p}-${key}="${k}" aria-checked="false">${l}</button>`).join('')}</div></div>`;
+  const ui = {
+    chips: p => `<div class="cv-chips" role="radiogroup" aria-label="Effekt">${FX.map(([k, l]) => `<button type="button" role="radio" data-${p}-fxv="${k}" aria-checked="false">${l}</button>`).join('')}</div>`,
+    html: p => segHtml(p, 'gain', 'Stärke', [['soft', 'Dezent'], ['norm', 'Normal'], ['hard', 'Kräftig']]) + segHtml(p, 'mode', 'Bewegung', MODES) + segHtml(p, 'color', 'Farbe', COLORS)
+      + `<div class="cv-rngs">${RNG.map(([k, l, a, b]) => `<label class="cv-rng"><span class="cv-rl"><b>${l}</b><output data-${p}-out="${k}"></output></span><input type="range" data-${p}-rng="${k}" min="${a}" max="${b}" step="5" aria-label="${l}"></label>`).join('')}<button type="button" class="cv-rst" data-${p}-reset>Zurücksetzen</button></div>`,
+    wire(ph, p, cfg, onChange) {
+      const camel = w => w.replace(/-./g, m => m[1].toUpperCase()), ds = k => camel(p + '-' + k);   // data-cv-fxv → dataset.cvFxv
+      const mark = () => {
+        [['fxv', 'fx'], ['gain', 'gain'], ['mode', 'mode'], ['color', 'color']].forEach(([a, key]) => ph.querySelectorAll(`[data-${p}-${a}]`).forEach(b => { const on = b.dataset[ds(a)] === cfg[key]; b.setAttribute('aria-checked', String(on)); b.classList.toggle('on', on); }));
+        ph.querySelectorAll(`[data-${p}-rng]`).forEach(r => { const k = r.dataset[ds('rng')]; if (+r.value !== cfg[k]) r.value = cfg[k]; const o = ph.querySelector(`[data-${p}-out="${k}"]`); if (o) o.textContent = cfg[k] + ' %'; });
+      };
+      let tm = 0;
+      ph.addEventListener('input', e => { const r = e.target.closest && e.target.closest(`[data-${p}-rng]`); if (!r) return; cfg[r.dataset[ds('rng')]] = +r.value; mark(); onChange(false); });
+      ph.addEventListener('change', e => { const r = e.target.closest && e.target.closest(`[data-${p}-rng]`); if (r) onChange(true); });
+      ph.addEventListener('click', e => {
+        const hit = a => e.target.closest(`[data-${p}-${a}]`), f = hit('fxv'), g2 = hit('gain'), m = hit('mode'), c = hit('color');
+        if (e.target.closest(`[data-${p}-reset]`)) { Object.assign(cfg, { reach: 100, bright: 100, trans: 0, speed: 100, thick: 100, color: 'theme', mode: 'music', gain: 'norm' }); mark(); onChange(true); return true; }
+        if (!(f || g2 || m || c)) return false;
+        if (f) cfg.fx = f.dataset[ds('fxv')]; else if (g2) cfg.gain = g2.dataset[ds('gain')]; else if (m) cfg.mode = m.dataset[ds('mode')]; else cfg.color = c.dataset[ds('color')];
+        mark(); onChange(true); return true;
+      });
+      mark(); return mark;
+    }
+  };
   function section(ph) {
-    const chips = FX.map(([k, l]) => `<button type="button" role="radio" data-cv-fxv="${k}" aria-checked="false">${l}</button>`).join('');
     ph.innerHTML = `<div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mt-4 mb-1">Cover &amp; Tags</div><div class="rounded-xl border border-slate-800 p-3 space-y-3">
       <label class="flex items-start gap-3 cursor-pointer"><input type="checkbox" data-cv-show class="mt-1 w-5 h-5 shrink-0"><span class="min-w-0"><span class="block text-sm font-semibold">Cover im Kopfbereich anzeigen</span><span class="block text-[11px] leading-4 text-slate-400">Oben rechts; Antippen öffnet Cover &amp; Tags. Rahmen, Rundung und Farben folgen dem gewählten Design.</span></span></label>
       <div><div class="text-sm font-semibold mb-1.5">Größe</div><div class="cv-seg2" role="radiogroup" aria-label="Größe des Covers">${[['s', 'Klein'], ['m', 'Mittel'], ['l', 'Groß']].map(([k, l]) => `<button type="button" role="radio" data-cv-size="${k}" aria-checked="false">${l}</button>`).join('')}</div></div>
       <div><div class="text-sm font-semibold mb-1.5">Musik-Effekt am Rand</div><div class="cv-pvrow"><div class="cv-pv" data-cv-pv><canvas class="cv-fx" aria-hidden="true"></canvas><span class="cv-box"><img alt="" class="cv-img"><span class="cv-ph" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span></span></div>
-        <div class="cv-chips" role="radiogroup" aria-label="Effekt">${chips}</div></div><div class="text-[11px] leading-4 text-slate-400 mt-1">Die Vorschau läuft mit einem Beispiel-Beat. Der Effekt liegt immer um das Bild herum – das Cover bleibt frei.</div></div>
-      <div><div class="text-sm font-semibold mb-1.5">Stärke</div><div class="cv-seg2" role="radiogroup" aria-label="Stärke des Effekts">${[['soft', 'Dezent'], ['norm', 'Normal'], ['hard', 'Kräftig']].map(([k, l]) => `<button type="button" role="radio" data-cv-gain="${k}" aria-checked="false">${l}</button>`).join('')}</div></div>
-      <div class="cv-rngs">${[['reach', 'Größe des Effekts', 50, 160, '%'], ['bright', 'Helligkeit', 40, 160, '%'], ['trans', 'Transparenz', 0, 80, '%']].map(([k, l, a, b, u]) => `<label class="cv-rng"><span class="cv-rl"><b>${l}</b><output data-cv-out="${k}"></output></span><input type="range" data-cv-rng="${k}" min="${a}" max="${b}" step="5" aria-label="${l}"></label>`).join('')}<button type="button" class="cv-rst" data-cv-reset>Zurücksetzen</button></div>
+        ${ui.chips('cv')}</div><div class="text-[11px] leading-4 text-slate-400 mt-1">Die Vorschau läuft mit einem Beispiel-Beat. Der Effekt liegt immer um das Bild herum – das Cover bleibt frei.</div></div>
+      ${ui.html('cv')}
       <button type="button" data-cv-edit class="w-full py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs font-bold text-slate-200">Cover &amp; Tags bearbeiten</button></div>`;
     const a = ph.querySelector('[data-cv-show]'), pvEl = ph.querySelector('[data-cv-pv]'), cvs = pvEl.querySelector('canvas'), pimg = pvEl.querySelector('.cv-img');
-    const pv = new FxView(cvs);
+    const pv = new FxView(cvs); pv.cfg = S;
     pv.refresh = () => { const p = proj(); const c = (p && p.cover) || ''; pvEl.classList.toggle('has', !!c); if (c) { if (pimg.getAttribute('src') !== c) pimg.src = c; } else pimg.removeAttribute('src'); pv.fx = S.fx; const pp = clamp(Math.round(12 * S.reach / 100), 6, 16); pvEl.style.setProperty('--cvp', pp + 'px'); pvEl.style.width = pvEl.style.height = (72 + pp * 2) + 'px'; pv.layout(72, pp, boxRadius(pvEl.querySelector('.cv-box'))); pv.draw(S.fx, performance.now(), false); };
-    const mark = () => { a.checked = S.show !== false; ph.querySelectorAll('[data-cv-fxv]').forEach(b => { const on = b.dataset.cvFxv === S.fx; b.setAttribute('aria-checked', String(on)); b.classList.toggle('on', on); }); ph.querySelectorAll('[data-cv-size]').forEach(b => { const on = b.dataset.cvSize === S.size; b.setAttribute('aria-checked', String(on)); b.classList.toggle('on', on); }); ph.querySelectorAll('[data-cv-gain]').forEach(b => { const on = b.dataset.cvGain === S.gain; b.setAttribute('aria-checked', String(on)); b.classList.toggle('on', on); }); ph.querySelectorAll('[data-cv-rng]').forEach(r => { const k = r.dataset.cvRng; if (+r.value !== S[k]) r.value = S[k]; const o = ph.querySelector('[data-cv-out="' + k + '"]'); if (o) o.textContent = S[k] + ' %'; }); };
-    mark(); previews.add(pv); setTimeout(() => { pv.refresh(); wake(); }, 60);
+    const mark2 = () => { a.checked = S.show !== false; ph.querySelectorAll('[data-cv-size]').forEach(b => { const on = b.dataset.cvSize === S.size; b.setAttribute('aria-checked', String(on)); b.classList.toggle('on', on); }); };
+    let sv = 0;
+    const mark = ui.wire(ph, 'cv', S, final => { pv.fx = S.fx; if (final) { clearTimeout(sv); saveS(); } else { clearTimeout(sv); sv = setTimeout(saveS, 250); } pv.refresh(); refresh(); wake(); });
+    mark2(); previews.add(pv); setTimeout(() => { pv.refresh(); wake(); }, 60);
     ph.addEventListener('change', e => { if (e.target === a) { S.show = a.checked; saveS(); refresh(); } });
-    ph.addEventListener('input', e => { const r = e.target.closest && e.target.closest('[data-cv-rng]'); if (!r) return; S[r.dataset.cvRng] = +r.value; mark(); clearTimeout(ph._sv); ph._sv = setTimeout(saveS, 250); pv.refresh(); refresh(); wake(); });
     ph.addEventListener('click', e => {
-      const f = e.target.closest('[data-cv-fxv]'), z = e.target.closest('[data-cv-size]'), g2 = e.target.closest('[data-cv-gain]');
-      if (f) { S.fx = f.dataset.cvFxv; pv.fx = S.fx; } else if (z) S.size = z.dataset.cvSize; else if (g2) S.gain = g2.dataset.cvGain;
-      if (e.target.closest('[data-cv-reset]')) { S.reach = 100; S.bright = 100; S.trans = 0; saveS(); mark(); pv.refresh(); refresh(); wake(); return; }
-      if (f || z || g2) { saveS(); mark(); refresh(); wake(); return; }
+      const z = e.target.closest('[data-cv-size]');
+      if (z) { S.size = z.dataset.cvSize; saveS(); mark2(); refresh(); wake(); return; }
       if (e.target.closest('[data-cv-edit]')) { const m = $('settings-modal'); if (m) m.remove(); open(); }
     });
   }
-  new MutationObserver(ms => { for (const m of ms) m.addedNodes.forEach(n => { if (n.nodeType !== 1) return; const ph = n.id === 'cv-sec' ? n : (n.querySelector && n.querySelector('#cv-sec')); if (ph && !ph.dataset.done) { ph.dataset.done = '1'; section(ph); } }); }).observe(document.body || document.documentElement, { childList: true, subtree: true });
+  SunDOM.mount('cv-sec', ph => section(ph));
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 
@@ -441,5 +478,32 @@
     bd.wake = wake; bd.destroy = () => { binds.delete(bd); el.remove(); };
     binds.add(bd); bd.refresh(); return bd;
   }
-  window.Cover = { bind, open, close, editor, generate, fromFile, applyTo, exportMeta, tagWav, id3, opusTags, fileBase, coverBytes, hasTags, tagsOf, refresh, settings: () => Object.assign({}, S), set: (k, v) => { S[k] = v; saveS(); refresh(); wake(); }, styles: STYLES, effects: FX, slot: () => slot, view: () => main, resized, keyShort, SMALL_PX, makeGeo };
+  /* Effekt-Rand um eine ganze Leiste (Dockbar): eine Zeichenfläche über der Leiste, der Effekt läuft im schmalen Band am Innenrand.
+     o = { cfg: () => Einstellungen (fx, gain, mode, color, reach, bright, trans, speed, thick, on), live: () => bool, data: () => Uint8Array|null, enabled: () => bool, pad: Basisbreite in px, demo: true → immer Beispiel-Beat (Vorschau) }
+     Rückgabe: { host, v, layout(), refresh(), needs(), step(), destroy() } */
+  function rim(host, o) {
+    o = o || {}; const cv = document.createElement('canvas'); cv.className = 'cv-rim'; cv.setAttribute('aria-hidden', 'true'); host.appendChild(cv);
+    try { if (getComputedStyle(host).position === 'static') host.classList.add('cv-rim-host'); } catch (_) {}
+    const v = new FxView(cv); v.dpr = 1.5; let drawn = false, key = '';
+    const cfg = () => o.cfg ? o.cfg() : S, on = () => { const c = cfg(); return c.on !== false && c.fx !== 'off' && (!o.enabled || o.enabled()); }, shown = () => host.getClientRects().length > 0 && (!o.visible || !!o.visible());
+    const r = { host, v, canvas: cv };
+    const clear = () => { if (drawn) { v.g.setTransform(1, 0, 0, 1, 0, 0); v.g.clearRect(0, 0, cv.width, cv.height); drawn = false; key = ''; } };
+    r.layout = () => {
+      if (!on() || !shown()) { clear(); return; } const c = cfg(), w = host.clientWidth, h = host.clientHeight; if (w < 24 || h < 14) return;
+      const pad = clamp(Math.round((o.pad || 8) * c.reach / 100), 3, 18), cs = getComputedStyle(host), br = parseFloat(cs.borderTopLeftRadius) || 0, k = [w, h, pad, Math.round(br), c.fx].join('|');
+      if (k === key) return; key = k; v.cfg = c; v.layout(Math.max(10, w - pad * 2), pad, Math.max(2, br - pad), Math.max(8, h - pad * 2)); v.draw(c.fx, performance.now(), false); drawn = true;
+    };
+    r.refresh = () => { key = ''; r.layout(); wake(); };
+    r.needs = () => { if (!on() || !shown() || reduced()) return false; const c = cfg(), md = c.mode || 'music'; return !!o.demo ? md !== 'static' : md === 'anim' || (md === 'music' && !!(o.live && o.live())); };
+    r.step = (ts, dt) => {
+      if (!on() || !shown()) { clear(); return false; } r.layout(); const c = cfg(); v.cfg = c;
+      return drive(v, c, () => { try { return !!(o.live && o.live()); } catch (_) { return false; } }, () => { try { return o.data ? o.data() : null; } catch (_) { return null; } }, ts, dt, !!o.demo);
+    };
+    try { if (window.ResizeObserver) { let t = 0; const ro = new ResizeObserver(() => { clearTimeout(t); t = setTimeout(() => { if (host.isConnected) r.refresh(); }, 80); }); ro.observe(host); r.ro = ro; } } catch (_) {}
+    r.destroy = () => { rims.delete(r); try { r.ro && r.ro.disconnect(); } catch (_) {} cv.remove(); };
+    rims.add(r); r.layout(); return r;
+  }
+
+  if (window.SunPerf) SunPerf.heavy(() => !!raf && !document.hidden);
+  window.Cover = { rim, ui, cleanCfg, modes: MODES, colors: COLORS, analyser, bind, open, close, editor, generate, fromFile, applyTo, exportMeta, tagWav, id3, opusTags, fileBase, coverBytes, hasTags, tagsOf, refresh, settings: () => Object.assign({}, S), set: (k, v) => { S[k] = v; saveS(); refresh(); wake(); }, styles: STYLES, effects: FX, slot: () => slot, view: () => main, resized, keyShort, SMALL_PX, makeGeo };
 })();

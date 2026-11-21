@@ -136,7 +136,7 @@
       document.getElementById('pattern-studio-modal')?.remove();
       const ov = document.createElement('div');
       ov.id = 'pattern-studio-modal';
-      ov.className = 'fixed inset-0 z-[110] bg-black/80 flex items-end sm:items-center justify-center p-2 sm:p-5';
+      ov.className = 'fixed inset-0 z-[var(--z-dialog-2)] bg-black/80 flex items-end sm:items-center justify-center p-2 sm:p-5';
       const opts = (obj, cur) => Object.entries(obj).map(([k, v]) => `<option value="${k}" ${k === cur ? 'selected' : ''}>${escapeText(v)}</option>`).join('');
       const progObj = Object.fromEntries(Object.keys(PATTERN_PROGRESSIONS).map(k => [k, 'Stufen ' + k]));
       if (dawState.detectedChords && dawState.detectedChords.length) {

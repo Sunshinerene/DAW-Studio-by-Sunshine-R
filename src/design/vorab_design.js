@@ -1,6 +1,6 @@
 /* Design vor dem ersten Zeichnen setzen (kein Aufblitzen) */
     window.__sunUi=function(u){var d=document.documentElement,s=d.style;u=u||{};
-      d.setAttribute('data-glass',u.glass===false?'off':'on');d.setAttribute('data-glow',u.glow===false?'off':'on');d.setAttribute('data-large',u.large?'1':'0');
+      d.setAttribute('data-glass',u.glass===false?'off':'on');d.setAttribute('data-glow',u.glow===false?'off':'on');d.setAttribute('data-large',u.large?'1':'0');d.setAttribute('data-icons',u.icons===false?'emoji':'line');
       var m=/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(u.accent||'');
       if(m){var r=parseInt(m[1],16),g=parseInt(m[2],16),bl=parseInt(m[3],16),hi=function(c){return Math.round(c+(255-c)*.38)},lum=(.299*r+.587*g+.114*bl)/255;
         s.setProperty('--acc',u.accent);s.setProperty('--acc-rgb',r+','+g+','+bl);s.setProperty('--acc-hi','rgb('+hi(r)+','+hi(g)+','+hi(bl)+')');s.setProperty('--acc-ink',lum>.58?'#1a1206':'#ffffff');d.setAttribute('data-accent','1');}

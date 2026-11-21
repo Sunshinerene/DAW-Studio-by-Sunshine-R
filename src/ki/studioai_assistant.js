@@ -4,9 +4,7 @@
   if (!window.StudioAI || !window.SunshineAI) return;
   const A = window.SunshineAI, D = StudioAI.dsp;
   const $ = id => document.getElementById(id);
-  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-  const say = (m, k) => { try { toast(m, k || 'info'); } catch (_) {} };
+  const { esc, clamp, say } = window.SunUtil;
 
   /* ---------------------------------------------------------------- Einstellungen */
   const LS = 'sunshine.assistant';
@@ -63,7 +61,7 @@
   }
 
   /* ---------------------------------------------------------------- Prompt & Auswertung */
-  const SYSTEM = `Du steuerst die Musik-App "Sunshine@R Stem DAW Studio". Antworte NUR mit einem JSON-Objekt, ohne weiteren Text:
+  const SYSTEM = `Du steuerst die Musik-App "Sunshine@R DAW Studio". Antworte NUR mit einem JSON-Objekt, ohne weiteren Text:
 {"actions":[{"cmd":"..."}],"reply":"kurze deutsche Antwort"}
 Erlaubte cmd-Werte und Felder:
 play, stop, undo, redo, newtrack, save
@@ -198,7 +196,7 @@ Nutzer: Wie funktioniert Auto-Mix? -> {"actions":[],"reply":"Auto-Mix analysiert
   function openChat() {
     $('chat-modal')?.remove();
     const ov = document.createElement('div'); ov.id = 'chat-modal';
-    ov.className = 'fixed inset-0 z-[120] bg-black/80 flex items-end sm:items-center justify-center p-2 sm:p-5';
+    ov.className = 'fixed inset-0 z-[var(--z-dialog-3)] bg-black/80 flex items-end sm:items-center justify-center p-2 sm:p-5';
     const mic = A.voiceOn && A.voiceOn() && A.speechSupported;
     ov.innerHTML = `<div class="w-full max-w-xl h-[80vh] max-h-[720px] flex flex-col rounded-2xl border border-purple-500/40 bg-slate-950 p-4 shadow-2xl text-slate-100" role="dialog" aria-label="Assistent">
       <div class="flex items-center gap-2 mb-2"><div class="text-base font-black">💬 Assistent</div><button type="button" data-ch="cfg" class="ml-auto px-3 py-2 rounded-lg bg-slate-800 text-slate-200 text-sm" aria-label="Einrichten">⚙</button><button type="button" data-close class="px-3 py-2 rounded-lg bg-slate-800 text-slate-300" aria-label="Schließen">✕</button></div>
@@ -224,7 +222,7 @@ Nutzer: Wie funktioniert Auto-Mix? -> {"actions":[],"reply":"Auto-Mix analysiert
     $('assistant-settings')?.remove();
     const c = read(), o = c.online, p = o.provider;
     const ov = document.createElement('div'); ov.id = 'assistant-settings';
-    ov.className = 'fixed inset-0 z-[130] bg-black/80 flex items-end sm:items-center justify-center p-2 sm:p-5';
+    ov.className = 'fixed inset-0 z-[var(--z-dialog-4)] bg-black/80 flex items-end sm:items-center justify-center p-2 sm:p-5';
     const BTN = 'py-2.5 px-3 rounded-xl border text-xs font-bold border-slate-700 bg-slate-900 text-slate-200';
     ov.innerHTML = `<div class="w-full max-w-xl max-h-[92vh] overflow-y-auto rounded-2xl border border-purple-500/40 bg-slate-950 p-4 shadow-2xl text-slate-100" role="dialog" aria-label="Assistent einrichten">
       <div class="flex items-center gap-3 mb-1"><div class="text-base font-black">💬 Assistent einrichten</div><button type="button" data-close class="ml-auto px-3 py-2 rounded-lg bg-slate-800 text-slate-300" aria-label="Schließen">✕</button></div>
@@ -288,5 +286,5 @@ Nutzer: Wie funktioniert Auto-Mix? -> {"actions":[],"reply":"Auto-Mix analysiert
   Object.assign(A, { messages: MSGS, openChat, openChatSettings: openSettings, assistantState: L, askLocal, askOnline, ctxText });
   const boot = () => inject();
   if (document.readyState === 'complete') setTimeout(boot, 0); else window.addEventListener('load', () => setTimeout(boot, 0));
-  let tries = 0; const iv = setInterval(() => { inject(); if ($('btn-chat') || ++tries > 20) clearInterval(iv); }, 500);
+  let tries = 0; const iv = SunTick.every(500, () => { inject(); if ($('btn-chat') || ++tries > 20) SunTick.stop(iv); }, { hidden: true });
 })();

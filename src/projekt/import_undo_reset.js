@@ -1,10 +1,10 @@
 
-/* ===== Sunshine@R Stem DAW Studio: Import-Dialog, Undo, Reset ===== */
+/* ===== Sunshine@R DAW Studio: Import-Dialog, Undo, Reset ===== */
 (() => {
   let ready = false;
   window.addEventListener('load', () => { ready = true; });
   const $ = id => document.getElementById(id);
-  const safe = f => { try { f(); } catch (e) { console.warn(e); } };
+  const { safe } = window.SunUtil;
 
   /* ---------- Undo ---------- */
   const undoStack = [];
@@ -16,6 +16,7 @@
     seq: SEQ.map(k => [...dawState[k]]),
     vel: [...dawState.stepVelocities],
     trim: dawState.startOffsetMs,
+    mk: JSON.parse(JSON.stringify(dawState.markers || [])),
     sub: $('status-subtitle').textContent
   });
   const redoStack = [];
@@ -25,7 +26,7 @@
   }
   // Neue Aktion → alter „Vor“-Verlauf ist ungültig
   function pushUndo() { if (!ready) return; undoStack.push(snap()); if (undoStack.length > 40) undoStack.shift(); redoStack.length = 0; updateUndoBtn(); }
-  window.__dawPushUndo = pushUndo;
+  window.__dawPushUndo = pushUndo; window.__dawClearHistory = function () { undoStack.length = 0; redoStack.length = 0; updateUndoBtn(); };
   function refreshAll() {
     renumberTracks();
     dawState.tracks.forEach(t => safe(() => audioEngine.ensureTrackNode(t)));
@@ -38,7 +39,7 @@
   function restoreSnap(s) {
     dawState.tracks = s.tracks; dawState.buffers = s.buffers; dawState.midiNotes = s.midiNotes;
     SEQ.forEach((k, i) => { dawState[k] = s.seq[i]; });
-    dawState.stepVelocities = s.vel; dawState.startOffsetMs = s.trim;
+    dawState.stepVelocities = s.vel; dawState.startOffsetMs = s.trim; if (s.mk) dawState.markers = s.mk;
     const firstMidi = dawState.tracks.find(t => t.type === 'midi');
     dawState.activeMidiTrackId = firstMidi ? firstMidi.id : null;
     $('status-subtitle').textContent = s.sub;
@@ -95,8 +96,8 @@
         await audioEngine.ensureCtx();
         pushUndo();
         const raw = await f.arrayBuffer();
-        const decoded = await audioEngine.ctx.decodeAudioData(raw.slice(0));
-        dawState.buffers[tr.id] = decoded;
+        const decoded = await (window.__projectIO && window.__projectIO.decodeKeep ? window.__projectIO.decodeKeep(raw, f.name) : audioEngine.ctx.decodeAudioData(raw.slice(0)));
+        dawState.buffers[tr.id] = decoded; delete tr.clips;
         if (/^Audio Spur/i.test(tr.name)) {
           tr.name = f.name.replace(/.[^/.]+$/, '').slice(0, 28);
         }
@@ -178,7 +179,7 @@
       put(br, 'fm-danger');
       document.body.appendChild(menu);
       const hdrEl = document.querySelector('header');
-      const place = () => { const r = (hdrEl || hdr).getBoundingClientRect(); menu.style.top = Math.max(0, r.bottom + 6) + 'px'; menu.style.right = '12px'; };
+      const place = () => { const r = (hdrEl || hdr).getBoundingClientRect(); menu.style.top = Math.max(0, r.bottom + 6) + 'px'; menu.style.right = '12px'; menu.style.maxHeight = Math.max(160, window.innerHeight - r.bottom - 18) + 'px'; menu.style.overflowY = 'auto'; menu.style.overscrollBehavior = 'contain'; };
       const close = () => { menu.hidden = true; btn.setAttribute('aria-expanded', 'false'); };
       const open = () => { place(); menu.hidden = false; btn.setAttribute('aria-expanded', 'true'); };
       btn.addEventListener('click', e => { e.stopPropagation(); menu.hidden ? open() : close(); });
@@ -210,7 +211,7 @@
       document.body.appendChild(nav);
       const mq = window.matchMedia('(max-width:760px)');
       const hdrH = () => { const h = document.querySelector('header'); return h ? h.getBoundingClientRect().height : 0; };
-      const goTo = el => { if (!el) return; const y = el.getBoundingClientRect().top + window.scrollY - hdrH() - 8; window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' }); };
+      const goTo = el => { if (!el || document.documentElement.getAttribute('data-dock') === 'big') return; const y = el.getBoundingClientRect().top + window.scrollY - hdrH() - 8; window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' }); };
       const place = () => {
         if (mq.matches) {
           nav.replaceChildren(tr);
@@ -238,24 +239,12 @@
   let stemCacheReady = false;
   let stemCacheDir = null;
   let stemCacheBackend = null; // 'OPFS' oder 'IndexedDB'
-  let stemCacheDbPromise = null;
 
   // IndexedDB ist der Ausweichspeicher, insbesondere wenn die HTML-Datei
   // lokal aus dem Android-Dateimanager (file://) geöffnet wird.
   function openStemCacheDB() {
     if (!('indexedDB' in window)) return Promise.reject(new Error('IndexedDB wird von diesem Browser nicht unterstützt'));
-    if (stemCacheDbPromise) return stemCacheDbPromise;
-    stemCacheDbPromise = new Promise((resolve, reject) => {
-      const req = indexedDB.open('SunshineStemCache', 1);
-      req.onupgradeneeded = () => {
-        const db = req.result;
-        if (!db.objectStoreNames.contains('stems')) db.createObjectStore('stems', { keyPath: 'id' });
-      };
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error || new Error('IndexedDB konnte nicht geöffnet werden'));
-      req.onblocked = () => reject(new Error('IndexedDB ist durch einen anderen Tab blockiert'));
-    });
-    return stemCacheDbPromise;
+    return SunIDB.open('stems');
   }
 
   async function cacheStemFileIndexedDB(blob, originalName, sourceName) {
@@ -391,7 +380,8 @@
   async function readZip(file) {
     // JSZip zuerst verwenden: DecompressionStream('deflate-raw') ist nicht
     // in allen Android-/Browser-Versionen verfügbar bzw. gleich implementiert.
-    if (typeof JSZip !== 'undefined') {
+    let JSZip = null; try { JSZip = await SunLazy.zip(); } catch (_) { /* ohne ZIP-Bibliothek: nativer Weg unten */ }
+    if (JSZip) {
       try {
         const z = await JSZip.loadAsync(file), entries = [];
         z.forEach((p, en) => { if (!en.dir) entries.push({ name: p, en }); });
@@ -436,7 +426,7 @@
       dawState.activeMidiTrackId = null;
     }
 
-    let ok = 0, midi = 0; const failed = [];
+    let ok = 0, midi = 0; const failed = [], newIds = [];
     for (const { i, target } of sel) {
       const it = items[i];
       try {
@@ -457,7 +447,7 @@
           continue;
         }
 
-        const decoded = await audioEngine.ctx.decodeAudioData(raw.slice(0));
+        const decoded = await (window.__projectIO && window.__projectIO.decodeKeep ? window.__projectIO.decodeKeep(raw, it.name) : audioEngine.ctx.decodeAudioData(raw.slice(0)));
         const cleanName = it.name.replace(/.[^/.]+$/, '').slice(0, 28);
         const looksLikeVocals = /vocal|vox|voice|acap|rap|sing/i.test(it.name);
 
@@ -474,8 +464,9 @@
           tr.name = cleanName;
         }
 
-        dawState.buffers[tr.id] = decoded;
+        dawState.buffers[tr.id] = decoded; delete tr.clips;
         tr.mute = false;
+        newIds.push(tr.id);
         ok++;
       } catch (e) {
         console.error('Import fehlgeschlagen:', it.name, e);
@@ -493,11 +484,12 @@
     $('status-subtitle').textContent = `${dawState.tracks.length} Spur(en) aktiv`;
     toast(ok + midi ? `${ok} Audio-Spur(en), ${midi} MIDI geladen.` : `Keine Datei importiert.`, ok + midi ? 'success' : 'warn');
     if (failed.length) toast(`Importfehler (${failed.length}): ${failed[0].slice(0, 150)}`, 'error');
+    try { if (ok > 0 && window.__afterImport) window.__afterImport({ ok, midi, ids: newIds, mode }); } catch (e) { console.warn(e); }
   }
 
   function openDialog(items) {
     const ov = document.createElement('div');
-    ov.className = 'fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-3';
+    ov.className = 'fixed inset-0 z-[var(--z-dialog)] bg-black/70 backdrop-blur-sm flex items-center justify-center p-3';
     ov.innerHTML = `<div class="bg-daw-surface border border-daw-border rounded-2xl w-full max-w-2xl max-h-[88vh] flex flex-col shadow-2xl text-slate-200">
       <div class="p-3.5 border-b border-daw-border font-bold text-sm">📂 Laden / Hinzufügen – ${items.length} Datei(en) gefunden</div>
       <div class="p-3.5 flex flex-col gap-1.5 text-xs border-b border-daw-border">

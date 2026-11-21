@@ -11,7 +11,7 @@ const ev=(f,a)=>pg.evaluate(f,a);
 // ---- A) Startseite mit Neu-hier-Karte
 await pg.goto(`http://127.0.0.1:${port}/index_ueberarbeitet.html`,{waitUntil:'load'});await pg.waitForTimeout(1500);
 T('Help-Modul geladen (Help.tours/chapters)',await ev(()=>!!window.Help&&Help.tours().length>=10&&Help.chapters().length>=14));
-T('Startseite offen, Hilfe-Knopf sichtbar',await ev(()=>{const h=document.getElementById('hm-help');return Home.isOpen()&&h&&h.getBoundingClientRect().width>40}));
+{const r=await ev(()=>{const h=document.getElementById('hm-help'),z=document.querySelector('#hm-dock [data-zt=help]');return {o:Home.isOpen(),h:!!h,z:!!z,d:h&&getComputedStyle(h).display,cls:document.documentElement.className}});T('Startseite offen, Anleitung über die Zentrale der Dockbar erreichbar (alter Knopf entfällt, bleibt aber im Dokument)',r.o&&r.h&&r.z&&r.d==='none',r)}
 T('„Neu hier?“-Karte beim ersten Start',await ev(()=>!!document.querySelector('#hm-newbie .hp-new')));
 await pg.screenshot({path:path.join(SHOT,'hp_home.png')});
 // Karte „Nein, danke“

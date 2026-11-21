@@ -9,7 +9,7 @@ await pg.addInitScript(()=>{window.__a={iv:[],to:0,raf:0,mo:0,ael:{},tm:[]};cons
 const MO=window.MutationObserver;window.MutationObserver=function(cb){window.__a.mo++;return new MO(cb)};window.MutationObserver.prototype=MO.prototype;
 const ae=EventTarget.prototype.addEventListener;EventTarget.prototype.addEventListener=function(t,...r){const k=(this===window?'window':this===document?'document':this.nodeType?'el':'other')+':'+t;window.__a.ael[k]=(window.__a.ael[k]||0)+1;return ae.call(this,t,...r)};
 window.__lt=[];try{new PerformanceObserver(l=>l.getEntries().forEach(e=>window.__lt.push([Math.round(e.startTime),Math.round(e.duration)]))).observe({entryTypes:['longtask']})}catch(_){}
-try{localStorage.setItem('sunshine.home','off');localStorage.setItem('sunshine.news','{"seen":"1.30"}')}catch(_){}});
+try{localStorage.setItem('sunshine.home','off');localStorage.setItem('sunshine.news','{"seen":"1.31"}')}catch(_){}});
 const cdp=await ctx.newCDPSession(pg);await cdp.send('Performance.enable');
 const t0=Date.now();await pg.goto(`http://127.0.0.1:${port}/index_ueberarbeitet.html`,{waitUntil:'load'});const tl=Date.now()-t0;
 await pg.waitForTimeout(2500);

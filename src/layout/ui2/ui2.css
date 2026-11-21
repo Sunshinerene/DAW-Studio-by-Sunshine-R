@@ -11,6 +11,10 @@ html[data-theme="studio"]{--ctl-r:11px;--tr-bg:#262A32;--tr-bd:#363B45;--tr-sh:i
 html[data-radius="sharp"]{--ctl-r:7px}
 html[data-radius="sharp"][data-theme="liquid"]{--ctl-r:8px}
 html[data-radius="round"]{--ctl-r:20px}
+/* 1.37: gemeinsamer Rundungs-Faktor – Player, Startseite, Dockbars, Hilfe, Feedback, Cover rechnen damit (Eckig / Normal / Extra rund) */
+html{--rk:1;--r-pill:999px;--r-circle:50%;--sx:6px}
+html[data-radius="sharp"]{--rk:.45;--r-pill:8px;--r-circle:9px}
+html[data-radius="round"]{--rk:1.45}
 html[data-glow="off"]{--tr-sh:none}
 html[data-theme] body :is(#btn-stop,#btn-loop,#btn-metronome):not([data-on="1"]){background:var(--tr-bg)!important;border:1px solid var(--tr-bd)!important;color:#cbd5e1!important;box-shadow:var(--tr-sh)!important}
 html[data-theme] body :is(#btn-loop,#btn-metronome)[data-on="1"]{background:rgb(var(--acc-rgb-t,var(--daw-accent)) / .22)!important;border:1px solid rgb(var(--acc-rgb-t,var(--daw-accent)) / .75)!important;color:#fff3dc!important;box-shadow:none!important}

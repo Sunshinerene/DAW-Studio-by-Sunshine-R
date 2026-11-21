@@ -6,15 +6,14 @@
 (function () {
   'use strict';
   const $ = id => document.getElementById(id);
-  const say = (m, k) => { try { if (typeof toast === 'function') toast(m, k || 'info'); } catch (_) {} };
-  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const { esc, say } = window.SunUtil;
   const B = window.SUNSHINE_BUILD || {};
   const NAT = /^[0-9a-f]{6,}$/.test(String(B.nat || '')) ? String(B.nat) : '';
   const VER = String(B.v || '');
   const C = 'sunshine-live', KEY = 'sunshine.live';
   const TOK = n => '__BUILD_' + n + '__';   // absichtlich zusammengesetzt: der Build ersetzt die Platzhalter im ganzen Text – dieser Code darf sie nicht als Ganzes enthalten
-  let L = { on: true, bad: null }; try { Object.assign(L, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (_) {}
-  const saveL = () => { try { localStorage.setItem(KEY, JSON.stringify(L)); } catch (_) {} };
+  let L = { on: true, bad: null }; SunStore.merge(L, KEY);
+  const saveL = () => SunStore.save(KEY, L);
   const U = () => window.Update;
   const cmp = (a, b) => { try { return window.News._cmp(a, b); } catch (_) { return String(a) === String(b) ? 0 : 1; } };
   const dateDe = ts => { try { return new Date(ts).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }); } catch (_) { return ''; } };

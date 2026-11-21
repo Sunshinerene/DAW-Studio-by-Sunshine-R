@@ -4,19 +4,8 @@
        Filter, Pan). SF3 (komprimiert) wird nicht unterstützt. */
     const SF_LIB = { fonts: {}, listPromise: null, warned: {} };
 
-    function sfOpenDb() {
-      if (SF_LIB.dbPromise) return SF_LIB.dbPromise;
-      SF_LIB.dbPromise = new Promise((resolve, reject) => {
-        if (typeof indexedDB === 'undefined') { reject(new Error('IndexedDB ist nicht verfügbar.')); return; }
-        const rq = indexedDB.open('sunshine-soundfonts', 1);
-        rq.onupgradeneeded = () => { const db = rq.result; db.createObjectStore('meta', { keyPath: 'id' }); db.createObjectStore('data'); };
-        rq.onsuccess = () => resolve(rq.result);
-        rq.onerror = () => reject(rq.error || new Error('IndexedDB konnte nicht geöffnet werden.'));
-      });
-      return SF_LIB.dbPromise;
-    }
-    const sfReq = r => new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
-    const sfTxDone = tx => new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error || new Error('Speichern abgebrochen.')); });
+    function sfOpenDb() { return SunIDB.open('fonts'); }
+    const sfReq = SunIDB.req, sfTxDone = SunIDB.done;
 
     function sfListInstalled() {
       if (!SF_LIB.listPromise) {
@@ -294,7 +283,7 @@
       document.getElementById('sf-picker-modal')?.remove();
       const ov = document.createElement('div');
       ov.id = 'sf-picker-modal';
-      ov.className = 'fixed inset-0 z-[110] bg-black/80 flex items-end sm:items-center justify-center p-2 sm:p-5';
+      ov.className = 'fixed inset-0 z-[var(--z-dialog-2)] bg-black/80 flex items-end sm:items-center justify-center p-2 sm:p-5';
       ov.innerHTML = `<div class="w-full max-w-xl max-h-[92vh] flex flex-col rounded-2xl border border-purple-500/40 bg-slate-950 p-4 shadow-2xl text-slate-100">
         <div class="flex items-center gap-3 mb-2"><div class="text-base font-black">🎼 SoundFont · ${escapeText(track.name)}</div><button type="button" data-close class="ml-auto px-3 py-1 rounded-lg bg-slate-800 text-slate-300">✕</button></div>
         <div class="flex gap-2 mb-2"><select id="sf-font" class="flex-1 min-w-0 bg-slate-900 border border-slate-600 rounded-lg p-2 text-sm"></select><button type="button" data-sf-del class="px-3 rounded-lg border border-rose-500/40 text-rose-300 text-xs" title="SoundFont vom Gerät entfernen">🗑</button></div>
@@ -355,7 +344,7 @@
         if (engCb.checked) { try { await audioEngine.ensureCtx(); const sf = track.instrument === 'sf' && track.sf ? track.sf : (curFont ? { font: curFont, fontName: SF_LIB.fonts[curFont] && SF_LIB.fonts[curFont].meta.name } : null); if (sf) SpessaEngine.prepare(audioEngine.ctx, sf); } catch (err) { console.warn(err); } }
         updEng();
       });
-      const engTimer = setInterval(() => { if (!document.body.contains(ov)) { clearInterval(engTimer); return; } updEng(); }, 500);
+      const engTimer = SunTick.every(500, () => { if (!document.body.contains(ov)) { SunTick.stop(engTimer); return; } updEng(); });
       updEng();
 
       ov.addEventListener('click', async e => {

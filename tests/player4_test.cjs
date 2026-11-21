@@ -7,7 +7,7 @@ let ok=0,bad=0;const T=(n,c,x)=>{if(c){ok++;console.log('PASS',n)}else{bad++;con
 (async()=>{await new Promise(r=>srv.listen(0,'127.0.0.1',r));const port=srv.address().port;const b=await chromium.launch();
 const mk=async(q,init,routeFn)=>{const ctx=await b.newContext({viewport:{width:393,height:852},isMobile:true,hasTouch:true});const pg=await ctx.newPage();pg.__errs=[];pg.on('pageerror',e=>pg.__errs.push(e.message));
  await pg.route(/^https?:\/\/(?!127\.0\.0\.1)/,r=>routeFn?routeFn(r):r.abort());
- await pg.addInitScript(i=>{try{if(!sessionStorage.__i){sessionStorage.__i=1;localStorage.setItem('sunshine.home','off');localStorage.setItem('sunshine.news','{"seen":"1.30"}');if(i)Object.keys(i).forEach(k=>localStorage.setItem(k,i[k]))}}catch(e){}},init||null);
+ await pg.addInitScript(i=>{try{if(!sessionStorage.__i){sessionStorage.__i=1;localStorage.setItem('sunshine.home','off');localStorage.setItem('sunshine.news','{"seen":"1.42"}');if(i)Object.keys(i).forEach(k=>localStorage.setItem(k,i[k]))}}catch(e){}},init||null);
  await pg.goto(`http://127.0.0.1:${port}/index_ueberarbeitet.html${q||''}`,{waitUntil:'load'});await pg.waitForTimeout(1200);return pg};
 let pg=await mk('',{ 'sunshine.player':'{"bg":true,"vol":1}','sunshine.cover':'{"fx":"ring"}' },null);const ev=(f,a)=>pg.evaluate(f,a);
 const cp=require('child_process');const FX='/tmp/fx127_t';fs.rmSync(FX,{recursive:true,force:true});fs.mkdirSync(FX,{recursive:true});
@@ -15,7 +15,7 @@ const files=[['eins',300],['zwei',400]].map(([n,f])=>{cp.execSync(`ffmpeg -y -lo
 const SH=process.env.SHOTS;const shot=async n=>{if(SH)await pg.screenshot({path:SH+'/'+n+'.png'})};
 // Start: Startseite offen, noch nichts läuft
 await ev(()=>Home.open());await pg.waitForTimeout(700);
-T('Startseite: keine Dockbar, solange nichts läuft',await ev(()=>{const d=document.getElementById('hm-dock');return !d||d.hidden}));
+T('Startseite: keine Playbar, solange nichts läuft (Dockbar mit Klang + Zentrale bleibt)',await ev(()=>!(window.HmDock&&HmDock.state().visible)));
 T('Alte Equalizer-Animation ist entfernt',await ev(()=>!document.getElementById('hm-eq')));
 await shot('home_idle');
 // Player füllen und abspielen, Player schließen
@@ -23,7 +23,7 @@ await ev(()=>Home.close());await ev(()=>Player.open());await pg.waitForTimeout(3
 await pg.setInputFiles('#pl-file',files);await pg.waitForTimeout(1500);
 await ev(()=>document.querySelectorAll('#pl-list .pl-row')[0].click());await pg.waitForTimeout(1200);
 await ev(()=>Player.close());await ev(()=>Home.open());await pg.waitForTimeout(900);
-const a=await ev(()=>{const d=document.getElementById('hm-dock'),r=d.getBoundingClientRect();return {vis:!d.hidden,mode:HmDock.mode(),bottom:r.bottom,vh:innerHeight,src:document.getElementById('hd-src').textContent,title:document.getElementById('hd-title').textContent,btn:[...d.querySelectorAll('[data-hd]')].map(b=>b.dataset.hd),playing:Player.state().playing,cover:!!document.querySelector('#hm-cvhost .cv-b'),stage:!document.getElementById('hm-stage').hidden}});
+const a=await ev(()=>{const d=document.getElementById('hm-dock'),r=d.getBoundingClientRect();return {vis:HmDock.state().visible,mode:HmDock.mode(),bottom:r.bottom,vh:innerHeight,src:document.getElementById('hd-src').textContent,title:document.getElementById('hd-title').textContent,btn:[...document.querySelectorAll('#hd-ctl [data-hd]')].map(b=>b.dataset.hd),playing:Player.state().playing,cover:!!document.querySelector('#hm-cvhost .cv-b'),stage:!document.getElementById('hm-stage').hidden}});
 T('Player läuft → Dockbar erscheint unten auf der Startseite',a.vis&&a.mode==='player'&&a.bottom<=a.vh&&a.bottom>a.vh-24,a);
 T('Quelle „Player“, Titel „eins“, Tasten Zufall/Zurück/Play/Weiter/Wiederholen',a.src==='Player'&&a.title==='eins'&&a.btn.join()==='shuffle,prev,toggle,next,repeat',a);
 T('Cover mit Equalizer-Bühne sichtbar',a.cover&&a.stage,a);
@@ -46,20 +46,20 @@ await pg.click('#hm-stage .hd-open');await pg.waitForTimeout(500);T('Tipp auf de
 const pv=await ev(()=>PlSound.view().c&&PlSound.view().c.id);T('Player nimmt die Anzeige wieder für sich',pv==='pl-viz',pv);
 await ev(()=>Player.close());await pg.waitForTimeout(700);T('Zurück auf der Startseite: Anzeige wieder dort',await ev(()=>PlSound.view().c.id==='hm-viz'));
 // Ausblenden
-await pg.click('#hm-stage .hd-x');await pg.waitForTimeout(600);T('✕ pausiert und blendet die Leiste aus',await ev(()=>document.getElementById('hm-dock').hidden&&!Player.state().playing));
+await pg.click('#hm-stage .hd-x');await pg.waitForTimeout(600);T('✕ pausiert und blendet die Playbar aus',await ev(()=>!HmDock.state().visible&&!Player.state().playing));
 // DAW
 await ev(()=>{Home.close()});await pg.waitForTimeout(300);
 await ev(()=>{document.getElementById('btn-play').click()});await pg.waitForTimeout(900);
 const dp=await ev(()=>({on:dawState.isPlaying,ph:dawState.playheadSec}));
 await ev(()=>Home.open());await pg.waitForTimeout(900);
-const d2=await ev(()=>{const d=document.getElementById('hm-dock');return {vis:!d.hidden,mode:HmDock.mode(),src:document.getElementById('hd-src').textContent,btn:[...d.querySelectorAll('[data-hd]')].map(b=>b.dataset.hd),playing:dawState.isPlaying,tm:document.getElementById('hd-cur').textContent}});
+const d2=await ev(()=>{const d=document.getElementById('hm-dock');return {vis:HmDock.state().visible,mode:HmDock.mode(),src:document.getElementById('hd-src').textContent,btn:[...document.querySelectorAll('#hd-ctl [data-hd]')].map(b=>b.dataset.hd),playing:dawState.isPlaying,tm:document.getElementById('hd-cur').textContent}});
 T('DAW läuft, Startseite geöffnet: Wiedergabe wird nicht mehr gestoppt',d2.playing,{dp,d2});
 T('DAW → Dockbar mit DAW-Tasten (Loop/Anfang/Play/Stopp/Metronom)',d2.vis&&d2.mode==='daw'&&d2.src==='DAW'&&d2.btn.join()==='loop,start,toggle,stop,metro',d2);
 await shot('home_daw');
 await pg.click('#hm-dock [data-hd=toggle]');await pg.waitForTimeout(500);T('Pause der DAW über die Startseite',await ev(()=>!dawState.isPlaying));
 T('Nach Pause bleibt die DAW-Leiste (Fortsetzen möglich)',await ev(()=>!document.getElementById('hm-dock').hidden&&HmDock.mode()==='daw'));
 await pg.click('#hm-dock [data-hd=toggle]');await pg.waitForTimeout(600);T('Play der DAW über die Startseite',await ev(()=>dawState.isPlaying));
-await pg.click('#hm-dock [data-hd=stop]');await pg.waitForTimeout(700);T('Stopp der DAW: Leiste verschwindet',await ev(()=>!dawState.isPlaying&&document.getElementById('hm-dock').hidden));
+await pg.click('#hm-dock [data-hd=stop]');await pg.waitForTimeout(700);T('Stopp der DAW: Playbar verschwindet',await ev(()=>!dawState.isPlaying&&!HmDock.state().visible));
 // Wechsel: DAW läuft, Player startet → DAW pausiert, Leiste wechselt
 await ev(()=>Home.close());await ev(()=>document.getElementById('btn-play').click());await pg.waitForTimeout(600);
 await ev(()=>{Player.play&&Player.play()});await pg.waitForTimeout(900);await ev(()=>Home.open());await pg.waitForTimeout(700);

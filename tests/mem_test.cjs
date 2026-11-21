@@ -8,7 +8,7 @@ function wav(sr,secs,bits,float,f){const ch=2,n=sr*secs,ba=ch*bits/8,buf=Buffer.
 (async()=>{await new Promise(r=>srv.listen(0,'127.0.0.1',r));const port=srv.address().port;const b=await chromium.launch();
 const ctx=await b.newContext({viewport:{width:393,height:852},isMobile:true,hasTouch:true});const pg=await ctx.newPage();const errs=[];pg.on('pageerror',e=>errs.push(e.message));
 await pg.route(/^https?:\/\/(?!127\.0\.0\.1)/,r=>r.abort());
-await pg.addInitScript(()=>{try{localStorage.setItem('sunshine.home','off');localStorage.setItem('sunshine.news','{"seen":"1.30"}')}catch(e){}});
+await pg.addInitScript(()=>{try{localStorage.setItem('sunshine.home','off');localStorage.setItem('sunshine.news','{"seen":"1.42"}')}catch(e){}});
 await pg.goto(`http://127.0.0.1:${port}/index_ueberarbeitet.html`,{waitUntil:'load'});await pg.waitForTimeout(1200);
 const ev=(f,a)=>pg.evaluate(f,a);
 const W16=wav(44100,20,16,false,220).toString('base64'),WF=wav(44100,5,32,true,330).toString('base64');
@@ -59,7 +59,7 @@ await ev(async m=>{await Autosave._restore?.(m)},meta).catch(()=>{});
 const asr=await ev(()=>({has:!!dawState.buffers[__as],len:dawState.buffers[__as]&&dawState.buffers[__as].length}));
 T('Autosave-Wiederherstellung dekodiert die Original-Datei wieder',asr.has&&asr.len>=44100*19,asr);
 // ---- Sicherung (ZIP) mit Blobs
-const bk=await ev(async()=>{const r=await Backup.make({});const f=await JSZip.loadAsync(r.blob);const m=JSON.parse(await f.file('manifest.json').async('string'));return {bytes:r.bytes,bin:m.binBytes,recs:r.records}});
+const bk=await ev(async()=>{const r=await Backup.make({});await SunLazy.zip();const f=await JSZip.loadAsync(r.blob);const m=JSON.parse(await f.file('manifest.json').async('string'));return {bytes:r.bytes,bin:m.binBytes,recs:r.records}});
 T('Datensicherung enthält die kleinen Dateien (Gesamtgröße deutlich unter Rohdaten)',bk.bytes<44100*(20+5+2+20)*2*4*0.6,bk);
 T('Keine JS-Fehler',errs.length===0,errs);
 console.log('\n'+ok+' ok, '+bad+' fehlgeschlagen');await b.close();srv.close();process.exit(bad?1:0)})();

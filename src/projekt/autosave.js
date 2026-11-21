@@ -4,30 +4,15 @@
    Beim Start wird eine Wiederherstellung angeboten, solange das aktuelle Projekt leer ist. */
 (function () {
   'use strict';
-  const DB = 'SunshineAutosave', LS = 'sunshine.autosave', TICK = 8000, FIRST = 2500;
+  const LS = 'sunshine.autosave', TICK = 8000, FIRST = 2500;
   const $ = id => document.getElementById(id);
   let enabled = true; try { const j = JSON.parse(localStorage.getItem(LS) || '{}'); if (j.on === false) enabled = false; } catch (_) {}
-  let dbp = null, baseline = null, lastJson = null, offer = false, lastInfo = null, warnedSize = false;
+  let baseline = null, lastJson = null, offer = false, lastInfo = null, warnedSize = false;
   const savedBuf = new Map();          /* Spur-ID → AudioBuffer, der zuletzt gesichert wurde */
   const stats = { saves: 0, bufWrites: 0, skipped: 0 };
 
-  function db() {
-    if (dbp) return dbp;
-    dbp = new Promise((res, rej) => {
-      let r; try { r = indexedDB.open(DB, 1); } catch (e) { rej(e); return; }
-      r.onupgradeneeded = () => { const d = r.result; if (!d.objectStoreNames.contains('meta')) d.createObjectStore('meta'); if (!d.objectStoreNames.contains('buf')) d.createObjectStore('buf'); };
-      r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error || new Error('Autosave-Datenbank nicht verfügbar'));
-    });
-    return dbp;
-  }
-  function tx(stores, mode, fn) {
-    return db().then(d => new Promise((res, rej) => {
-      const t = d.transaction(stores, mode); let out;
-      try { out = fn(...[].concat(stores).map(s => t.objectStore(s))); } catch (e) { rej(e); return; }
-      t.oncomplete = () => res(out && 'result' in out ? out.result : out); t.onerror = () => rej(t.error); t.onabort = () => rej(t.error || new Error('abgebrochen'));
-    }));
-  }
-  const reqP = r => new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+  const tx = (stores, mode, fn) => SunIDB.tx('autosave', stores, mode, fn);
+  const reqP = SunIDB.req;
 
   const bufCount = () => Object.values(dawState.buffers || {}).filter(b => b && b.numberOfChannels).length;
   const bytes = () => Object.values(dawState.buffers || {}).reduce((s, b) => s + (b && b.numberOfChannels ? b.length * b.numberOfChannels * 4 : 0), 0);
@@ -106,11 +91,11 @@
   function dialog(meta) {
     const nT = ((meta.state && meta.state.tracks) || []).length, when = new Date(meta.savedAt).toLocaleString('de-DE');
     const ov = document.createElement('div'); ov.id = 'as-offer';
-    ov.style.cssText = 'position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.72);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:14px';
-    ov.innerHTML = '<div role="dialog" aria-modal="true" style="max-width:420px;width:100%;border-radius:18px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;padding:18px;box-shadow:0 20px 60px #000a;font-family:inherit">' +
+    ov.style.cssText = 'position:fixed;inset:0;z-index:var(--z-toast);background:rgba(0,0,0,.72);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:14px';
+    ov.innerHTML = '<div role="dialog" aria-modal="true" style="max-width:420px;width:100%;border-radius:calc(18px * var(--rk,1));border:1px solid #334155;background:#0f172a;color:#e2e8f0;padding:18px;box-shadow:0 20px 60px #000a;font-family:inherit">' +
       '<div style="font-size:17px;font-weight:800;margin-bottom:6px">♻️ Letzte Sitzung wiederherstellen?</div>' +
       '<div style="font-size:13px;color:#94a3b8;line-height:1.5">Die App wurde zuletzt am <b style="color:#e2e8f0">' + when + '</b> automatisch gesichert' + (meta.name ? ' (Projekt „' + String(meta.name).replace(/[<&]/g, '') + '“)' : '') + ': ' + nT + ' Spur(en), ' + (meta.audio || 0) + ' mit Audio (' + mb(meta.size || 0) + ').' + (meta.partial ? '<br><span style="color:#fbbf24">Hinweis: Das Audio war zu groß für den Autosave – es werden nur Einstellungen, Noten und Clips wiederhergestellt.</span>' : '') + '</div>' +
-      '<div style="display:flex;gap:10px;margin-top:16px"><button data-as="no" style="flex:1;min-height:46px;border-radius:12px;border:1px solid #475569;background:#1e293b;color:#e2e8f0;font-weight:700">Verwerfen</button><button data-as="yes" style="flex:1.4;min-height:46px;border-radius:12px;border:0;background:#f59e0b;color:#1c1100;font-weight:800">Wiederherstellen</button></div></div>';
+      '<div style="display:flex;gap:10px;margin-top:16px"><button data-as="no" style="flex:1;min-height:46px;border-radius:calc(12px * var(--rk,1));border:1px solid #475569;background:#1e293b;color:#e2e8f0;font-weight:700">Verwerfen</button><button data-as="yes" style="flex:1.4;min-height:46px;border-radius:calc(12px * var(--rk,1));border:0;background:#f59e0b;color:#1c1100;font-weight:800">Wiederherstellen</button></div></div>';
     document.body.appendChild(ov);
     ov.addEventListener('click', async e => {
       const b = e.target.closest('[data-as]'); if (!b) return;
@@ -135,7 +120,7 @@
   function start() {
     if (!window.__projectIO || typeof dawState === 'undefined') return;
     setTimeout(async () => { baseline = stateJson(); lastJson = baseline; await checkOffer(); }, FIRST);
-    setInterval(() => { if (document.hidden) return; if (dawState.isPlaying || dawState.isRecordingMic || inflight) return; saveNow(); }, TICK);
+    SunTick.every(TICK, () => { if (document.hidden) return; if (dawState.isPlaying || dawState.isRecordingMic || inflight) return; saveNow(); }, { hidden: true });
     document.addEventListener('visibilitychange', () => { if (document.hidden) saveNow(); });
     window.addEventListener('pagehide', () => { saveNow(); });
   }

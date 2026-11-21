@@ -17,7 +17,7 @@
   const LS_THEME = 'sunshine.theme', LS_UI = 'sunshine.ui';
   const html = document.documentElement;
   const getTheme = () => { const t = html.getAttribute('data-theme'); return THEMES.some(x => x.id === t) ? t : 'aurora'; };
-  const UI_DEFAULTS = { glass: true, glow: true, large: false, accent: null, glassK: 40, blur: null, radius: 'normal' };
+  const UI_DEFAULTS = { glass: true, glow: true, large: false, accent: null, glassK: 40, blur: null, radius: 'normal', voice: false, icons: true };
   const readUi = () => { try { return Object.assign({}, UI_DEFAULTS, JSON.parse(localStorage.getItem(LS_UI) || '{}')); } catch (_) { return Object.assign({}, UI_DEFAULTS); } };
   function applyUi(p) {
     if (typeof window.__sunUi === 'function') { window.__sunUi(p); return; }
@@ -33,7 +33,7 @@
     const m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute('content', t.meta);
     if (persist !== false) { try { localStorage.setItem(LS_THEME, t.id); } catch (_) {} }
   }
-  function saveUi(p) { try { localStorage.setItem(LS_UI, JSON.stringify(p)); } catch (_) {} applyUi(p); }
+  function saveUi(p) { try { localStorage.setItem(LS_UI, JSON.stringify(p)); } catch (_) {} applyUi(p); try { document.dispatchEvent(new CustomEvent('sunshine-ui', { detail: p })); } catch (_) {} }
 
   function previewHtml(t) {
     const p = t.pv;
@@ -48,10 +48,11 @@
     const spessaOk = typeof SpessaEngine === 'object' && SpessaEngine.hasBundle && SpessaEngine.hasBundle();
     const ov = document.createElement('div');
     ov.id = 'settings-modal';
-    ov.className = 'fixed inset-0 z-[120] bg-black/80 flex items-end sm:items-center justify-center p-2 sm:p-5';
+    ov.className = 'fixed inset-0 z-[var(--z-dialog-3)] bg-black/80 flex items-end sm:items-center justify-center p-2 sm:p-5';
     const toggle = (key, label, hint, on) => `<label class="flex items-start gap-3 py-2 cursor-pointer"><input type="checkbox" data-ui="${key}" ${on ? 'checked' : ''} class="mt-1 w-5 h-5 shrink-0"><span class="min-w-0"><span class="block text-sm font-semibold">${label}</span><span class="block text-[11px] text-slate-400">${hint}</span></span></label>`;
     ov.innerHTML = `<div class="w-full max-w-xl max-h-[92vh] overflow-y-auto rounded-2xl border border-purple-500/40 bg-slate-950 p-4 shadow-2xl text-slate-100" role="dialog" aria-label="Optionen">
       <div class="flex items-center gap-3 mb-1"><div class="text-base font-black">⚙️ Optionen</div><button type="button" data-close class="ml-auto px-3 py-2 rounded-lg bg-slate-800 text-slate-300" aria-label="Schließen">✕</button></div>
+      <div id="hp-sec"></div>
       <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mt-3 mb-2">Design</div>
       <div id="theme-grid" class="grid grid-cols-2 gap-2.5">
         ${THEMES.map(t => `<button type="button" data-theme-id="${t.id}" aria-pressed="${t.id === cur}" class="theme-card text-left rounded-2xl p-2 border ${t.id === cur ? 'border-amber-400 ring-2 ring-amber-400/60 bg-slate-800' : 'border-slate-700 bg-slate-900'}">${previewHtml(t)}<div class="px-1 pt-2 pb-0.5"><div class="text-sm font-bold flex items-center gap-1.5">${t.name}${t.id === cur ? '<span class="text-[10px] font-mono text-amber-300">✓ aktiv</span>' : ''}</div><div class="text-[11px] text-slate-400 leading-snug">${t.desc}</div></div></button>`).join('')}
@@ -61,7 +62,21 @@
         ${toggle('glass', 'Glas-Effekte (Unschärfe)', 'Weiche Milchglas-Flächen. Bei Ruckeln auf älteren Geräten ausschalten.', ui.glass)}
         ${toggle('glow', 'Leuchteffekte', 'Glühende Zahlen, Buttons und Schatten.', ui.glow)}
         ${toggle('large', 'Große Bedienelemente', 'Alle Buttons mindestens 44 px hoch – leichter zu treffen.', ui.large)}
+        ${toggle('icons', 'Einheitliche Linien-Icons', 'Ein durchgehender Icon-Satz in der Textfarbe des Designs statt bunter Emoji. Ausschalten = Emoji.', ui.icons)}
+        <div class="py-2"><label class="block text-sm font-semibold mb-1" for="opt-dockmode">Bereiche (Editor, Drums, Vocal, Mixer)</label><select id="opt-dockmode" data-dockmode class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100"><option value="big" ${window.DockWin && DockWin.mode === 'big' ? 'selected' : ''}>Großes Fenster bei Bedarf (aufgeräumt)</option><option value="windows" ${window.DockWin && DockWin.mode === 'windows' ? 'selected' : ''}>Untereinander, einklappbar</option><option value="tabs" ${window.DockWin && DockWin.mode === 'tabs' ? 'selected' : ''}>Reiter unter den Spuren</option></select><span class="block text-[11px] text-slate-400 mt-1">Standard: Oben Spuren und Transport; Editor, Drums, Vocal und Mixer öffnen auf Tipp als eigenes großes Fenster.</span></div>
       </div>
+      <div id="st-sec"></div>
+      <div id="fx-sec"></div>
+      <div id="dfx-sec"></div>
+      <div id="ly-sec"></div>
+      <div id="up-sec"></div>
+      <div id="hl-sec"></div>
+      <div id="sv-sec"></div>
+      <div id="fb-sec"></div>
+      <div id="pl-sec"></div>
+      <div id="in-sec"></div>
+      <div id="cv-sec"></div>
+      <div id="td-sec"></div>
       <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mt-4 mb-1">Anpassen</div>
       <div class="rounded-xl border border-slate-800 p-3 space-y-3.5">
         <div>
@@ -94,7 +109,12 @@
       </div>
       <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mt-4 mb-1">Klang</div>
       <label class="flex items-start gap-3 py-2 cursor-pointer ${spessaOk ? '' : 'opacity-50'}"><input type="checkbox" data-spessa ${spessaOk && SpessaEngine.enabled ? 'checked' : ''} ${spessaOk ? '' : 'disabled'} class="mt-1 w-5 h-5 shrink-0"><span class="min-w-0"><span class="block text-sm font-semibold">SpessaSynth-Engine für SoundFonts</span><span class="block text-[11px] text-slate-400">Volle SoundFont-Unterstützung (Zonen, Filter, Drums). Aus = einfacher Ersatz-Player.</span></span></label>
-      <div class="flex items-center gap-3 mt-4 pt-3 border-t border-slate-800"><img src="assets/sunshine-r-app-icon.png" alt="" class="w-10 h-10 rounded-xl" onerror="this.remove()"><div class="min-w-0"><div class="text-sm font-bold">Sunshine@R Stem DAW Studio <span class="text-[10px] font-mono text-cyan-300">PRO</span></div><div class="text-[11px] text-slate-400">Design wird auf diesem Gerät gespeichert.</div></div><button type="button" data-close class="ml-auto px-4 py-2.5 rounded-xl bg-cyan-500 text-slate-950 font-bold text-sm">Fertig</button></div>
+      <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mt-4 mb-1">Sicherheit</div>
+      <div class="rounded-xl border border-slate-800 px-3 py-1"><label class="flex items-start gap-3 py-2 cursor-pointer"><input type="checkbox" data-autosave ${window.Autosave && Autosave.enabled() ? 'checked' : ''} class="mt-1 w-5 h-5 shrink-0"><span class="min-w-0"><span class="block text-sm font-semibold">♻️ Autosave &amp; Wiederherstellung</span><span class="block text-[11px] text-slate-400">Sichert dein Projekt automatisch im Browser. Nach einem Absturz oder Neustart fragt die App, ob sie weitermachen soll.</span><span id="as-status" class="block text-[11px] text-amber-300 mt-1">${window.Autosave ? Autosave.statusText() : ''}</span></span></label><button type="button" data-as-clear class="mb-2 w-full py-2.5 rounded-lg border border-slate-700 bg-slate-900 text-xs font-bold text-slate-200">Zwischenstand löschen</button></div>
+      <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mt-4 mb-1">Experimentell</div>
+      <div class="rounded-xl border border-slate-800 px-3 py-1">${toggle('voice', '🎤 Sprachsteuerung (Test)', 'Blendet einen Mikrofon-Knopf ein: Befehle wie „Play“, „Tempo 120“, „Spur 2 stumm“ sprechen oder tippen. Löschen und Zurücksetzen sind gesperrt. Ob Sprechen geht, hängt vom Gerät ab – Tippen geht immer.', ui.voice)}</div>
+      <button type="button" data-ai-settings class="mt-2 w-full py-3 rounded-xl border border-slate-700 bg-slate-900 text-sm font-bold text-slate-100">💬 Assistent einrichten (lokales Modell · Online) …</button>
+      <div class="flex items-center gap-3 mt-4 pt-3 border-t border-slate-800"><img src="assets/sunshine-r-app-icon.png" alt="" class="w-10 h-10 rounded-xl" onerror="this.remove()"><div class="min-w-0"><div class="text-sm font-bold">Sunshine@R DAW Studio <span class="text-[10px] font-mono text-cyan-300">PRO</span></div><div class="text-[11px] text-slate-400">Design wird auf diesem Gerät gespeichert.</div></div><button type="button" data-close class="ml-auto px-4 py-2.5 rounded-xl bg-cyan-500 text-slate-950 font-bold text-sm">Fertig</button></div>
     </div>`;
     document.body.appendChild(ov);
     // KI-Modell-Status live anzeigen
@@ -110,7 +130,7 @@
     };
     if (window.BasicPitchAI) window.BasicPitchAI.onChange(() => { if (document.body.contains(ov)) bpRender(); });
     bpRender();
-    const say = (m, k) => { if (typeof toast === 'function') toast(m, k); };
+    const { say } = window.SunUtil;
     ov.addEventListener('change', e => {
       if (e.target.id === 'bp-files' && e.target.files.length) {
         window.BasicPitchAI.installFiles(e.target.files).then(() => say('KI-Modell aus eigenen Dateien geladen und gespeichert.', 'success'), err => say(err.message, 'error'));
@@ -122,6 +142,7 @@
       if (t.closest('button[data-bp-load]')) { say('KI-Modell wird geladen …', 'info'); window.BasicPitchAI.load(true).then(() => say('KI-Modell bereit.', 'success'), err => say(err.message.slice(0, 200), 'error')); return; }
       if (t.closest('button[data-bp-pick]')) { ov.querySelector('#bp-files').click(); return; }
       if (t.closest('button[data-bp-remove]')) { window.BasicPitchAI.remove().then(() => say('KI-Modell entfernt.', 'info')); return; }
+      if (t.closest('button[data-ai-settings]')) { ov.remove(); if (window.SunshineAI && SunshineAI.openChatSettings) SunshineAI.openChatSettings(); return; }
       if (t === ov || t.closest('[data-close]')) { ov.remove(); return; }
       const card = t.closest('button[data-theme-id]');
       if (card) { applyTheme(card.dataset.themeId); openSettings(); const sc = document.querySelector('#settings-modal > div'); return; }
@@ -132,10 +153,9 @@
       if (rb) { const p = readUi(); p.radius = rb.dataset.radius; saveUi(p); ov.querySelectorAll('#rad-row button').forEach(b => { const on = b === rb; b.setAttribute('aria-pressed', String(on)); b.className = 'py-2.5 text-xs font-bold rounded-xl border ' + (on ? 'border-amber-400 bg-slate-800 text-amber-200' : 'border-slate-700 bg-slate-900 text-slate-300'); }); return; }
       if (t.closest('button[data-reset-custom]')) { const p = readUi(); Object.assign(p, { accent: null, glassK: UI_DEFAULTS.glassK, blur: null, radius: 'normal' }); saveUi(p); openSettings(); return; }
     });
-    // Live-Regler: Dialog wird beim Ziehen durchsichtig, damit man die Wirkung sieht
-    const peek = on => ov.classList.toggle('peek', on);
-    ov.addEventListener('pointerdown', e => { if (e.target.closest('[data-range],[data-accent-custom]')) peek(true); });
-    ['pointerup', 'pointercancel', 'change', 'blur'].forEach(ev => ov.addEventListener(ev, e => { if (e.target.closest && e.target.closest('[data-range],[data-accent-custom]')) peek(false); }, true));
+    // Live-Regler: beim Ziehen bleibt nur die bediente Zeile sichtbar, damit man die Wirkung auf der echten Oberfläche sieht
+    ov.addEventListener('pointerdown', e => { const c = e.target.closest('[data-range],[data-accent-custom]'); if (c) SunPeek.on(ov, c.closest('label') || c.parentElement || c); });
+    ['pointerup', 'pointercancel', 'change', 'blur'].forEach(ev => ov.addEventListener(ev, e => { if (e.target.closest && e.target.closest('[data-range],[data-accent-custom]')) SunPeek.off(ov); }, true));
     ov.addEventListener('input', e => {
       const t = e.target;
       if (t.dataset && t.dataset.range) {
@@ -151,6 +171,7 @@
     ov.addEventListener('change', e => {
       const t = e.target;
       if (t.dataset && t.dataset.ui) { const p = readUi(); p[t.dataset.ui] = t.checked; saveUi(p); }
+      else if (t.dataset && 'dockmode' in t.dataset) { try { DockWin.setMode(t.value); } catch (_) {} }
       else if (t.dataset && 'spessa' in t.dataset) { try { SpessaEngine.setEnabled(t.checked); } catch (_) {} }
     });
   }

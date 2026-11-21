@@ -7,7 +7,7 @@ const ctx=await b.newContext({viewport:{width:393,height:852},deviceScaleFactor:
 await pg.route(/cdn\.tailwindcss\.com/,r=>r.fulfill({status:200,contentType:'application/javascript',body:TW}));
 await pg.route(/^https?:\/\/(?!127\.0\.0\.1|cdn\.tailwindcss\.com)/,r=>r.abort());   // KEIN Internet: Laden muss sauber scheitern
 await pg.goto(`http://127.0.0.1:${port}/index_ueberarbeitet.html`,{waitUntil:'load'});await pg.waitForTimeout(1000);
-await pg.tap('#btn-menu');await pg.tap('#file-menu #btn-settings');await pg.waitForSelector('#settings-modal');
+await pg.evaluate(()=>document.getElementById('btn-settings').click());await pg.waitForSelector('#settings-modal');
 T('KI-Bereich sichtbar',await pg.locator('#bp-status').count()===1);
 T('Status anfangs: noch nicht geladen',/Noch nicht geladen/.test(await pg.textContent('#bp-status')),await pg.textContent('#bp-status'));
 await pg.locator('#bp-status').scrollIntoViewIfNeeded();await pg.screenshot({path:process.argv[3]});

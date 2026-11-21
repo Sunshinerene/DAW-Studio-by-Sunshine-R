@@ -460,8 +460,11 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.ActivityCallback;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
@@ -473,7 +476,94 @@ public class SunshineMediaPlugin extends Plugin {
   private String artKey = "";
 
   @Override
-  public void load() { inst = this; }
+  public void load() {
+    inst = this;
+    // Reste vom letzten Start (kopierte Titel im Zwischenspeicher) wegraeumen
+    new Thread(new Runnable() { @Override public void run() { try { trimCache(null, 0); } catch (Throwable t) { } } }).start();
+  }
+
+  /** Zwischenspeicher fuer direkt abgespielte Titel: hoechstens 'keep' Dateien (die neuesten) bleiben, 'except' wird nie geloescht. */
+  private File cacheDir() {
+    File d = new File(getContext().getCacheDir(), "player");
+    if (!d.exists()) d.mkdirs();
+    return d;
+  }
+
+  private void trimCache(File except, int keep) {
+    File[] fs = cacheDir().listFiles();
+    if (fs == null) return;
+    java.util.Arrays.sort(fs, new java.util.Comparator<File>() {
+      @Override public int compare(File a, File b) { return Long.compare(b.lastModified(), a.lastModified()); }
+    });
+    int kept = 0;
+    for (File f : fs) {
+      if (except != null && f.equals(except)) continue;
+      if (f.getName().endsWith(".part") || kept >= keep) { f.delete(); } else { kept++; }
+    }
+  }
+
+  /** Datei aus dem Ordner-Dialog (content://) in den Zwischenspeicher der App kopieren und den Pfad zurueckgeben.
+      Die Wiedergabe laeuft danach direkt von dieser Datei (WebView mit Spulen), ohne dass sie ueber die Bruecke in den Arbeitsspeicher geladen wird.
+      Es bleiben hoechstens 2 Titel liegen; bereits kopierte Titel werden wiederverwendet. Schlaegt etwas fehl, nutzt die Seite den alten Weg. */
+  @PluginMethod
+  public void cacheFile(final PluginCall call) {
+    final String uriS = call.getString("uri", "");
+    final String name = call.getString("name", "audio");
+    final long want = call.getDouble("size", 0.0).longValue();
+    new Thread(new Runnable() {
+      @Override
+      public void run() {
+        File part = null;
+        try {
+          if (uriS.length() == 0) throw new Exception("keine Datei");
+          String ext = "";
+          int dot = name.lastIndexOf('.');
+          if (dot >= 0 && name.length() - dot <= 6) ext = name.substring(dot).replaceAll("[^A-Za-z0-9.]", "");
+          File dir = cacheDir();
+          File out = new File(dir, Integer.toHexString(uriS.hashCode()) + "_" + Long.toHexString(want) + ext);
+          if (out.exists() && out.length() > 0 && (want <= 0 || out.length() == want)) {
+            out.setLastModified(System.currentTimeMillis());
+            trimCache(out, 1);
+            JSObject o = new JSObject();
+            o.put("path", out.getAbsolutePath());
+            o.put("size", out.length());
+            call.resolve(o);
+            return;
+          }
+          trimCache(null, 1);
+          if (want > 0 && dir.getUsableSpace() < want + 32L * 1048576L) throw new Exception("zu wenig Speicher");
+          part = new File(dir, "x" + System.nanoTime() + ".part");
+          ContentResolver cr = getContext().getContentResolver();
+          InputStream in = cr.openInputStream(Uri.parse(uriS));
+          if (in == null) throw new Exception("kein Zugriff");
+          long total = 0;
+          try {
+            OutputStream os = new FileOutputStream(part);
+            try {
+              byte[] buf = new byte[262144];
+              int r;
+              while ((r = in.read(buf)) > 0) { os.write(buf, 0, r); total += r; }
+            } finally {
+              os.close();
+            }
+          } finally {
+            in.close();
+          }
+          if (total <= 0 || (want > 0 && total < want)) throw new Exception("unvollstaendig");
+          if (out.exists()) out.delete();
+          if (!part.renameTo(out)) throw new Exception("umbenennen fehlgeschlagen");
+          part = null;
+          JSObject o = new JSObject();
+          o.put("path", out.getAbsolutePath());
+          o.put("size", total);
+          call.resolve(o);
+        } catch (Throwable t) {
+          try { if (part != null) part.delete(); } catch (Throwable x) { }
+          call.reject("Datei nicht kopierbar");
+        }
+      }
+    }).start();
+  }
 
   @Override
   protected void handleOnDestroy() {

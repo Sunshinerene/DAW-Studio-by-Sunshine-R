@@ -368,7 +368,7 @@
       // Responsive Canvas Redraw on Window Resize
       window.addEventListener('resize', () => {
         renderAllTrackCanvases();
-        if (dawState.activeTab === 'midi') {
+        if (dawState.activeTab === 'midi' || (window.DockWin && DockWin.isOpen('midi'))) {
           drawPianoRoll();
           drawVelocityLane();
         }

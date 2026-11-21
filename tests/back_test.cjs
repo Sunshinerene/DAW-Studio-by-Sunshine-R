@@ -13,7 +13,7 @@ await pg.waitForTimeout(900);
 // ---- Offline
 const nonFont=ext.filter(u=>!/fonts\.(googleapis|gstatic)\.com/.test(u));
 T('Offline: Tailwind & JSZip kommen aus der App (keine Anfrage an cdn.tailwindcss.com / cdnjs)',!ext.some(u=>/tailwindcss|cdnjs/.test(u)),ext.join(' '));
-T('Offline: Seite ist gestylt (vorberechnetes Tailwind-CSS eingebaut, kein Laufzeit-Skript, JSZip da)',await ev(()=>!window.tailwind&&!!document.getElementById('tw-precompiled')&&document.getElementById('tw-precompiled').textContent.length>20000&&!document.querySelector('script[src*=tailwind]')&&!!window.JSZip&&getComputedStyle(document.getElementById('btn-play')).borderRadius!=='0px'));
+T('Offline: Seite ist gestylt (vorberechnetes Tailwind-CSS eingebaut, kein Laufzeit-Skript, JSZip da)',await ev(async()=>!window.tailwind&&!!document.getElementById('tw-precompiled')&&document.getElementById('tw-precompiled').textContent.length>20000&&!document.querySelector('script[src*=tailwind]')&&!!(await SunLazy.zip())&&getComputedStyle(document.getElementById('btn-play')).borderRadius!=='0px'));
 T('Einzige externe Anfragen: Schriftarten (fallen ohne Netz auf Systemschrift zurück)',nonFont.length===0,nonFont.join(' '));
 // ---- Zurück-Taste
 T('Startseite ohne Projekt: Zurück → false (App geht in den Hintergrund)',await ev(()=>Home.isOpen())&&await back()===false);

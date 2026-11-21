@@ -12,4 +12,5 @@ for f in $(ls *_test.cjs | grep -v -E "^(nav_test|logo_test|sf3_test)\.cjs$"); d
   echo "$f exit=$ec pass=$p fail=$fl" >> ergebnis.txt
 done
 echo FERTIG >> ergebnis.txt
-grep -c "fail=0" ergebnis.txt | sed 's/^/Dateien ohne Fehler: /'; grep -v "fail=0" ergebnis.txt | grep -v FERTIG
+# Grün heißt: Abbruchcode 0 UND keine FAIL-Zeile (ein Absturz mitten im Test zählt als Fehler)
+grep -c "exit=0 .*fail=0" ergebnis.txt | sed 's/^/Dateien ohne Fehler: /'; grep -v "exit=0 .*fail=0" ergebnis.txt | grep -v FERTIG

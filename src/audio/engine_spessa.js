@@ -331,10 +331,10 @@
       buildMasterGraph() {
         const ctx = this.ctx;
         this.masterGain = ctx.createGain();
-        this.masterGain.gain.value = dawState.masterGainVal;
+        this.masterGain.gain.value = dawState.masterGainVal * Math.pow(10, (dawState.masterTrimDb || 0) / 20);
 
         this.masterLimiter = ctx.createDynamicsCompressor();
-        this.masterLimiter.threshold.value = -1.0;
+        this.masterLimiter.threshold.value = dawState.limiterDb == null ? -1.0 : dawState.limiterDb;
         this.masterLimiter.knee.value = 2;
         this.masterLimiter.ratio.value = 16;
         this.masterLimiter.attack.value = 0.0015;
@@ -441,23 +441,28 @@
 
         const analyser = ctx.createAnalyser();
         analyser.fftSize = 128;
+        /* Automation: Pegel (Multiplikator), Pan- und Filter-Versatz als Zusatzsignal auf die Parameter */
+        const autoGain = ctx.createGain(); autoGain.gain.value = 1;
+        const panAuto = ctx.createConstantSource(); panAuto.offset.value = 0; panAuto.connect(panner.pan); panAuto.start();
+        const filtAuto = ctx.createConstantSource(); filtAuto.offset.value = 0; filtAuto.connect(lowCut.frequency); filtAuto.start();
 
         input.connect(lowCut);
         scGain.connect(sectionGate);
         sectionGate.connect(panner);
         panner.connect(fader);
-        fader.connect(analyser);
+        fader.connect(autoGain);
+        autoGain.connect(analyser);
         analyser.connect(this.masterGain);
 
         if (track.type === 'audio' || track.type === 'stem' || track.type === 'mic') {
           revSend = ctx.createGain();
           revSend.gain.value = (dawState.vocalRackActive && (track.vocalCleanup || track.type === 'mic')) ? 1.0 : 0.0;
-          fader.connect(revSend);
+          autoGain.connect(revSend);
           revSend.connect(this.reverbConvolver);
         }
 
         this.channelNodes[track.id] = {
-          input, lowCut, scGain, sectionGate, panner, fader, analyser, vocalChain, revSend, fxInput, fxNodes
+          input, lowCut, scGain, sectionGate, panner, fader, analyser, vocalChain, revSend, fxInput, fxNodes, autoGain, panAuto, filtAuto
         };
       }
 
@@ -467,7 +472,8 @@
         const anySolo = dawState.tracks.some(t => t.solo);
 
         if (this.masterGain) {
-          this.masterGain.gain.setTargetAtTime(dawState.masterGainVal, now, 0.015);
+          this.masterGain.gain.setTargetAtTime(dawState.masterGainVal * Math.pow(10, (dawState.masterTrimDb || 0) / 20), now, 0.015);
+          if (this.masterLimiter) this.masterLimiter.threshold.setTargetAtTime(dawState.limiterDb == null ? -1.0 : dawState.limiterDb, now, 0.02);
         }
         if (this.reverbReturn) {
           const hasTrackReverb = dawState.tracks.some(t => (t.fx || []).some(fx => fx.type === 'reverb' && fx.enabled));
@@ -513,6 +519,7 @@
         const trimSec = dawState.startOffsetMs / 1000;
         let longest = 0;
         dawState.tracks.forEach(tr => {
+          if (Array.isArray(tr.clips)) { longest = Math.max(longest, ClipModel.end(tr)); return; }
           const buf = dawState.buffers[tr.id];
           if (buf) longest = Math.max(longest, buf.duration - trimSec);
         });
@@ -564,13 +571,13 @@
         this.nextStepTime = now - frac * secPer16th;
 
         this.startAudioStemSources(now, dawState.playheadSec);
-        this.timerId = setInterval(() => this.schedulerLoop(), 22);
+        this.timerId = window.WorkerTick ? WorkerTick.start(() => this.schedulerLoop(), 22) : setInterval(() => this.schedulerLoop(), 22);
       }
 
       stop(resetZero = true) {
         dawState.isPlaying = false;
         if (this.timerId) {
-          clearInterval(this.timerId);
+          if (window.WorkerTick) WorkerTick.stop(this.timerId); else clearInterval(this.timerId);
           this.timerId = null;
         }
         this.stopAudioStemSources();
@@ -607,6 +614,7 @@
 
       // Startet alle Audiospuren zum Zeitpunkt `when` ab Zeitleisten-Position `offsetSec`.
       scheduleStemPass(when, offsetSec, stopAt) {
+        if (window.AutoModel) { try { AutoModel.schedule(this, when, offsetSec, stopAt); } catch (e) { console.warn('[Automation]', e); } }
         const trimSec = dawState.startOffsetMs / 1000;
         const barSec = 4 * (60 / dawState.bpm);
         const totalArrSec = this.getTotalArrangementBars() * barSec;
@@ -614,7 +622,8 @@
         dawState.tracks.forEach(tr => {
           const buf = dawState.buffers[tr.id];
           const node = this.channelNodes[tr.id];
-          if (!buf || !node) return;
+          if (Array.isArray(tr.clips) && node) { ClipModel.schedule(this, tr, node, when, offsetSec, stopAt); return; }
+          if (!buf || !node || buf.__parked) return;   /* entladen (Speicher-Sparer) */
 
           const usable = Math.max(0.1, buf.duration - trimSec);
           // Nur deutlich kürzere Samples (> 1 Takt kürzer als die Zeitleiste) wiederholen sich selbst
@@ -649,16 +658,17 @@
 
       stopAudioStemSources() {
         this.activeStemSources.forEach(src => {
-          try { src.onended = null; src.stop(); src.disconnect(); } catch (e) {}
+          try { src.onended = null; src.stop(); src.disconnect(); if (src._g) src._g.disconnect(); } catch (e) {}
         });
         this.activeStemSources = [];
+        if (window.AutoModel) { try { AutoModel.reset(this); } catch (e) {} }
       }
 
       schedulerLoop() {
         if (!dawState.isPlaying || !this.ctx) return;
 
         const secPer16th = (60 / dawState.bpm) / 4;
-        const lookaheadSec = 0.11;
+        const lookaheadSec = document.hidden ? 0.6 : 0.11;
         const totalBars = this.getTotalArrangementBars();
         const totalArrSec = totalBars * 4 * (60 / dawState.bpm);
 
@@ -914,7 +924,7 @@
           }
           const micTr = dawState.tracks.find(t => t.id === dawState.recordingMicTrackId) || dawState.tracks.find(t => t.type === 'mic');
           if (micTr) {
-            dawState.buffers[micTr.id] = buf;
+            dawState.buffers[micTr.id] = buf; delete micTr.clips;
             renderMultiTrackLanes();
             toast(`Vocal-Take auf ${micTr.num} | ${micTr.name} gespeichert!`, 'success');
           }

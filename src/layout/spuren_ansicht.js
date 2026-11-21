@@ -46,7 +46,7 @@
 
     function openNewTrackDialog() {
       const ov = document.createElement('div');
-      ov.className = 'fixed inset-0 z-[100] bg-black/75 backdrop-blur-sm flex items-center justify-center p-3';
+      ov.className = 'fixed inset-0 z-[var(--z-dialog)] bg-black/75 backdrop-blur-sm flex items-center justify-center p-3';
       ov.innerHTML = `<div class="bg-daw-surface border border-daw-border rounded-2xl w-full max-w-md shadow-2xl text-slate-200 overflow-hidden">
         <div class="p-3.5 border-b border-daw-border font-bold text-sm flex items-center justify-between">
           <span>➕ Neue Spur erstellen</span>
@@ -176,6 +176,7 @@
               <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-daw-bg text-slate-400 border border-daw-border hidden sm:inline">${tr.badge}</span>
               <button data-collapse="${tr.id}" title="Spur ein-/ausklappen" aria-expanded="${tr.collapsed ? 'false' : 'true'}" class="track-collapse-btn tr-collapse-btn px-1.5 py-0.5 rounded bg-daw-surface hover:bg-daw-elevated text-[10px] font-bold text-slate-300 border border-daw-border">${tr.collapsed ? '＋' : '－'}</button>
               <button type="button" data-fx="${escapeText(tr.id)}" title="FX-Rack öffnen" aria-label="FX-Rack öffnen" style="touch-action:manipulation" class="tr-fx-btn px-1.5 py-0.5 rounded bg-fuchsia-500/15 hover:bg-fuchsia-500/30 text-[9px] font-bold text-fuchsia-300 border border-fuchsia-500/40">FX ${Array.isArray(tr.fx)?tr.fx.filter(x=>x.enabled).length:0}</button>
+              <button type="button" data-clipedit="${tr.id}" title="Spur groß ansehen &amp; bearbeiten (Teilen, Zuschneiden, Verschieben …)" aria-label="Spur groß ansehen" style="touch-action:manipulation" class="tr-edit-btn px-1.5 py-0.5 rounded bg-amber-500/15 hover:bg-amber-500/30 text-[9px] font-bold text-amber-200 border border-amber-500/40">⤢</button>
               <button data-edit="${tr.editTab}" data-trackid="${tr.id}" class="tr-edit-btn px-1.5 py-0.5 rounded bg-daw-surface hover:bg-daw-elevated text-[9px] font-bold text-cyan-300 border border-daw-border">Edit</button>
               <button data-del="${tr.id}" title="Spur löschen" class="tr-del-btn px-1.5 py-0.5 rounded bg-rose-500/15 hover:bg-rose-500/30 text-[9px] font-bold text-rose-300 border border-rose-500/35">✕</button>
             </div>
@@ -411,9 +412,14 @@
         ctx.globalAlpha = tr.mute ? 0.25 : 0.9;
         ctx.fillStyle = tr.color;
 
-        if (tr.type === 'audio' || tr.type === 'stem' || tr.type === 'mic') {
+        if (Array.isArray(tr.clips) && (tr.type === 'audio' || tr.type === 'stem' || tr.type === 'mic')) {
+          ClipModel.drawLane(ctx, tr, w, h, totalSec);
+        } else if (tr.type === 'audio' || tr.type === 'stem' || tr.type === 'mic') {
           const buf = dawState.buffers[tr.id];
-          if (buf) {
+          if (buf && buf.__parked) {
+            const pk = ClipModel.peaks(buf), spb = buf.sampleRate / 256, st0 = trimSec * spb, vb = totalSec * spb, mid = h / 2;
+            for (let x = 0; x < w; x++) { const b0 = Math.floor(st0 + x * vb / w), b1 = Math.max(b0 + 1, Math.floor(st0 + (x + 1) * vb / w)); let m = 0; for (let b = Math.max(0, b0); b < b1 && b < pk.length; b++) if (pk[b] > m) m = pk[b]; const bh = Math.max(1.5, m * h * 0.85); ctx.fillRect(x, mid - bh / 2, 1.5, bh); }
+          } else if (buf) {
             const data = buf.getChannelData(0);
             const startSamp = Math.floor(trimSec * buf.sampleRate);
             const viewSamps = Math.floor(totalSec * buf.sampleRate);

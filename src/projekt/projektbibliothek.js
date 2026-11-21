@@ -1,38 +1,47 @@
 
 /* Sunshine@R project library: named projects with audio buffers + DAW state */
 (() => {
-  const DB_NAME = 'SunshineRStemStudioProjects';
   const STORE = 'projects';
-  let dbPromise;
   const $ = id => document.getElementById(id);
 
-  function openDB() {
-    if (dbPromise) return dbPromise;
-    dbPromise = new Promise((resolve, reject) => {
-      const req = indexedDB.open(DB_NAME, 1);
-      req.onupgradeneeded = () => {
-        const db = req.result;
-        if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { keyPath: 'id' });
-      };
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error || new Error('Projekt-Datenbank konnte nicht geöffnet werden.'));
-    });
-    return dbPromise;
-  }
+  const requestStore = (mode, action) => SunIDB.tx('projects', STORE, mode, action);
 
-  function requestStore(mode, action) {
-    return openDB().then(db => new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE, mode);
-      const store = tx.objectStore(STORE);
-      let req;
-      try { req = action(store); } catch (e) { reject(e); return; }
-      tx.oncomplete = () => resolve(req && req.result);
-      tx.onerror = () => reject(tx.error || new Error('Datenbankfehler'));
-      tx.onabort = () => reject(tx.error || new Error('Speichern abgebrochen'));
-    }));
+  /* ---- Quellen-Merker: zu jedem aus einer Datei dekodierten Puffer die Original-Datei (Blob; liegt im Blob-Speicher des Browsers) ---- */
+  const SRC = new WeakMap();
+  function compactSource(ab) { if (ab && ab.__parked) return { blob: ab.blob, name: ab.name }; const s = SRC.get(ab); if (!s || !s.blob) return null; const raw = ab.length * ab.numberOfChannels * 4; return s.blob.size <= raw * 0.9 ? s : null; }
+  const MIME = { wav: 'audio/wav', mp3: 'audio/mpeg', ogg: 'audio/ogg', flac: 'audio/flac', m4a: 'audio/mp4' };
+  /* Datei dekodieren UND merken (statt decodeAudioData(buf.slice(0)) direkt) */
+  async function decodeKeep(ab, name) {
+    const ext = (String(name || '').split('.').pop() || '').toLowerCase();
+    const blob = new Blob([ab], { type: MIME[ext] || 'application/octet-stream' });
+    const decoded = await audioEngine.ctx.decodeAudioData(ab.slice(0));
+    SRC.set(decoded, { blob, name: String(name || '') });
+    return decoded;
   }
-
-  function makePayload() {
+  /* Gespeicherte Projekte mit Original-Dateien: erst dekodieren (nacheinander 2 gleichzeitig, damit der Speicher klein bleibt) */
+  const needsHydrate = p => !!p && !!p.buffers && Object.values(p.buffers).some(it => it && it.src && !it.audioBuffer);
+  async function hydratePayload(payload) {
+    const list = Object.entries(payload.buffers || {}).filter(([, it]) => it && it.src && !it.audioBuffer);
+    if (!list.length) return { ok: 0, failed: [] };
+    await audioEngine.ensureCtx();
+    if (list.length >= 4) { try { toast('Audio wird geladen … (' + list.length + ' Dateien)', 'info'); } catch (_) {} }
+    const failed = []; let next = 0, ok = 0;
+    const worker = async () => {
+      while (next < list.length) {
+        const [id, it] = list[next++];
+        try {
+          const ab = await it.src.arrayBuffer();
+          const decoded = await audioEngine.ctx.decodeAudioData(ab);
+          SRC.set(decoded, { blob: it.src, name: it.name || '' });
+          it.audioBuffer = decoded; ok++;
+        } catch (e) { console.warn('Audio konnte nicht dekodiert werden:', id, e); failed.push(id); it.src = null; }
+      }
+    };
+    await Promise.all([worker(), worker()]);
+    if (failed.length) { try { toast(failed.length + ' Audiodatei(en) konnten nicht gelesen werden.', 'error'); } catch (_) {} }
+    return { ok, failed };
+  }
+  function makePayload(opts) {
     if (typeof syncActiveMidiTrackFromState === 'function') syncActiveMidiTrackFromState();
     const state = {};
     Object.keys(dawState).forEach(key => {
@@ -40,16 +49,21 @@
       try { state[key] = JSON.parse(JSON.stringify(dawState[key])); } catch (_) {}
     });
     const buffers = {};
+    if (opts && opts.noBuffers) return { state, buffers, savedAt: Date.now(), formatVersion: 1 };
     Object.entries(dawState.buffers || {}).forEach(([id, audioBuffer]) => {
       if (!audioBuffer || !audioBuffer.numberOfChannels) return;
+      /* Importierte Dateien: die kleine Original-Datei speichern statt der entpackten Rohdaten (spart Speicher und Platz) */
+      const sb = compactSource(audioBuffer);
+      if (sb) { buffers[id] = { sampleRate: audioBuffer.sampleRate, length: audioBuffer.length, src: sb.blob, name: sb.name || '' }; return; }
+      /* Sonst die Rohdaten – ohne zusätzliche Kopie (die Datenbank kopiert beim Schreiben selbst) */
       const channels = [];
-      for (let c = 0; c < audioBuffer.numberOfChannels; c++) channels.push(audioBuffer.getChannelData(c).slice());
+      for (let c = 0; c < audioBuffer.numberOfChannels; c++) channels.push(audioBuffer.getChannelData(c));
       buffers[id] = { sampleRate: audioBuffer.sampleRate, length: audioBuffer.length, channels };
     });
     return { state, buffers, savedAt: Date.now(), formatVersion: 1 };
   }
 
-  function restorePayload(payload) {
+  function restoreCore(payload) {
     if (!payload || !payload.state) throw new Error('Das Projekt enthält keine gültigen DAW-Daten.');
     const volatile = new Set(['buffers','isPlaying','playheadSec','isRecordingMic','micRecStartTime','recordingMicTrackId','pendingAudioTargetTrackId','lastDuckTime','lastDuckDb']);
     Object.entries(payload.state).forEach(([key, value]) => {
@@ -66,6 +80,8 @@
     if (ctx && typeof ctx.createBuffer === 'function') {
       Object.entries(payload.buffers || {}).forEach(([id, item]) => {
         try {
+          if (item && item.audioBuffer) { dawState.buffers[id] = item.audioBuffer; return; }
+          if (!item || !item.channels) return;
           const audioBuffer = ctx.createBuffer(item.channels.length, item.length, item.sampleRate);
           item.channels.forEach((channel, index) => audioBuffer.copyToChannel(new Float32Array(channel), index));
           dawState.buffers[id] = audioBuffer;
@@ -106,7 +122,7 @@
 
   function modalBase(title, body, footer) {
     const overlay = document.createElement('div');
-    overlay.className = 'fixed inset-0 z-[150] bg-black/75 backdrop-blur-sm flex items-center justify-center p-3';
+    overlay.className = 'fixed inset-0 z-[var(--z-sheet)] bg-black/75 backdrop-blur-sm flex items-center justify-center p-3';
     overlay.innerHTML = `<div class="w-full max-w-lg max-h-[88vh] overflow-hidden rounded-2xl border border-daw-border bg-daw-panel shadow-2xl flex flex-col text-slate-100">
       <div class="px-4 py-3 border-b border-daw-border flex items-center justify-between"><strong class="text-sm">${title}</strong><button type="button" data-close class="text-slate-400 hover:text-white text-xl">×</button></div>
       <div class="p-4 overflow-y-auto">${body}</div>
@@ -165,7 +181,7 @@
         try {
           await audioEngine.ensureCtx();
           if (dawState.isPlaying) audioEngine.stop(true);
-          restorePayload(record.payload);
+          await restorePayload(record.payload);
           $('status-subtitle').textContent = `Projekt: ${record.name}`;
           $('status-subtitle').dataset.projectName = record.name;
           ov.remove();
@@ -188,8 +204,14 @@
     return String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   }
 
+  /* Öffentlich: bei Projekten mit Original-Dateien ein Promise (erst dekodieren), sonst wie bisher sofort */
+  function restorePayload(payload) {
+    if (needsHydrate(payload)) return hydratePayload(payload).then(() => restoreCore(payload));
+    return restoreCore(payload);
+  }
+  window.__projectIO = { makePayload, restorePayload, hydratePayload, decodeKeep, srcOf: ab => SRC.get(ab) || null, compactOf: compactSource };
   window.addEventListener('DOMContentLoaded', () => {
-    $('btn-save-project')?.addEventListener('click', saveNamedProject);
-    $('btn-open-projects')?.addEventListener('click', openProjectLibrary);
+    $('btn-save-project')?.addEventListener('click', () => (window.Home && window.Home.save) ? window.Home.save() : saveNamedProject());
+    $('btn-open-projects')?.addEventListener('click', () => (window.Home && window.Home.open) ? window.Home.open() : openProjectLibrary());
   });
 })();

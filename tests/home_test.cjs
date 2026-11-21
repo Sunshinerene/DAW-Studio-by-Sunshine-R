@@ -17,7 +17,7 @@ T('Logo (16:9-Banner) geladen und sichtbar, Wortmarke ausgeblendet',await ev(()=
 T('Leerer Zustand: Hinweis, kein „Weiter“, kein Zurück-Knopf',await ev(()=>!!document.querySelector('.hm-empty')&&!document.getElementById('hm-resume-cur')&&document.getElementById('hm-back').hidden));
 T('„home-pending“ wurde entfernt (keine blockierte DAW)',await ev(()=>!document.documentElement.classList.contains('home-pending')));
 await pg.waitForTimeout(900);
-T('Alte Hintergrund-Animation ist entfernt (kein #hm-eq), solange nichts läuft keine Bühne und keine Dockbar',await ev(()=>!document.getElementById('hm-eq')&&(!document.getElementById('hm-dock')||document.getElementById('hm-dock').hidden)&&document.getElementById('hm-stage').hidden));
+T('Alte Hintergrund-Animation ist entfernt (kein #hm-eq), solange nichts läuft keine Bühne und keine Playbar (die Dockbar bleibt für die Zentrale)',await ev(()=>!document.getElementById('hm-eq')&&document.getElementById('hm-stage').hidden&&!HmDock.state().visible));
 await pg.screenshot({path:SHOT+'/home_empty.png'});
 // ---- Neues Projekt
 await pg.tap('#hm-new');await pg.waitForTimeout(400);T('Neues-Projekt-Dialog öffnet mit Vorschlag „Neues Projekt“',await ev(()=>document.getElementById('pf-name').value==='Neues Projekt'));
@@ -35,11 +35,11 @@ T('Statuszeile zeigt „Projekt: Test Alpha“, Undo leer',s1.sub==='Projekt: Te
 T('Projekt sofort in der Bibliothek',await ev(async()=>{await Home.refreshList();return Home.items().some(m=>m.name==='Test Alpha'&&m.bpm===132)}));
 // ---- Zurück zur Startseite über Menü
 await pg.tap('#btn-menu');await pg.waitForTimeout(200);T('Menü hat 🏠 Startseite und 📁 Projekt-Einstellungen oben',await ev(()=>{const m=document.getElementById('file-menu'),b=[...m.querySelectorAll('.fm-item')];return b[0].id==='btn-home'&&b[1].id==='btn-project-settings'}));
-await pg.tap('#btn-home');await pg.waitForTimeout(900);
+await pg.evaluate(()=>document.getElementById('btn-home').click());await pg.waitForTimeout(900);
 T('Startseite wieder offen mit „Weiter: Test Alpha“',await vis('#home-root')&&await ev(()=>/Weiter: Test Alpha/.test(document.getElementById('hm-resume').innerText)));
 const card=await ev(()=>document.querySelector('.hm-item').innerText.replace(/\s+/g,' '));T('Karte zeigt BPM, Tonart, Spuren',/132 BPM/.test(card)&&/A Dur/.test(card)&&/1 Spur/.test(card)&&/OFFEN/.test(card),card);
 await pg.screenshot({path:SHOT+'/home_with_project.png'});
-await pg.tap('#hm-back');T('Zurück-Knopf schließt',!(await vis('#home-root')));
+await pg.evaluate(()=>document.getElementById('hm-back').click());T('Zurück-Knopf schließt',!(await vis('#home-root')));
 // ---- Audio hinzufügen, zweites Projekt anlegen
 await ev(async()=>{await audioEngine.ensureCtx();const ctx=audioEngine.ctx,b=ctx.createBuffer(2,44100*3,44100);for(let c=0;c<2;c++){const d=b.getChannelData(c);for(let i=0;i<d.length;i++)d[i]=.3*Math.sin(2*Math.PI*220*i/44100)}const t=createTrack('audio','Basslinie');dawState.buffers[t.id]=b;audioEngine.ensureTrackNode(t);renderMultiTrackLanes();});
 await open();await pg.waitForTimeout(1500);

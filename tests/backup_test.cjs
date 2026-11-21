@@ -37,7 +37,7 @@ T('Sicherung erstellt: 3 Standard-Datenbanken (ohne SoundFonts), 5 Datensätze',
 T('Dateiname Sunshine-Sicherung-YYYYMMDD-HHMM.zip',/^Sunshine-Sicherung-\d{8}-\d{4}\.zip$/.test(res.name),res.name);
 T('Manifest: Format 1, Einstellungen sunshine.* ja, „fremd“ nein',res.man.format===1&&res.man.ls['sunshine.fx']&&!('fremd' in res.man.ls));
 const all=await ev(async()=>{const r=await Backup.make({all:true});return{dbs:r.dbs}});T('„Auch große Zusatzdaten“: SoundFonts dabei (mind. 4 Datenbanken, Player-Sitzung zählt mit)',all.dbs>=4,JSON.stringify(all));
-const zipOk=await ev(async b64=>{const bin=atob(b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);const z=await JSZip.loadAsync(u);return{n:Object.keys(z.files).length,bin:Object.keys(z.files).filter(f=>f.startsWith('bin/')).length}},res.b64);
+const zipOk=await ev(async b64=>{const bin=atob(b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);await SunLazy.zip();const z=await JSZip.loadAsync(u);return{n:Object.keys(z.files).length,bin:Object.keys(z.files).filter(f=>f.startsWith('bin/')).length}},res.b64);
 T('ZIP lesbar, Binärdaten (Audio, Blob, Buffer) liegen als eigene Dateien',zipOk.n>8&&zipOk.bin>=5,JSON.stringify(zipOk));
 const orig=await ev(READ);
 T('Ausgangsdaten vollständig lesbar (Selbsttest)',orig.audio&&orig.blob==='hallo'&&orig.map&&orig.date&&orig.nan,JSON.stringify(orig));
@@ -56,7 +56,7 @@ await pg.evaluate(async b64=>{const bin=atob(b64),u=new Uint8Array(bin.length);f
 T('Zusammenführen: p2 zurück auf „Zwei“, lokales p3 bleibt',await pg.evaluate(async()=>{const o=await new Promise(r=>{const q=indexedDB.open('SunshineRStemStudioProjects');q.onsuccess=()=>r(q.result)});const g=k=>new Promise(r=>{const q=o.transaction('projects').objectStore('projects').get(k);q.onsuccess=()=>r(q.result)});const a=await g('p2'),c=await g('p3');o.close();return a.name==='Zwei'&&c&&c.name==='Neu lokal'}));
 // ---- Fehlerfälle
 const errs2=await pg.evaluate(async()=>{const o={};try{await Backup.restore(new File([new Uint8Array([1,2,3])],'x.zip'))}catch(e){o.junk=e.message}
- const z=new JSZip();z.file('hallo.txt','x');try{await Backup.restore(new File([await z.generateAsync({type:'uint8array'})],'y.zip'))}catch(e){o.nomf=e.message}
+ await SunLazy.zip();const z=new JSZip();z.file('hallo.txt','x');try{await Backup.restore(new File([await z.generateAsync({type:'uint8array'})],'y.zip'))}catch(e){o.nomf=e.message}
  const z2=new JSZip();z2.file('manifest.json',JSON.stringify({format:99,dbs:[]}));try{await Backup.restore(new File([await z2.generateAsync({type:'uint8array'})],'z.zip'))}catch(e){o.fmt=e.message}return o});
 T('Fehlerfälle: kaputte Datei / kein Manifest / fremdes Format → klare Meldung',/ZIP/.test(errs2.junk)&&/manifest/.test(errs2.nomf)&&/format/i.test(errs2.fmt),JSON.stringify(errs2));
 await pg.context().close();

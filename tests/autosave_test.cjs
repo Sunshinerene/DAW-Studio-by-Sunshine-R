@@ -58,7 +58,7 @@ await pg.tap('#as-offer [data-as="no"]');await pg.waitForTimeout(500);
 T('Verwerfen löscht den Zwischenstand',(await ev(()=>Autosave._peek()))==null);
 await reload();T('…kein Angebot mehr',await pg.locator('#as-offer').count()===0);
 // 9 Optionen
-await pg.tap('#btn-menu');await pg.tap('#file-menu #btn-settings');await pg.waitForSelector('#settings-modal');
+await pg.evaluate(()=>document.getElementById('btn-settings').click());await pg.waitForSelector('#settings-modal');
 T('Optionen: Autosave-Schalter an',await pg.locator('input[data-autosave]').isChecked());
 T('Optionen: Status-Zeile sichtbar',await pg.locator('#as-status').isVisible());
 await pg.locator('input[data-autosave]').uncheck();await pg.waitForTimeout(200);

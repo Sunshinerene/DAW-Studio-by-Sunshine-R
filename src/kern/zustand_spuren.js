@@ -37,6 +37,10 @@
       startOffsetMs: 0,
       activeTab: 'midi',
       masterGainVal: 0.95,
+      masterTrimDb: 0,
+      limiterDb: -1,
+      markers: [],
+      project: null,
 
       // Arrangement Sections (Total = 24 Bars)
       sections: [
