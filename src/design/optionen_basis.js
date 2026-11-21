@@ -73,6 +73,7 @@
       <div id="hl-sec"></div>
       <div id="sv-sec"></div>
       <div id="fb-sec"></div>
+      <div id="lab-sec"></div>
       <div id="pl-sec"></div>
       <div id="in-sec"></div>
       <div id="cv-sec"></div>

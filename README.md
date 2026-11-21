@@ -4,7 +4,7 @@ Dieser Ordner ist die **Quelle** der App. Das Ergebnis des Baus ist eine einzige
 `dist/index_ueberarbeitet.html` – sie wird als `www/index.html` ins Android-Repo gelegt (Live-Update und APK-Bau
 bleiben unverändert, siehe `ANLEITUNG.md` im Android-Zusatzpaket).
 
-Stand: Version 1.45 (Schnellwahl, aufgeräumte Dockbars). Der Bau aus Stufe 1 war Byte für Byte gleich 1.30; ab 1.31 sind die gemeinsamen Bausteine (unten) eingebaut, ab 1.32 laufen Takt und Beobachter zentral und die App ruht im Leerlauf.
+Stand: Version 1.46 (Labor (Beta)). Der Bau aus Stufe 1 war Byte für Byte gleich 1.30; ab 1.31 sind die gemeinsamen Bausteine (unten) eingebaut, ab 1.32 laufen Takt und Beobachter zentral und die App ruht im Leerlauf.
 
 ## Bauen und testen
 
@@ -34,7 +34,7 @@ echten GitHub-Actions-Lauf sind sie nicht gelaufen.
 | `android/` | `patch-android.cjs` und `sw.js` als Referenzkopie. **Maßgeblich ist die Kopie im Android-Repo (`scripts/patch-android.cjs`)**; bei Änderung beides angleichen |
 | `patches/` | Bau-Skripte (siehe unten) |
 
-Außerhalb von `src/`: `assets/` (Logo, Icon, Intro, `vendor/jszip`), `tests/` (66 Testdateien + `fixtures/`), `tools/` (Prüfskripte, Spessa-Bau-Kit),
+Außerhalb von `src/`: `assets/` (Logo, Icon, Intro, `vendor/jszip`), `tests/` (67 Testdateien + `fixtures/`), `tools/` (Prüfskripte, Spessa-Bau-Kit),
 `CHANGELOG.md` (oberster Abschnitt = „Was ist neu“ in der App, die Version der App wird daraus gelesen), `VORSCHAU.md`, `feedback_to.txt`.
 
 ## Gemeinsame Bausteine (`src/kern/bausteine.js`, lädt vor allen anderen Modulen)
@@ -125,3 +125,4 @@ Alle Rundungen in Stilen laufen über Faktoren aus `src/layout/ui2/ui2.css`: `--
 - 1.43: `window.addAudioBlobAsTrack(blob, dateiname, titel)` (`import_undo_reset.js`) legt eine einzelne Audio-Datei als neue Spur an (dekodieren → Undo-Schritt → `createTrack` → `refreshAll`). `Player.toDaw(i)` ruft es für einen Titel auf und prüft vorher mit `Health.memory()` den Speicher (Rückfrage ab Warnstufe, Ablehnung ab Hochstufe). Test: `tospur_test.cjs`.
 - 1.44: MP3-Export. `src/vendor/lame.min.js` (lamejs 1.2.x, LGPL, unverändert) wird von `build_polish.py` als `<script type="text/plain" id="lame-src">` ans Seitenende gesetzt (Live-Update genügt, keine Datei in `assets/`). `SunLazy.lame()` führt den Text beim ersten Gebrauch aus. `ExportUI.encodeMp3` wandelt blockweise nach 16 Bit, schreibt ID3v2.3 über `Cover.id3`. Formate `mp3_128/192/320`. Test: `mp3_test.cjs` (ffprobe/ffmpeg).
 - 1.45: Schnellwahl. In `zentrale.js` hört ein Dokument-Handler auf Wischen nach oben über `#bottom-nav`, `#pl-dock`, `#hm-dock` und dem Strich `#zt-grip`; `#zt-sheet` zeigt `Zentrale.pane(view())` direkt über der Leiste (Ebene 158, in `back.js`/`home.js`-Inert-Ausnahme eingetragen). DAW-Leiste (`tpdock.js`) hat nur noch tp/tabs/zt, Player-Dock ctl/snd/zt; die Startseite behält ihre Leisten je nach Modus. Tests: `schnellwahl_test.cjs`, angepasst: layout3/zentrale/dock6.
+- 1.46: Labor (Beta). `src/layout/optionen/labor.js` (nach `icons.js` geladen) führt die Registry `Labor.register({id,title,desc,status:'beta'|'geplant',needs:'apk'})`, `Labor.isOn(id)`, `Labor.use(id,fn)`, `Labor.set`, `Labor.active`; Zustand in `sunshine.labor`. Eigene Optionen-Kategorie `lab` (optnav, Bereich `#lab-sec`), Feedback-Knopf pro Idee (Bereich „Labor“) und Zeile „Labor eingeschaltet: …“ im Feedback. Neue Ideen immer über das Labor einbauen: bei „aus“ muss alles laufen wie ohne. Test: `labor_test.cjs`.

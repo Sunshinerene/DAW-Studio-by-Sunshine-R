@@ -68,7 +68,7 @@
   let FS = Object.assign({ cat: 'bug', text: '', area: 'auto', contact: '', dev: true, log: true }, jget(KF, {}));
   const saveFS = () => jset(KF, FS);
   const CATS = [['bug', '🐞', 'Fehler'], ['idea', '💡', 'Idee'], ['note', '💬', 'Anmerkung'], ['love', '❤️', 'Lob'], ['ask', '❓', 'Frage']];
-  const AREAS = [['auto', 'automatisch erkennen'], ['Startseite', 'Startseite'], ['Player', 'Player & Klang'], ['Spuren', 'Spuren / Arrangement'], ['MIDI-Editor', 'MIDI-Editor & Piano Roll'], ['Drums', 'Drums & FX'], ['Vocal', 'Vocal & Mikrofon'], ['Mixer', 'Mixer & Master'], ['Export', 'Export / Speichern'], ['Update', 'Update & Sicherung'], ['Design', 'Design & Bedienung'], ['Sonstiges', 'Sonstiges']];
+  const AREAS = [['auto', 'automatisch erkennen'], ['Startseite', 'Startseite'], ['Player', 'Player & Klang'], ['Spuren', 'Spuren / Arrangement'], ['MIDI-Editor', 'MIDI-Editor & Piano Roll'], ['Drums', 'Drums & FX'], ['Vocal', 'Vocal & Mikrofon'], ['Mixer', 'Mixer & Master'], ['Export', 'Export / Speichern'], ['Update', 'Update & Sicherung'], ['Design', 'Design & Bedienung'], ['Labor', 'Labor (Beta-Ideen)'], ['Sonstiges', 'Sonstiges']];
   function areaAuto() {
     try { const w = window.BigWin && BigWin.current(); if (w) return { midi: 'MIDI-Editor', drums: 'Drums', vocals: 'Vocal', mixer: 'Mixer' }[w] || w; } catch (_) {}
     try { if (window.Player && Player.isOpen && Player.isOpen()) return 'Player'; } catch (_) {}
@@ -87,6 +87,7 @@
   function compose(o) {
     o = o || FS; const cat = CATS.find(c => c[0] === o.cat) || CATS[0]; const area = o.area === 'auto' ? areaAuto() : o.area;
     const L = ['Sunshine@R DAW Studio – Feedback', 'Art: ' + cat[1] + ' ' + cat[2], 'Bereich: ' + area, 'Version: ' + (B.v || '?'), '', String(o.text || '').trim() || '(kein Text)'];
+    try { const a = window.Labor ? Labor.active() : []; if (a.length) L.push('', 'Labor eingeschaltet: ' + a.join(', ')); } catch (_) {}
     if (o.contact && o.contact.trim()) { L.push('', 'Rückmeldung an: ' + o.contact.trim()); }
     if (area === 'Player') { L.push('', '--- Player ---'); try { Player.report().forEach(x => L.push(x)); } catch (_) { L.push('– keine Angaben –'); } }
     if (o.dev) { L.push('', '--- Geräte- und Versionsangaben ---'); deviceLines().forEach(x => L.push(x)); }

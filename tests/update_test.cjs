@@ -11,7 +11,7 @@ const mk=async({build,repo,api,status,pre,home})=>{const ctx=await b.newContext(
  await pg.route(/^https?:\/\/(?!127\.0\.0\.1)/,r=>r.abort());
  if(api!==undefined)await pg.route('https://api.github.com/**',r=>{pg.api++;r.fulfill({status:status||200,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:api})});
  if(build!==undefined)await pg.route(/index_ueberarbeitet\.html/,async r=>{const resp=await r.fetch();let t=await resp.text();t=t.split('__BUILD_N__').join(String(build)).split('__BUILD_REPO__').join(repo).split('__BUILD_TIME__').join('2026-11-19');r.fulfill({response:resp,body:t,headers:Object.assign({},resp.headers(),{'content-type':'text/html'})})});
- await pg.addInitScript(([h,p])=>{if(h!==false)localStorage.setItem('sunshine.home',h?'on':'off');localStorage.setItem('sunshine.news',JSON.stringify({seen:'1.45'}));if(p)localStorage.setItem('sunshine.update',p);window.open=(u)=>{(window.__opened=window.__opened||[]).push(u);return null}},[home?true:false,pre||null]);
+ await pg.addInitScript(([h,p])=>{if(h!==false)localStorage.setItem('sunshine.home',h?'on':'off');localStorage.setItem('sunshine.news',JSON.stringify({seen:'1.46'}));if(p)localStorage.setItem('sunshine.update',p);window.open=(u)=>{(window.__opened=window.__opened||[]).push(u);return null}},[home?true:false,pre||null]);
  await pg.goto(`http://127.0.0.1:${port}/index_ueberarbeitet.html`,{waitUntil:'load'});await pg.waitForTimeout(900);return pg};
 const openOpt=async pg=>{await pg.evaluate(()=>document.getElementById('btn-menu').click());await pg.waitForTimeout(200);await pg.evaluate(()=>document.getElementById('btn-settings').click());await pg.waitForTimeout(500)};
 // ---- A) Entwicklungsversion (Tokens nicht ersetzt)

@@ -13,6 +13,7 @@
     sound: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
     perf: '<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>',
     data: '<path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/>',
+    lab: '<path d="M10 2v7.3a2 2 0 0 1-.3 1L4.2 19a2 2 0 0 0 1.7 3h12.2a2 2 0 0 0 1.7-3l-5.5-8.7a2 2 0 0 1-.3-1V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/>',
     help: '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
     next: '<path d="m9 18 6-6-6-6"/>', back: '<path d="m15 18-6-6 6-6"/>', search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>'
   };
@@ -23,6 +24,7 @@
     { id: 'sound', title: 'Klang, KI & Assistent', sum: () => 'Player, Hintergrund-Wiedergabe, SoundFonts, Audio→MIDI-KI, Assistent', keys: ['Klang', 'KI · Audio → MIDI', 'ai-btn', 'Experimentell', 'pl-sec'], kw: 'player hintergrund benachrichtigung sperrbildschirm musik abspielen mp3 wav zip soundfont synth spessasynth basic pitch ki audio midi assistent chat modell sprache sprachsteuerung mikrofon experimentell' },
     { id: 'perf', title: 'Leistung & Speicher', sum: () => { try { const m = Health.memory(); return 'Arbeitsspeicher ≈ ' + m.mb + ' MB · Sparmodus · Speicher-Sparer'; } catch (_) { return 'Arbeitsspeicher, Sparmodus, Speicher-Sparer'; } }, keys: ['hl-sec', 'sv-sec'], kw: 'ram speicher ruckeln langsam sparmodus fehlerprotokoll absturz entladen spuren anzeige-test akku' },
     { id: 'data', title: 'Updates & Datensicherung', sum: () => { try { const b = Update.build(); return (b ? 'Build ' + b + ' · ' : '') + 'Updates, Sicherung, Autosave'; } catch (_) { return 'Updates, Sicherung, Autosave'; } }, keys: ['up-sec', 'Sicherheit'], kw: 'update version build apk live oberfläche was ist neu sicherung backup wiederherstellen zip autosave zwischenstand gerätespeicher' },
+    { id: 'lab', title: 'Labor (Beta)', sum: () => { try { const n = Labor.active().length; return 'Neue Ideen zum Ausprobieren' + (n ? ' · ' + n + ' an' : ' · alles aus'); } catch (_) { return 'Neue Ideen zum Ausprobieren'; } }, keys: ['lab-sec'], kw: 'labor beta experiment ausprobieren testen neu idee vorschau native nativer player crossfade' },
     { id: 'help', title: 'Hilfe & Feedback', sum: () => 'Rundgang, Handbuch, Feedback, Vorschau', keys: ['hp-sec', 'fb-sec'], kw: 'anleitung handbuch rundgang tour hilfe feedback fehler melden idee vorschau neu nächstes' }
   ];
   let cur = null, query = '', rest = null, lastScroll = 0, busy = false;

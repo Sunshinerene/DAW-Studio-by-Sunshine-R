@@ -2,6 +2,11 @@
 <!-- Pflege: Ganz oben einen neuen Abschnitt „## Version · Datum · Titel“ anlegen, darunter die Neuerungen als Stichpunkte.
      Der oberste Abschnitt wird (1) in die App eingebaut („Was ist neu“) und (2) bei GitHub als Release-Text veröffentlicht. -->
 
+## 1.46 · 2026-11-21 · Labor (Beta)
+- Neu: **Labor (Beta)** unter Optionen – eine eigene Kategorie für neue Ideen zum Ausprobieren. Jede Idee ist **aus**, bis du sie einschaltest; dann ist die App wie gewohnt. Zu jeder Idee gibt es einen Knopf „Feedback zu dieser Idee“, und im Feedback steht automatisch, welche Labor-Ideen an waren.
+- Neu: Im Labor steht schon der Platzhalter „Nativer Player (Android)“ als **geplant** – ein Player, der direkt in Android läuft. Er braucht später eine neue App-Version.
+- Hinweis: Gefällt eine Idee, übernehmen wir sie fest oder bauen sie aus; sonst verschwindet sie wieder. Ohne eingeschaltete Idee ändert sich nichts.
+
 ## 1.45 · 2026-11-21 · Schnellwahl und aufgeräumte Dockbars
 - Neu: **Schnellwahl** – wische die Dockbar (in DAW, Player und Startseite) **nach oben**, dann klappt die Zentrale mit sechs großen Tasten auf: Startseite, DAW, Player, Feedback, Optionen, Anleitung. Ein kleiner Strich über der Leiste zeigt es an (antippen geht auch). Nach unten wischen, neben das Fenster tippen, Esc oder „Zurück“ schließen sie wieder.
 - Besser: **Aufgeräumte Dockbars** – die Player-Steuerung (Zufall, Zurück, Play, Weiter, Wiederholen) gibt es nur noch im Player, die DAW-Steuerung nur noch in der DAW. Die DAW-Leiste hat jetzt drei Seiten (Transport, Bereiche, Zentrale), die Player-Dockbar ebenfalls (Steuerung, Klang, Zentrale). Die Startseite zeigt weiter die Leiste dessen, was gerade läuft.
