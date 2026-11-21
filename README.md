@@ -4,7 +4,7 @@ Dieser Ordner ist die **Quelle** der App. Das Ergebnis des Baus ist eine einzige
 `dist/index_ueberarbeitet.html` – sie wird als `www/index.html` ins Android-Repo gelegt (Live-Update und APK-Bau
 bleiben unverändert, siehe `ANLEITUNG.md` im Android-Zusatzpaket).
 
-Stand: Version 1.47 (Anleitung aktuell). Der Bau aus Stufe 1 war Byte für Byte gleich 1.30; ab 1.31 sind die gemeinsamen Bausteine (unten) eingebaut, ab 1.32 laufen Takt und Beobachter zentral und die App ruht im Leerlauf.
+Stand: Version 1.48 (Schlaf-Timer, Export-Knopf). Der Bau aus Stufe 1 war Byte für Byte gleich 1.30; ab 1.31 sind die gemeinsamen Bausteine (unten) eingebaut, ab 1.32 laufen Takt und Beobachter zentral und die App ruht im Leerlauf.
 
 ## Bauen und testen
 
@@ -34,7 +34,7 @@ echten GitHub-Actions-Lauf sind sie nicht gelaufen.
 | `android/` | `patch-android.cjs` und `sw.js` als Referenzkopie. **Maßgeblich ist die Kopie im Android-Repo (`scripts/patch-android.cjs`)**; bei Änderung beides angleichen |
 | `patches/` | Bau-Skripte (siehe unten) |
 
-Außerhalb von `src/`: `assets/` (Logo, Icon, Intro, `vendor/jszip`), `tests/` (68 Testdateien + `fixtures/`), `tools/` (Prüfskripte, Spessa-Bau-Kit),
+Außerhalb von `src/`: `assets/` (Logo, Icon, Intro, `vendor/jszip`), `tests/` (69 Testdateien + `fixtures/`), `tools/` (Prüfskripte, Spessa-Bau-Kit),
 `CHANGELOG.md` (oberster Abschnitt = „Was ist neu“ in der App, die Version der App wird daraus gelesen), `VORSCHAU.md`, `feedback_to.txt`.
 
 ## Gemeinsame Bausteine (`src/kern/bausteine.js`, lädt vor allen anderen Modulen)
@@ -127,3 +127,4 @@ Alle Rundungen in Stilen laufen über Faktoren aus `src/layout/ui2/ui2.css`: `--
 - 1.45: Schnellwahl. In `zentrale.js` hört ein Dokument-Handler auf Wischen nach oben über `#bottom-nav`, `#pl-dock`, `#hm-dock` und dem Strich `#zt-grip`; `#zt-sheet` zeigt `Zentrale.pane(view())` direkt über der Leiste (Ebene 158, in `back.js`/`home.js`-Inert-Ausnahme eingetragen). DAW-Leiste (`tpdock.js`) hat nur noch tp/tabs/zt, Player-Dock ctl/snd/zt; die Startseite behält ihre Leisten je nach Modus. Tests: `schnellwahl_test.cjs`, angepasst: layout3/zentrale/dock6.
 - 1.46: Labor (Beta). `src/layout/optionen/labor.js` (nach `icons.js` geladen) führt die Registry `Labor.register({id,title,desc,status:'beta'|'geplant',needs:'apk'})`, `Labor.isOn(id)`, `Labor.use(id,fn)`, `Labor.set`, `Labor.active`; Zustand in `sunshine.labor`. Eigene Optionen-Kategorie `lab` (optnav, Bereich `#lab-sec`), Feedback-Knopf pro Idee (Bereich „Labor“) und Zeile „Labor eingeschaltet: …“ im Feedback. Neue Ideen immer über das Labor einbauen: bei „aus“ muss alles laufen wie ohne. Test: `labor_test.cjs`.
 - 1.47: Anleitung auf Stand. `help.js`: neue Rundgang-Schritte `cover`, `schnell`, `player`; neue Kapitel `zentrale`, `labor`; Mini-Rundgänge `zentrale`, `player`, `cover`, `labor`. Wer ein Feature baut, ergänzt Kapitel und Schritt gleich mit; `anleitung_aktuell_test.cjs` prüft Pflichtbegriffe, veraltete Aussagen und die „Optionen → …“-Pfade.
+- 1.48: Schlaf-Timer im Player (`player.js`: `sleepSet`, Mond-Knopf `data-pl=sleep`, Ausblenden über neuen Regler `PlSound.fade` vor der Anzeige, „Nach diesem Titel“ fängt `ended` ab); Kopfzeilen-Knopf `#btn-export-wav` heißt „Export" und öffnet `ExportUI.open('master')` (direkter WAV-Weg bleibt über `__exportMix`). Neuer Test `schlaf_test.cjs`.

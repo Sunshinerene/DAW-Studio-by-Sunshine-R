@@ -272,7 +272,7 @@
       case 'tab': { const b = document.querySelector(`.dock-tab-btn[data-tab="${c.tab}"]`); if (b) b.click(); return 'Bereich ' + c.tab; }
       case 'save': clickIf('btn-save-project'); return 'Projekt speichern';
       case 'newtrack': clickIf('btn-add-track'); return 'Neue Spur';
-      case 'exportwav': clickIf('btn-export-wav'); return 'WAV-Export';
+      case 'exportwav': if (typeof window.__exportMix === 'function') window.__exportMix(); else clickIf('btn-export-wav'); return 'WAV-Export';
       case 'open': openAssistant(c.what === 'tempo' ? 'tempo' : c.what); return 'KI-Assistent: ' + c.what;
       case 'blocked': return { err: 'Löschen und Zurücksetzen sind per Sprache aus Sicherheitsgründen gesperrt.' };
       case 'unknown': return { err: `Nicht verstanden: „${c.text}“` };

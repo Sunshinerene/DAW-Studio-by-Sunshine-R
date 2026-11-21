@@ -17,7 +17,7 @@ for(const w of [360,384,412]){
  T(w+' px: Dockbar gleich breit und bündig am unteren Bildschirmrand',m.d&&m.d.l===m.h.l&&m.d.r===m.h.r&&m.d.b===m.vh,m);
  T(w+' px: kein Seitwärts-Scrollen',m.sw<=m.vw,m);
  const hb=await ev(()=>{const h=document.querySelector('header.sticky'),hr=h.getBoundingClientRect(),bad=[];h.querySelectorAll('*').forEach(e=>{const r=e.getBoundingClientRect();if(r.width&&(r.right>hr.right+0.5||r.left<hr.left-0.5))bad.push((e.id||e.className+'').toString().slice(0,30))});return bad});
- T(w+' px: nichts in der Kopfzeile ragt über den Rand (Master WAV, Anzeige, TAP)',hb.length===0,hb);
+ T(w+' px: nichts in der Kopfzeile ragt über den Rand (Export, Anzeige, TAP)',hb.length===0,hb);
  // Player
  await ev(()=>Player.open());await pg.waitForTimeout(500);
  const p=await ev(()=>{const o=[...document.querySelectorAll('#pl-root .pl-top button')].map(e=>{const r=e.getBoundingClientRect();return [Math.round(r.left),Math.round(r.right)]});const d=document.getElementById('pl-dock').getBoundingClientRect();const cs=getComputedStyle(document.documentElement);return {o,vw:innerWidth,dl:Math.round(d.left),dr:Math.round(d.right),db:Math.round(d.bottom),vh:innerHeight,ov:cs.overflow,sw:document.documentElement.scrollWidth}});

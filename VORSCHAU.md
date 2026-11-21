@@ -4,7 +4,7 @@
      Gruppen: „Kommt definitiv“ (Kommt) · „Zum Testen“ (Zum Testen) · „Ideen“ (Idee). Datei leer lassen = keine Vorschau.
      Wichtig: Nennt der Titel keine NEUERE Version als die installierte App, ignoriert die App diese Datei und zeigt den eingebauten Text. -->
 
-## Version 1.48 – in Arbeit
+## Version 1.49 – in Arbeit
 
 ### Kommt definitiv
 - Feinschliff nach deinem Test der neuen Dockbars, Rand-Seiten und Player-Kopfzeile
@@ -12,6 +12,8 @@
 - Feinschliff nach deinem Test der Android-Funktionen (Ordner-Dialog, Benachrichtigung)
 
 ### Zum Testen
+- Schlaf-Timer (1.48): Mond oben rechts im Player – klappt „15 Minuten“ und „Nach diesem Titel“, wird die Musik zum Schluss sanft leiser, und hält sie auch bei gesperrtem Bildschirm an? Passt die Position des Mondes?
+- Export-Knopf (1.48): Oben rechts „Export“ in der DAW – öffnet er das Fenster mit WAV/MP3/Opus? Fehlt dir das direkte „Master WAV“ mit einem Tipp?
 - Anleitung (1.47): Rundgang und Handbuch einmal durchgehen – stimmt alles mit der App überein? Fehlt etwas, ist etwas unklar oder zu lang?
 - Labor (1.46): Optionen → Labor (Beta) – verständlich erklärt? Findest du den Feedback-Knopf pro Idee? Welche Ideen sollen als Erstes hinein?
 - Schnellwahl und aufgeräumte Dockbars (1.45): Dockbar nach oben wischen – klappen die sechs Tasten auf, in DAW, Player und Startseite? Stört der kleine Strich, oder hilft er? Passt es, dass die Player-Leiste nur im Player und die DAW-Leiste nur in der DAW sitzt?
@@ -46,5 +48,4 @@
 
 ### Ideen
 - Playlists speichern und eigene Klangprofile teilen
-- Schlaf-Timer für den Player
 - Equalizer als Standbild in der Benachrichtigung (Android erlaubt keine flüssige Animation)

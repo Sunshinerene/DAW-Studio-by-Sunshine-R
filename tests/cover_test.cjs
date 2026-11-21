@@ -3,7 +3,7 @@ const WORK=process.argv[2];const TW=fs.readFileSync(path.join(__dirname,'fixture
 const srv=http.createServer((q,r)=>{const f=path.join(WORK,decodeURIComponent(q.url.split('?')[0]).replace(/^\//,''));fs.readFile(f,(e,d)=>{if(e){r.writeHead(404);r.end();return;}r.writeHead(200,{'content-type':f.endsWith('.html')?'text/html':f.endsWith('.js')?'application/javascript':'application/octet-stream'});r.end(d)})});
 let ok=0,bad=0;const T=(n,c,x)=>{if(c){ok++;console.log('PASS',n)}else{bad++;console.log('FAIL',n,x===undefined?'':JSON.stringify(x))}};
 (async()=>{await new Promise(r=>srv.listen(0,'127.0.0.1',r));const port=srv.address().port;const b=await chromium.launch();
-const ctx=await b.newContext({viewport:{width:393,height:852},isMobile:true,hasTouch:true});await ctx.addInitScript(()=>{try{if(!sessionStorage.__i){sessionStorage.__i=1;localStorage.setItem('sunshine.home','off');localStorage.setItem('sunshine.news','{"seen":"1.47"}')}}catch(_){}});const pg=await ctx.newPage();const errs=[];pg.on('pageerror',e=>errs.push(e.message));
+const ctx=await b.newContext({viewport:{width:393,height:852},isMobile:true,hasTouch:true});await ctx.addInitScript(()=>{try{if(!sessionStorage.__i){sessionStorage.__i=1;localStorage.setItem('sunshine.home','off');localStorage.setItem('sunshine.news','{"seen":"1.48"}')}}catch(_){}});const pg=await ctx.newPage();const errs=[];pg.on('pageerror',e=>errs.push(e.message));
 await pg.route(/cdn\.tailwindcss\.com/,r=>r.fulfill({status:200,contentType:'application/javascript',body:TW}));await pg.route(/cdnjs\.cloudflare\.com.*jszip/,r=>r.fulfill({status:200,contentType:'application/javascript',body:JSZ}));
 await pg.route(/^https?:\/\/(?!127\.0\.0\.1|cdn\.tailwindcss\.com|cdnjs)/,r=>r.abort());
 await pg.goto(`http://127.0.0.1:${port}/index_ueberarbeitet.html`,{waitUntil:'load'});await pg.waitForTimeout(1200);
@@ -146,11 +146,13 @@ const cj=fs.readFileSync('/tmp/cv_z/cover.jpg');T('cover.jpg ist ein gültiges J
 await pg.tap('#ex-root [data-what=midi]');await ev(()=>{const m=createTrack('midi','Keys');m.midiNotes=[{id:1,pitch:60,start:0,dur:4,vel:100}];dawState.activeMidiTrackId=m.id;dawState.midiNotes=JSON.parse(JSON.stringify(m.midiNotes))});await run();by=await bytes();
 T('MIDI: Projektname als Titel, Künstler und Copyright als Meta-Text',by.includes(Buffer.from('Testsong'))&&by.includes(Buffer.from('© 2026 DJ Test'))&&by.includes(Buffer.from('DJ Test')),by.length);
 await ev(()=>document.querySelector('#ex-root [data-ex=close]').click());
-// Master-WAV-Knopf in der Kopfzeile
-await ev(()=>{window.__saved=null});await pg.tap('#btn-export-wav');await pg.waitForFunction(()=>window.__saved,null,{timeout:120000});sv=await ev(()=>window.__saved);by=await bytes();fs.writeFileSync('/tmp/cv_e.wav',by);const p5=probe('/tmp/cv_e.wav');
-T('Kopfzeilen-Knopf „Master WAV“: Dateiname und Tags/Cover wie im Export-Fenster',sv.name==='DJ Test - Testsong.wav'&&((p5.format.tags||{}).title||(p5.format.tags||{}).TITLE)==='Testsong'&&(p5.streams||[]).some(s=>s.codec_type==='video'),[sv.name,p5.format&&p5.format.tags]);
+// Export-Knopf in der Kopfzeile (öffnet das Export-Fenster, Mix vorgewählt)
+await ev(()=>{window.__saved=null});await pg.tap('#btn-export-wav');await pg.waitForSelector('#ex-root',{state:'visible'});await pg.waitForTimeout(300);
+T('Kopfzeilen-Knopf „Export“ öffnet das Export-Fenster mit „Mix“ vorgewählt',await ev(()=>document.querySelector('#ex-root [data-what=master]').getAttribute('aria-pressed')==='true'));
+await pg.selectOption('#ex-range','all');await pg.selectOption('#ex-fmt','wav16');await run();sv=await ev(()=>window.__saved);by=await bytes();fs.writeFileSync('/tmp/cv_e.wav',by);const p5=probe('/tmp/cv_e.wav');
+T('Kopfzeilen-Knopf „Export“: Dateiname und Tags/Cover wie im Export-Fenster',sv.name==='DJ Test - Testsong_Mix.wav'&&((p5.format.tags||{}).title||(p5.format.tags||{}).TITLE)==='Testsong'&&(p5.streams||[]).some(s=>s.codec_type==='video'),[sv.name,p5.format&&p5.format.tags]);
 // Projekt ohne Tags
-await ev(()=>{delete dawState.project.cover;delete dawState.project.thumb;dawState.project.tags={}});await ev(()=>{window.__saved=null});await pg.tap('#btn-export-wav');await pg.waitForFunction(()=>window.__saved,null,{timeout:120000});sv=await ev(()=>window.__saved);
+await ev(()=>{delete dawState.project.cover;delete dawState.project.thumb;dawState.project.tags={}});await ev(()=>{window.__saved=null});await ev(()=>{window.__exportMix()});await pg.waitForFunction(()=>window.__saved,null,{timeout:120000});sv=await ev(()=>window.__saved);
 T('Projekt ohne Tags/Cover: Export wie bisher (alter Name, keine Zusatzdaten)',/^Sunshine-R_Stem_DAW_Pro_120BPM\.wav$/.test(sv.name),sv.name);
 // Benachrichtigungsbild
 await ev(()=>{const r=Cover.generate({title:'N',artist:'A',style:'sun'});Cover.applyTo(dawState.project,{cover:r.cover,thumb:r.thumb,tags:{artist:'Kanal Eins'}});window.__m=[];window.Capacitor={isNativePlatform:()=>true,Plugins:{SunshineMedia:{update:async o=>{window.__m.push(o)},stop:async()=>{}}}};Player.hookDaw();dawState.isPlaying=true;Player._dawSync()});await pg.waitForTimeout(200);

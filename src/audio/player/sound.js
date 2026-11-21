@@ -26,7 +26,7 @@
   const MAXDB = 12;
 
   /* ---------------- Audio-Graph ---------------- */
-  const E = { au: null, ctx: null, src: null, f: [], pre: null, an: null, lim: null, ok: false, failed: false, gains: [0, 0, 0, 0, 0], buf: null, small: new Uint8Array(128) };
+  const E = { au: null, ctx: null, src: null, f: [], pre: null, an: null, lim: null, ok: false, failed: false, gains: [0, 0, 0, 0, 0], fade: null, fadeV: 1, buf: null, small: new Uint8Array(128) };
   function ensure() {
     if (E.ok) return true; if (E.failed || !E.au) return false;
     try {
@@ -34,10 +34,10 @@
       E.ctx = new AC({ latencyHint: 'playback' }); E.src = E.ctx.createMediaElementSource(E.au);
       const types = ['lowshelf', 'peaking', 'peaking', 'peaking', 'highshelf'];
       E.f = FREQS.map((fr, i) => { const f = E.ctx.createBiquadFilter(); f.type = types[i]; f.frequency.value = fr; f.Q.value = types[i] === 'peaking' ? 0.9 : 0.7; f.gain.value = 0; return f; });
-      E.pre = E.ctx.createGain();
+      E.pre = E.ctx.createGain(); E.fade = E.ctx.createGain(); E.fade.gain.value = E.fadeV;
       E.lim = E.ctx.createDynamicsCompressor(); E.lim.threshold.value = -3; E.lim.knee.value = 4; E.lim.ratio.value = 14; E.lim.attack.value = 0.004; E.lim.release.value = 0.14;
       E.an = E.ctx.createAnalyser(); E.an.fftSize = 1024; E.an.smoothingTimeConstant = 0.62; E.buf = new Uint8Array(E.an.frequencyBinCount);
-      let n = E.src; E.f.forEach(f => { n.connect(f); n = f; }); n.connect(E.pre); E.pre.connect(E.lim); E.lim.connect(E.an); E.an.connect(E.ctx.destination);
+      let n = E.src; E.f.forEach(f => { n.connect(f); n = f; }); n.connect(E.pre); E.pre.connect(E.lim); E.lim.connect(E.fade); E.fade.connect(E.an); E.an.connect(E.ctx.destination);
       E.ok = true; apply(true);
       E.ctx.addEventListener('statechange', () => { try { if (E.ctx.state === 'suspended' && E.au && !E.au.paused) E.ctx.resume(); } catch (_) {} });
       return true;
@@ -144,6 +144,8 @@
   window.PlSound = {
     PRESETS, BAND_NAMES, FREQS, MAXDB, byId, ensure, resume, wake, attach, paint, coverData,
     bind(au) { E.au = au; },
+    /* Ausblenden (Schlaf-Timer): 1 = volle Lautstärke, 0 = still; wirkt vor der Anzeige, auch wenn der Graph erst später entsteht */
+    fade(v) { E.fadeV = clamp(+v || 0, 0, 1); if (E.ok) { try { E.fade.gain.setTargetAtTime(E.fadeV, E.ctx.currentTime, 0.12); } catch (_) {} } return E.fadeV; }, fadeNow: () => E.fadeV,
     gainsFor(id, custom) { const p = byId(id); return id === 'custom' ? (custom || [0, 0, 0, 0, 0]).slice(0, 5) : p.g.slice(); },
     set(id, custom, needGraph) { V.id = byId(id).id; const g = this.gainsFor(V.id, custom); E.gains = g.map(v => clamp(Math.round(+v || 0), -MAXDB, MAXDB)); if (needGraph) ensure(); apply(false); paint(); return E.gains.slice(); },
     _filters: () => E.f, _pre: () => E.pre,

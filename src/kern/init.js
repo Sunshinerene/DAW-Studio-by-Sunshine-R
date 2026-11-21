@@ -92,7 +92,7 @@
 
       document.getElementById('btn-auto-trim').addEventListener('click', autoTrimSilence);
       document.getElementById('btn-export-midi').addEventListener('click', exportMidiFile);
-      document.getElementById('btn-export-wav').addEventListener('click', exportMasterWav);
+      document.getElementById('btn-export-wav').addEventListener('click', () => { if (window.ExportUI && ExportUI.open) ExportUI.open('master'); else exportMasterWav(); });
 
       // Bottom Tab Dock Switching
       document.querySelectorAll('.dock-tab-btn').forEach(btn => {

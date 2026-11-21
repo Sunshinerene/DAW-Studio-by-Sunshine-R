@@ -328,6 +328,43 @@
     bar.innerHTML = '<span>Letzte Sitzung: ' + esc(what) + ' · ' + list.length + ' Titel' + (t ? ' · weiter bei „' + esc(t.title) + '“' : '') + '. ' + (rec && (rec.handle || rec.nat) ? 'Mit einem Tipp wieder verbinden.' : (src.kind === 'dir' ? 'Den Ordner erneut wählen, dann geht es genau dort weiter.' : 'Die Dateien erneut wählen, dann geht es genau dort weiter.')) + '</span><button type="button" class="pl-btn pl-pri" data-pl="relink">' + (src.kind === 'dir' ? 'Ordner verbinden' : 'Dateien wählen') + '</button>';
   }
   /* Verlauf der letzten Ordner */
+  /* ---------- Schlaf-Timer (1.48) ---------- */
+  const SLEEP_FADE = 20;   // Sekunden zum Ausblenden am Ende
+  let sleep = null, sleepTk = null;   // { mode: 'time' | 'track', end, mins, v }
+  const sleepLeft = () => sleep && sleep.mode === 'time' ? Math.max(0, (sleep.end - Date.now()) / 1000) : -1;
+  const sleepText = () => !sleep ? '' : sleep.mode === 'track' ? 'nach diesem Titel' : 'noch ' + (sleepLeft() < 60 ? Math.ceil(sleepLeft()) + ' Sek.' : Math.ceil(sleepLeft() / 60) + ' Min.');
+  function fadeTo(v) {
+    try { const P = SND(); if (P && P.fade) P.fade(v); } catch (_) {}
+    try { const P = SND(); au.volume = Math.max(0, Math.min(1, S.vol * (P && P.active && P.active() ? 1 : v))); } catch (_) {}
+  }
+  function sleepPaint() {
+    const b = root && root.querySelector('[data-pl="sleep"]'); if (!b) return; const on = !!sleep, tx = b.querySelector('b');
+    b.setAttribute('aria-pressed', String(on)); b.classList.toggle('on', on); b.title = on ? 'Schlaf-Timer: ' + sleepText() : 'Schlaf-Timer';
+    if (tx) { tx.hidden = !on; tx.textContent = !on ? '' : sleep.mode === 'track' ? '1' : String(sleepLeft() < 60 ? '<1' : Math.ceil(sleepLeft() / 60)); }
+  }
+  function sleepClear() { sleep = null; if (sleepTk) { SunTick.stop(sleepTk); sleepTk = null; } fadeTo(1); sleepPaint(); }
+  function sleepSet(m) {
+    sleepClear(); if (!m) { say('Schlaf-Timer ist aus.', 'info'); return; }
+    sleep = m === 'track' ? { mode: 'track' } : { mode: 'time', mins: m, end: Date.now() + m * 60000, v: 1 };
+    sleepTk = SunTick.every(1000, sleepTick, { hidden: true }); sleepPaint();
+    say(m === 'track' ? 'Schlaf-Timer: Die Wiedergabe endet nach diesem Titel.' : 'Schlaf-Timer: In ' + m + ' Minuten ist Schluss – zum Schluss wird die Musik sanft leiser.', 'info');
+  }
+  function sleepTick() {
+    if (!sleep || sleep.mode !== 'time') return; const left = sleepLeft();
+    if (left <= 0) { const was = !au.paused; sleepClear(); pause(); fadeTo(1); if (was) say('Schlaf-Timer: Die Wiedergabe wurde angehalten. Gute Nacht!', 'info'); return; }
+    const v = left < SLEEP_FADE ? left / SLEEP_FADE : 1; if (v !== sleep.v) { sleep.v = v; fadeTo(v); }
+    SunTick.rate(sleepTk, left < SLEEP_FADE + 2 ? 250 : 1000); sleepPaint();
+  }
+  function sleepTrackEnd() {   // Titel zu Ende: zum nächsten Titel springen, aber nicht abspielen
+    sleepClear(); const j = pick(1, true); say('Schlaf-Timer: Die Wiedergabe wurde angehalten. Gute Nacht!', 'info');
+    if (j >= 0) load(j, false); else { try { au.currentTime = 0; } catch (_) {} syncMedia(); }
+  }
+  function showSleep() {
+    const rc = $('pl-rc'); if (!rc) return; const row = (v, t, sm) => '<div class="pl-rrow' + (sleep && ((v === 'track' && sleep.mode === 'track') || sleep.mins === v) ? ' on' : '') + '"><button type="button" class="pl-rg" data-sl="' + v + '"><b>' + t + '</b>' + (sm ? '<small>' + sm + '</small>' : '') + '</button></div>';
+    rc.innerHTML = '<div role="dialog" aria-label="Schlaf-Timer"><h3>Schlaf-Timer</h3><p>' + (sleep ? 'Aktiv: ' + sleepText() + '. Zum Schluss wird die Musik sanft leiser.' : 'Nach der gewählten Zeit wird die Musik sanft ausgeblendet und angehalten.') + '</p>' +
+      [15, 30, 45, 60, 90].map(m => row(m, m + ' Minuten')).join('') + row('track', 'Nach diesem Titel', 'danach wartet der nächste Titel pausiert') + (sleep ? row(0, 'Timer ausschalten') : '') +
+      '<div class="pl-ebtns"><button type="button" class="pl-btn" data-rcclose>Schließen</button></div></div>'; rc.hidden = false;
+  }
   function showRecent() {
     const rc = $('pl-rc'); if (!rc) return; const ago = ts => { const m = Math.round((Date.now() - ts) / 60000); return m < 2 ? 'gerade eben' : m < 90 ? 'vor ' + m + ' Min.' : m < 2880 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + Math.round(m / 1440) + ' Tagen'; };
     rc.innerHTML = '<div role="dialog" aria-label="Zuletzt genutzte Ordner"><h3>Zuletzt genutzte Ordner</h3><p>' + (recents.length ? 'Antippen öffnet den Ordner wieder' + (window.showDirectoryPicker ? ' (der Browser fragt eventuell einmal nach der Freigabe).' : natOk() ? ' – die App merkt sich die Freigabe, eventuell musst du nur einmal neu wählen.' : ' – auf Android wählst du ihn im Dialog erneut aus.') : 'Noch keine – sobald du einen Ordner öffnest, erscheint er hier.') + '</p>' +
@@ -450,7 +487,7 @@
   au.addEventListener('seeked', () => syncMedia());
   au.addEventListener('loadedmetadata', () => { const t = cur(); if (t && isFinite(au.duration)) { t.dur = au.duration; } paintList(); paintTime(); syncMedia(); });
   au.addEventListener('timeupdate', () => { paintTime(); savePos(false); });
-  au.addEventListener('ended', () => { if (S.repeat === 'one') { au.currentTime = 0; play(); } else next(true); });
+  au.addEventListener('ended', () => { if (sleep && sleep.mode === 'track') { sleepTrackEnd(); return; } if (S.repeat === 'one') { au.currentTime = 0; play(); } else next(true); });
   au.addEventListener('error', () => {
     const t = cur(); if (!t || !au.src) return;
     if (t.streamed && !t.noStream) { t.noStream = true; t.streamed = false; say('Direktes Abspielen klappt nicht – die Datei wird geladen …', 'info'); load(idx, t.wantPlay); return; }   // einmaliger Rückfall auf den alten Weg
@@ -527,7 +564,7 @@
     vol: '<path d="M11 5 6 9H2v6h4l5 4V5z" fill="currentColor"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/>',
     chat: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1.1-4.6A8 8 0 1 1 21 12z"/>',
     tospur: '<path d="M4 7h9M4 12h6M4 17h9"/><path d="M16 9v8M13 14l3 3 3-3"/>',
-    x: '<path d="M18 6 6 18M6 6l12 12"/>', plus: '<path d="M5 12h14M12 5v14"/>', back: '<path d="m15 18-6-6 6-6"/>',
+    moon: '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>', x: '<path d="M18 6 6 18M6 6l12 12"/>', plus: '<path d="M5 12h14M12 5v14"/>', back: '<path d="m15 18-6-6 6-6"/>',
     note: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
     folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/>',
     stop: '<rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" stroke="none"/>', start: '<path d="M19 20 9 12l10-8v16z" fill="currentColor"/><path d="M5 19V5"/>',
@@ -543,7 +580,7 @@
     root = document.createElement('div'); root.id = 'pl-root'; root.setAttribute('role', 'dialog'); root.setAttribute('aria-label', 'Player'); root.hidden = true;
     const addBtns = '<button type="button" class="pl-btn pl-pri" data-pl="add">' + svg('plus', 18) + '<span>Dateien</span></button><button type="button" class="pl-btn" data-pl="folder">' + svg('folder', 18) + '<span>Ordner</span></button>';
     root.innerHTML =
-      '<div class="pl-top"><span class="pl-tl"><button type="button" class="pl-btn" data-pl="close" aria-label="Player schließen">' + svg('back', 20) + '<span>Zurück</span></button></span><h2>Player</h2><span class="pl-tr"><button type="button" class="pl-btn pl-sq" data-pl="fb" aria-label="Feedback senden" title="Feedback senden">' + svg('chat', 20) + '</button><button type="button" class="pl-btn pl-sq" data-pl="opts" aria-label="Optionen" title="Optionen">' + svg('gear', 20) + '</button></span></div>' +
+      '<div class="pl-top"><span class="pl-tl"><button type="button" class="pl-btn" data-pl="close" aria-label="Player schließen">' + svg('back', 20) + '<span>Zurück</span></button></span><h2>Player</h2><span class="pl-tr"><button type="button" class="pl-btn pl-sq pl-sleep" data-pl="sleep" aria-label="Schlaf-Timer" title="Schlaf-Timer" aria-pressed="false">' + svg('moon', 20) + '<b hidden></b></button><button type="button" class="pl-btn pl-sq" data-pl="fb" aria-label="Feedback senden" title="Feedback senden">' + svg('chat', 20) + '</button><button type="button" class="pl-btn pl-sq" data-pl="opts" aria-label="Optionen" title="Optionen">' + svg('gear', 20) + '</button></span></div>' +
       '<div class="pl-fixed" id="pl-fixed">' +
       '<div class="pl-hero" id="pl-hero"><div class="pl-vizbox" id="pl-vizbox"><canvas id="pl-viz" aria-hidden="true"></canvas></div><div class="pl-cvhost" id="pl-cv"></div><div class="pl-art" id="pl-art"><img src="assets/sunshine-r-app-icon.png" alt="" onerror="this.remove()"></div></div>' +
       '<div class="pl-now"><div class="pl-title" id="pl-title">Noch nichts ausgewählt</div><div class="pl-sub" id="pl-sub">Dateien, einen Ordner oder ein Suno-ZIP hinzufügen</div><div class="pl-meta" id="pl-meta"></div></div></div>' +
@@ -570,6 +607,8 @@
     root.addEventListener('click', e => {
       const b = e.target.closest('[data-pl]'); const row = e.target.closest('[data-pl-i]'); const chip = e.target.closest('[data-pl-preset]');
       if (chip) { setPreset(chip.dataset.plPreset); return; }
+      const slb = e.target.closest('[data-sl]'); if (slb) { sleepSet(slb.dataset.sl === 'track' ? 'track' : +slb.dataset.sl); const r = $('pl-rc'); if (r) r.hidden = true; return; }
+      if (b && b.dataset.pl === 'sleep') { showSleep(); return; }
       const rcb = e.target.closest('[data-rc]'); if (rcb) { useRecent(rcb.dataset.rc); return; }
       const rcx = e.target.closest('[data-rcx]'); if (rcx) { recents = recents.filter(r => r.id !== rcx.dataset.rcx); saveRecents(); showRecent(); return; }
       if (e.target.closest('[data-rcclose]') || e.target === $('pl-rc')) { $('pl-rc').hidden = true; return; }
@@ -760,6 +799,7 @@
       if (lastErr) L.push('Letzter Fehler: ' + lastErr);
       return L;
     },
+    sleep: m => sleepSet(m), sleepState: () => sleep ? { mode: sleep.mode, mins: sleep.mins || 0, left: sleepLeft() } : null, _sleepAt: sec => { if (sleep && sleep.mode === 'time') { sleep.end = Date.now() + sec * 1000; sleepTick(); } },
     audio: au, media: Media, preset: id => setPreset(id), settings: () => Object.assign({}, S), isOpen: () => !!(root && !root.hidden), _dawSync: dawSync, hookDaw
   };
 })();

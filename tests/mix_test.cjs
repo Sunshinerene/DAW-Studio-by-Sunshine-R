@@ -62,7 +62,7 @@ T('Master-Trim −6 dB senkt die gemessene Lautheit um ≈ 6 LU',Math.abs((T0-T1
 await ev(()=>{dawState.masterTrimDb=0});
 // WAV-Export (alter Weg) unverändert
 await ev(()=>{window.__blob=null;window.saveOrShareBlob=async(b,n)=>{window.__blob=b.size;return 'saved'}});
-await pg.evaluate(()=>document.getElementById('btn-export-wav').click());await pg.waitForTimeout(6000);
+await pg.evaluate(()=>{window.__exportMix()});await pg.waitForTimeout(6000);
 T('Master-WAV-Export schreibt weiterhin eine Datei',(await ev(()=>window.__blob))>100000,await ev(()=>window.__blob));
 T('Keine Skriptfehler',errs.length===0,errs.join(' | '));
 console.log(`\n${ok} bestanden, ${bad} fehlgeschlagen`);await b.close();srv.close();

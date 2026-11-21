@@ -2,6 +2,11 @@
 <!-- Pflege: Ganz oben einen neuen Abschnitt „## Version · Datum · Titel“ anlegen, darunter die Neuerungen als Stichpunkte.
      Der oberste Abschnitt wird (1) in die App eingebaut („Was ist neu“) und (2) bei GitHub als Release-Text veröffentlicht. -->
 
+## 1.48 · 2026-11-21 · Schlaf-Timer und Export-Knopf
+- Neu: **Schlaf-Timer im Player** – der **Mond** oben rechts in der Player-Kopfzeile. Wähle 15, 30, 45, 60 oder 90 Minuten oder **„Nach diesem Titel“**. In den letzten 20 Sekunden wird die Musik sanft leiser, dann hält der Player an. Eine kleine Zahl am Mond zeigt die Restminuten; nochmal antippen zum Ändern oder Ausschalten. Läuft auch bei gesperrtem Bildschirm.
+- Neu: Der Knopf oben rechts in der DAW heißt jetzt **„Export“** und öffnet das Export-Fenster – dort wählst du **WAV, MP3 oder Opus** (und Bereich oder Stems). Der Mix ist schon vorgewählt. Dasselbe Fenster gibt es weiter im Menü.
+- Besser: Rundgang und Handbuch beschreiben den neuen Export-Knopf und den Schlaf-Timer.
+
 ## 1.47 · 2026-11-21 · Anleitung auf dem neuesten Stand
 - Besser: **Rundgang** – drei neue Schritte: **Cover & Tags**, **Schnellwahl** (Dockbar nach oben wischen) und der **Player**. Texte zu Menü, Optionen (jetzt sieben Kategorien) und Export (MP3) sind angepasst. Am großen Bildschirm entfällt die Schnellwahl von selbst, der Player wird dort über ☰ gezeigt.
 - Neu im **Handbuch**: Kapitel **„Zentrale & Schnellwahl“** und **„Labor (Beta)“**. Dazu überarbeitet: Startseite (jetzt unter „Startseite & Projekte“), untere Leiste, Player (Dockbar mit drei Seiten, Listenfenster, eigener Ordner-Dialog in der Android-App), Export (MP3 statt „geht nicht“), Design & Effekte (Rand-Effekte mit Seiten, Voreinstellungen, Dockbar-Effekt, Leistung und Leistungs-Wächter), Feedback und Hilfe bei Problemen.

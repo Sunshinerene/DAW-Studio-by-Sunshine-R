@@ -40,6 +40,9 @@ await ev(async()=>{window.__saved=null;const e=await ExportUI.encodeBuf(window._
  if(by.slice(0,3).toString()==='ID3')T('ffprobe liest Titel und Künstler aus dem ID3-Tag',/TAG:title=Testlied/i.test(p)&&/TAG:artist=Sunshine@R/i.test(p),p)}
 // Über das Export-Fenster: Mix als MP3
 await ev(async()=>{const sr=44100,b=audioEngine.ctx.createBuffer(1,sr*8,sr);for(let i=0;i<b.length;i++)b.getChannelData(0)[i]=0.3*Math.sin(2*Math.PI*200*i/sr);const a=createTrack('audio','Ton');dawState.buffers[a.id]=b;audioEngine.ensureTrackNode(a);renderMultiTrackLanes();window.__saved=null;window.saveOrShareBlob=async(bl,n)=>{window.__saved={name:n,size:bl.size};window.__blob=bl;return 'downloaded'}});
+await pg.tap('#btn-export-wav');await pg.waitForSelector('#ex-root',{state:'visible'});await pg.waitForTimeout(300);
+T('Kopfzeilen-Knopf heißt „Export“ und öffnet das Export-Fenster mit MP3 in der Formatauswahl',await ev(()=>/Export/.test(document.getElementById('lbl-export-wav').textContent)&&!/Master WAV/.test(document.getElementById('btn-export-wav').textContent)&&[...document.getElementById('ex-fmt').options].some(o=>o.value==='mp3_192')&&document.querySelector('#ex-root [data-what=master]').getAttribute('aria-pressed')==='true'));
+await ev(()=>document.querySelector('#ex-root [data-ex=close]').click());await pg.waitForTimeout(200);
 await pg.tap('#btn-menu');await pg.tap('#file-menu #btn-export-all');await pg.waitForSelector('#ex-root',{state:'visible'});await pg.waitForTimeout(300);
 T('Export-Fenster bietet drei MP3-Formate',await ev(()=>[...document.getElementById('ex-fmt').options].filter(o=>/^mp3_/.test(o.value)).length===3));
 await pg.selectOption('#ex-fmt','mp3_192');await pg.waitForTimeout(150);

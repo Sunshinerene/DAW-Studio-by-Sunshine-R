@@ -204,3 +204,10 @@ html[data-theme=liquid] #pl-root .pl-lh{-webkit-backdrop-filter:blur(16px);backd
 #pl-root .pl-lh #pl-count{font-size:12px}
 #pl-root .pl-lh .pl-lhadd{min-height:40px;padding:0 14px}
 #pl-root .pl-lh .pl-lhb{grid-column:1/-1;display:flex;justify-content:space-between;gap:6px;padding:0 6px 0 0}
+
+/* ===== 1.48: Schlaf-Timer ===== */
+#pl-root .pl-sleep{position:relative}
+#pl-root .pl-sleep.on{color:rgb(var(--daw-accent))}
+#pl-root .pl-sleep b{position:absolute;top:3px;right:2px;min-width:15px;height:15px;padding:0 3px;box-sizing:border-box;border-radius:8px;font-size:9.5px;line-height:15px;font-weight:900;text-align:center;background:rgb(var(--daw-accent));color:#10131c}
+#pl-root .pl-sleep b[hidden]{display:none}
+#pl-root .pl-rrow.on{border-color:rgb(var(--daw-accent))}
