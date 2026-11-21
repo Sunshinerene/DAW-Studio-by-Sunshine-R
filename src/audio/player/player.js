@@ -594,12 +594,12 @@
       '<div id="pl-list" role="list"></div>' +
       '<div class="pl-empty" id="pl-empty"><p>Hier spielst du Audiodateien ab – direkt von deinem Gerät, ohne ein Projekt zu öffnen und ohne sie erst in die App zu laden.</p><p>Unterstützt: <b>WAV, MP3, M4A, OGG, FLAC</b> und <b>ZIP</b> (z. B. der Suno-Download). Titel, Künstler, Album und Cover werden aus den Dateien gelesen.</p><div class="pl-ebtns">' + addBtns + '</div></div>' +
       '<p class="pl-note" id="pl-note"></p></div>' +
-      '<div class="pl-dock" id="pl-dock" role="group" aria-label="Wiedergabe"><div class="pl-dk-scroll" id="pl-dkscroll"><div class="pl-dk-pane" id="pl-dkp-ctl"><div class="pl-dk-seek"><span id="pl-cur">0:00</span><input type="range" class="daw-slider pl-seek" id="pl-seek" min="0" max="1000" value="0" step="1" aria-label="Position" disabled><span id="pl-dur">–:––</span></div>' +
+      '<div class="pl-dock" id="pl-dock" role="group" aria-label="Wiedergabe"><div class="pl-dk-scroll" id="pl-dkscroll"><div class="pl-dk-pane pl-dk-zt" id="pl-dkp-zt" aria-label="Zentrale"></div><div class="pl-dk-pane" id="pl-dkp-ctl"><div class="pl-dk-seek"><span id="pl-cur">0:00</span><input type="range" class="daw-slider pl-seek" id="pl-seek" min="0" max="1000" value="0" step="1" aria-label="Position" disabled><span id="pl-dur">–:––</span></div>' +
       '<div class="pl-ctl"><button type="button" class="pl-ic" data-pl="shuffle" aria-label="Zufall" aria-pressed="false">' + svg('shuffle') + '</button><button type="button" class="pl-ic" data-pl="prev" aria-label="Zurück">' + svg('prev', 26) + '</button>' +
       '<button type="button" class="pl-play" data-pl="toggle" aria-label="Abspielen">' + svg('play', 30) + '</button><button type="button" class="pl-ic" data-pl="next" aria-label="Weiter">' + svg('next', 26) + '</button><button type="button" class="pl-ic" data-pl="repeat" aria-label="Wiederholen" aria-pressed="false">' + svg('repeat') + '<b id="pl-rep1" hidden>1</b></button></div></div>' +
       '<div class="pl-dk-pane pl-dk-snd" id="pl-dkp-snd" aria-label="Klang-Vorauswahl"><div class="pl-chips" id="pl-chips" role="radiogroup" aria-label="Klang-Voreinstellung"></div></div>' +
-      '<div class="pl-dk-pane pl-dk-zt" id="pl-dkp-zt" aria-label="Zentrale"></div></div>' +
-      '<div class="pl-dk-dots" id="pl-dkdots"><button type="button" data-dk="0" class="on" aria-label="Steuerung"></button><button type="button" data-dk="1" aria-label="Klang-Vorauswahl"></button><button type="button" data-dk="2" aria-label="Zentrale"></button></div></div>' +
+      '</div>' +
+      '<div class="pl-dk-dots" id="pl-dkdots"><button type="button" data-dk="0" aria-label="Zentrale"></button><button type="button" data-dk="1" class="on" aria-label="Steuerung"></button><button type="button" data-dk="2" aria-label="Klang-Vorauswahl"></button></div></div>' +
       '<div class="pl-rc" id="pl-rc" hidden></div>' +
       '<input type="file" id="pl-file" multiple accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.opus,.flac,.zip,application/zip" hidden>' +
       '<input type="file" id="pl-dir" webkitdirectory directory multiple hidden>';
@@ -635,7 +635,7 @@
     sk.addEventListener('change', () => { if (isFinite(au.duration)) seekTo(au.duration * sk.value / 1000); seeking = false; });
     const dks = $('pl-dkscroll'), dkd = $('pl-dkdots');
     const dkPane = () => Math.round(dks.scrollLeft / Math.max(1, dks.clientWidth));
-    const dkIds = ['pl-dkp-ctl', 'pl-dkp-snd', 'pl-dkp-zt'];
+    const dkIds = ['pl-dkp-zt', 'pl-dkp-ctl', 'pl-dkp-snd'];   // von links nach rechts: Zentrale · Steuerung (Startseite der Leiste) · Klang
     const dkPaint = rest => { const n = Math.max(0, Math.min(dkIds.length - 1, dkPane())); dkd.querySelectorAll('button').forEach((b, i) => b.classList.toggle('on', i === n)); dks.dataset.pane = String(n); if (rest !== false) dkIds.forEach((id, i) => $(id).toggleAttribute('inert', n !== i)); };
     /* Seite „Zentrale“ – derselbe Baustein wie in der DAW-Leiste und auf der Startseite (die DAW-Steuerung gehört nicht in den Player) */
     try { if (window.Zentrale) { $('pl-dkp-zt').appendChild(Zentrale.pane('player')); document.documentElement.classList.add('zt-on'); } } catch (_) {}
@@ -742,7 +742,7 @@
     mini.style.bottom = 'calc(' + off + 'px + env(safe-area-inset-bottom,0px))';
   }
   function openOpts() { try { if (window.SunshineTheme && SunshineTheme.open) SunshineTheme.open(); else { const b = $('btn-settings'); if (b) b.click(); } } catch (_) {} }
-  function open() { build(); root.hidden = false; document.documentElement.classList.add('pl-open'); try { const m = $('file-menu'); if (m) m.hidden = true; } catch (_) {} render(); fitCover(true); if (SND()) { const pv = $('pl-viz'); if (pv && SND().view().c !== pv) SND().attach(pv, () => !au.paused && SND().active()); SND().wake(); } }
+  function open() { build(); const wasHidden = root.hidden; root.hidden = false; if (wasHidden && root._dkGo) { try { root._dkGo(1); } catch (_) {} } document.documentElement.classList.add('pl-open'); try { const m = $('file-menu'); if (m) m.hidden = true; } catch (_) {} render(); fitCover(true); if (SND()) { const pv = $('pl-viz'); if (pv && SND().view().c !== pv) SND().attach(pv, () => !au.paused && SND().active()); SND().wake(); } }
   function close() { if (root) root.hidden = true; document.documentElement.classList.remove('pl-open'); updMini(); }
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && root && !root.hidden) { close(); e.stopPropagation(); } }, true);
 

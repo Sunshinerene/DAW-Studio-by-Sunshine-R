@@ -2,6 +2,11 @@
 <!-- Pflege: Ganz oben einen neuen Abschnitt „## Version · Datum · Titel“ anlegen, darunter die Neuerungen als Stichpunkte.
      Der oberste Abschnitt wird (1) in die App eingebaut („Was ist neu“) und (2) bei GitHub als Release-Text veröffentlicht. -->
 
+## 1.49 · 2026-11-21 · Dockbar: Zentrale links, Playleiste in der Mitte
+- Neu: **Neue Reihenfolge der Dockbar** – in DAW, Player und auf der Startseite. **Links** die **Zentrale** (Startseite, DAW, Player, Feedback, Optionen, Anleitung), **in der Mitte** die **Playleiste**, **rechts** die Zusatzleiste: in der DAW die **Bereiche** (Spuren, Editor, Drums, Vocal, Mixer), im Player die **Klang-Voreinstellungen** (Techno, Klassik …).
+- Neu: Die Dockbar **startet immer auf der Playleiste** – auch wenn du den Player neu öffnest.
+- Besser: Handbuch und Rundgang beschreiben die neue Reihenfolge.
+
 ## 1.48 · 2026-11-21 · Schlaf-Timer und Export-Knopf
 - Neu: **Schlaf-Timer im Player** – der **Mond** oben rechts in der Player-Kopfzeile. Wähle 15, 30, 45, 60 oder 90 Minuten oder **„Nach diesem Titel“**. In den letzten 20 Sekunden wird die Musik sanft leiser, dann hält der Player an. Eine kleine Zahl am Mond zeigt die Restminuten; nochmal antippen zum Ändern oder Ausschalten. Läuft auch bei gesperrtem Bildschirm.
 - Neu: Der Knopf oben rechts in der DAW heißt jetzt **„Export“** und öffnet das Export-Fenster – dort wählst du **WAV, MP3 oder Opus** (und Bereich oder Stems). Der Mix ist schon vorgewählt. Dasselbe Fenster gibt es weiter im Menü.

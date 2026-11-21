@@ -4,7 +4,7 @@
      Gruppen: „Kommt definitiv“ (Kommt) · „Zum Testen“ (Zum Testen) · „Ideen“ (Idee). Datei leer lassen = keine Vorschau.
      Wichtig: Nennt der Titel keine NEUERE Version als die installierte App, ignoriert die App diese Datei und zeigt den eingebauten Text. -->
 
-## Version 1.49 – in Arbeit
+## Version 1.50 – in Arbeit
 
 ### Kommt definitiv
 - Feinschliff nach deinem Test der neuen Dockbars, Rand-Seiten und Player-Kopfzeile
@@ -12,6 +12,7 @@
 - Feinschliff nach deinem Test der Android-Funktionen (Ordner-Dialog, Benachrichtigung)
 
 ### Zum Testen
+- Dockbar-Reihenfolge (1.49): Links Zentrale, Mitte Playleiste, rechts Editor-Bereiche (DAW) bzw. Klang (Player) – passt das so, und startet die Leiste überall auf der Playleiste? Auch auf der Startseite prüfen.
 - Schlaf-Timer (1.48): Mond oben rechts im Player – klappt „15 Minuten“ und „Nach diesem Titel“, wird die Musik zum Schluss sanft leiser, und hält sie auch bei gesperrtem Bildschirm an? Passt die Position des Mondes?
 - Export-Knopf und Kopfleiste (1.48): Oben rechts „Export“ in der DAW – öffnet er das Fenster mit WAV/MP3/Opus? Fehlt dir das direkte „Master WAV“ mit einem Tipp? Sind die neuen Symbole (Laden, Projekte, Export) auf den ersten Blick klar?
 - Anleitung (1.47): Rundgang und Handbuch einmal durchgehen – stimmt alles mit der App überein? Fehlt etwas, ist etwas unklar oder zu lang?

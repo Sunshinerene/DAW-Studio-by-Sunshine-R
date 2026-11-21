@@ -177,10 +177,10 @@ html[data-theme=liquid] .hd .hd-play{background:linear-gradient(180deg,rgba(255,
     box.hidden = !st.dsp; note.hidden = st.dsp; note.textContent = st.dsp ? '' : 'Klang-Voreinstellungen sind in den Optionen ausgeschaltet.';
     box.querySelectorAll('[data-hm-preset]').forEach(b => { const o = b.dataset.hmPreset === st.preset; b.setAttribute('aria-checked', String(o)); b.classList.toggle('on', o); });
   }
-  /* Welche Seiten gibt es gerade? Läuft etwas: Playbar zuerst; sonst nur Klang und Zentrale */
+  /* Welche Seiten gibt es gerade? Zentrale links; läuft etwas, folgt die Playbar, dann Klang und die andere Steuerung; sonst nur Zentrale und Klang */
   function setPanes(m) {
     if (!strip || !pEls) return; const lab = { play: m === 'daw' ? 'DAW-Wiedergabe' : 'Player-Wiedergabe', snd: 'Klang', pl: 'Player-Steuerung', daw: 'DAW-Steuerung', zt: 'Zentrale' };
-    const ids = m === 'daw' ? ['play', 'snd', 'pl', 'zt'] : m === 'player' ? ['play', 'snd', 'daw', 'zt'] : ['snd', 'zt'];
+    const ids = m === 'daw' ? ['zt', 'play', 'snd', 'pl'] : m === 'player' ? ['zt', 'play', 'snd', 'daw'] : ['zt', 'snd'];   // Zentrale links, Playbar in der Mitte, rechts davon die Zusatzleisten
     strip.set(ids.map(id => ({ id, el: pEls[id], label: lab[id] })));
   }
   function stageSetup() { if (!stage || !cv) return; if (!cvb && window.Cover && Cover.bind) { cvb = Cover.bind($('hm-cvhost'), { size: 140, data: coverData, live: () => liveNow() }); cvb.el.classList.add('hd-cvb'); } }

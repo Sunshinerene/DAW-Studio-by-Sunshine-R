@@ -3,7 +3,7 @@ const WORK=process.argv[2];const TW=fs.readFileSync(path.join(__dirname,'fixture
 const srv=http.createServer((q,r)=>{const f=path.join(WORK,decodeURIComponent(q.url.split('?')[0]).replace(/^\//,''));fs.readFile(f,(e,d)=>{if(e){r.writeHead(404);r.end();return;}r.writeHead(200,{'content-type':f.endsWith('.html')?'text/html':f.endsWith('.js')?'application/javascript':'application/octet-stream'});r.end(d)})});
 let ok=0,bad=0;const T=(n,c,x)=>{if(c){ok++;console.log('PASS',n)}else{bad++;console.log('FAIL',n,x===undefined?'':JSON.stringify(x))}};
 (async()=>{await new Promise(r=>srv.listen(0,'127.0.0.1',r));const port=srv.address().port;const b=await chromium.launch();
-const open=async(w,h,mobile)=>{const ctx=await b.newContext({viewport:{width:w,height:h},isMobile:mobile,hasTouch:mobile});await ctx.addInitScript(()=>{try{if(!sessionStorage.__i){sessionStorage.__i=1;localStorage.setItem('sunshine.home','off');localStorage.setItem('sunshine.news','{"seen":"1.48"}')}}catch(_){}});const pg=await ctx.newPage();pg.__errs=[];pg.on('pageerror',e=>pg.__errs.push(e.message));
+const open=async(w,h,mobile)=>{const ctx=await b.newContext({viewport:{width:w,height:h},isMobile:mobile,hasTouch:mobile});await ctx.addInitScript(()=>{try{if(!sessionStorage.__i){sessionStorage.__i=1;localStorage.setItem('sunshine.home','off');localStorage.setItem('sunshine.news','{"seen":"1.49"}')}}catch(_){}});const pg=await ctx.newPage();pg.__errs=[];pg.on('pageerror',e=>pg.__errs.push(e.message));
 await pg.route(/cdn\.tailwindcss\.com/,r=>r.fulfill({status:200,contentType:'application/javascript',body:TW}));await pg.route(/cdnjs\.cloudflare\.com.*jszip/,r=>r.fulfill({status:200,contentType:'application/javascript',body:JSZ}));await pg.route(/^https?:\/\/(?!127\.0\.0\.1|cdn\.tailwindcss\.com|cdnjs)/,r=>r.abort());
 await pg.goto(`http://127.0.0.1:${port}/index_ueberarbeitet.html`,{waitUntil:'load'});await pg.waitForTimeout(1300);return pg};
 let pg=await open(393,852,true);const ev=(f,a)=>pg.evaluate(f,a);
@@ -17,16 +17,16 @@ T('Kopfbereich ist niedriger geworden (Transport-Zeile entfällt)',await ev(()=>
 const l0=await ev(()=>document.getElementById('btn-loop').textContent.trim());await pg.tap('#btn-loop');await pg.waitForTimeout(200);const l1=await ev(()=>document.getElementById('btn-loop').textContent.trim());T('Loop-Knopf in der Leiste funktioniert',l0!==l1,[l0,l1]);await pg.tap('#btn-loop');
 // Umschalter
 await pg.tap('#bottom-nav [data-td-go="tabs"]');await pg.waitForTimeout(700);
-T('Umschalter-Tipp zeigt Spuren/Editor/Drums/Vocal/Mixer',await ev(()=>{const n=document.getElementById('bottom-nav'),s=document.querySelector('.td-scroll');return n.dataset.pane==='tabs'&&s.scrollLeft>s.clientWidth*0.9&&document.querySelector('.td-tp').hasAttribute('inert')&&!document.querySelector('.td-tabs').hasAttribute('inert')}));
+T('Umschalter-Tipp zeigt Spuren/Editor/Drums/Vocal/Mixer',await ev(()=>{const n=document.getElementById('bottom-nav'),s=document.querySelector('.td-scroll');return n.dataset.pane==='tabs'&&s.scrollLeft>s.clientWidth*1.9&&document.querySelector('.td-tp').hasAttribute('inert')&&!document.querySelector('.td-tabs').hasAttribute('inert')}));
 T('Knöpfe der zweiten Seite sichtbar im Bildschirm',await ev(()=>['btn-nav-tracks'].concat([...document.querySelectorAll('.td-tabs .dock-tab-btn')].map(x=>x.id||'')).length>=1&&[...document.querySelectorAll('.td-tabs button:not(.td-sw)')].every(x=>{const r=x.getBoundingClientRect();return r.width>40&&r.left>=0&&r.right<=innerWidth})));
 await ev(()=>{const t=document.querySelector('.dock-tab-btn[data-tab=drums]');t.click()});await pg.waitForTimeout(400);
 T('Bereichs-Knopf funktioniert weiterhin (Drums aktiv)',await ev(()=>document.querySelector('.dock-tab-btn[data-tab=drums]').classList.contains('active')||document.querySelector('.dock-tab-btn[data-tab=drums]').getAttribute('aria-selected')==='true'||!!document.getElementById('tab-panel-drums')&&!document.getElementById('tab-panel-drums').classList.contains('hidden')));
 // zurück per Pfeil
-await pg.tap('#bottom-nav [data-td-go="tp"]');await pg.waitForTimeout(700);T('Punkt „Transport“ bringt den Transport wieder',await ev(()=>document.getElementById('bottom-nav').dataset.pane==='tp'&&document.querySelector('.td-scroll').scrollLeft<4));
+await pg.tap('#bottom-nav [data-td-go="tp"]');await pg.waitForTimeout(700);T('Punkt „Transport“ bringt den Transport wieder',await ev(()=>document.getElementById('bottom-nav').dataset.pane==='tp'&&Math.abs(document.querySelector('.td-scroll').scrollLeft-document.querySelector('.td-scroll').clientWidth)<4));
 // Wisch (Scroll) setzt Zustand
-await ev(()=>{const s=document.querySelector('.td-scroll');s.scrollTo({left:s.clientWidth,behavior:'auto'})});await pg.waitForTimeout(400);
+await ev(()=>{const s=document.querySelector('.td-scroll');s.scrollTo({left:s.clientWidth*2,behavior:'auto'})});await pg.waitForTimeout(400);
 T('Wisch (Scrollen) wechselt die Seite und aktualisiert inert/Zustand',await ev(()=>document.getElementById('bottom-nav').dataset.pane==='tabs'&&!document.querySelector('.td-tabs').hasAttribute('inert')));
-await ev(()=>{const s=document.querySelector('.td-scroll');s.scrollTo({left:0,behavior:'auto'})});await pg.waitForTimeout(400);
+await ev(()=>{const s=document.querySelector('.td-scroll');s.scrollTo({left:s.clientWidth,behavior:'auto'})});await pg.waitForTimeout(400);
 T('Wisch zurück',await ev(()=>document.getElementById('bottom-nav').dataset.pane==='tp'));
 // Rundgang
 await ev(()=>TpDock.go('tabs',true));await pg.waitForTimeout(200);await ev(()=>TpDock.reveal());await pg.waitForTimeout(200);T('Rundgang/Reveal blendet die Transport-Seite ein',await ev(()=>TpDock.state().pane==='tp'));

@@ -19,7 +19,8 @@
     left: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>'
   };
   let tp = null, home = null, scroller = null, p1 = null, p2 = null, p4 = null, pane = 'tp', settle = 0, dotsEl = null, seekc = null, startBtn = null;
-  const PANES = ['tp', 'tabs', 'zt'];
+  /* Reihenfolge von links nach rechts: Zentrale · Transport (die Seite, auf der die Leiste immer startet) · Bereiche */
+  const PANES = ['zt', 'tp', 'tabs'];
 
   const nav = () => $('bottom-nav');
   const findTp = () => { const b = $('btn-play'); return b ? b.parentElement : null; };
@@ -31,7 +32,7 @@
     n.setAttribute('data-pane', pane);
     if (dotsEl) [...dotsEl.children].forEach((d, i) => d.classList.toggle('on', PANES[i] === pane));
     if (rest === false) return;
-    [[p1, 'tp'], [p2, 'tabs'], [p4, 'zt']].forEach(([p, k]) => { if (!p) return; const on = k === pane; p.toggleAttribute('inert', !on); p.setAttribute('aria-hidden', on ? 'false' : 'true'); });
+    [[p4, 'zt'], [p1, 'tp'], [p2, 'tabs']].forEach(([p, k]) => { if (!p) return; const on = k === pane; p.toggleAttribute('inert', !on); p.setAttribute('aria-hidden', on ? 'false' : 'true'); });
   }
   function go(name, instant) {
     if (!scroller) return;
@@ -75,27 +76,27 @@
     p1 = document.createElement('div'); p1.className = 'td-pane td-tp';
     p2 = document.createElement('div'); p2.className = 'td-pane td-tabs';
     p4 = document.createElement('div'); p4.className = 'td-pane td-zt';
-    const t1 = document.createElement('button'); t1.type = 'button'; t1.id = 'btn-td-tabs'; t1.className = 'td-sw'; t1.setAttribute('aria-label', 'Bereiche anzeigen: Spuren, Editor, Drums, Vocal, Mixer'); t1.title = 'Wischen oder tippen: Spuren · Editor · Drums · Vocal · Mixer'; t1.innerHTML = ICON.right + dots(0);
-    const t2 = document.createElement('button'); t2.type = 'button'; t2.id = 'btn-td-tp'; t2.className = 'td-sw'; t2.setAttribute('aria-label', 'Transport anzeigen: Play, Stopp, Loop, Klick'); t2.title = 'Wischen oder tippen: Play · Stopp · Loop · Klick'; t2.innerHTML = ICON.left + dots(1);
-    const t3r = document.createElement('button'); t3r.type = 'button'; t3r.id = 'btn-td-zt'; t3r.className = 'td-sw td-sw-r'; t3r.setAttribute('aria-label', 'Zentrale anzeigen: Startseite, Player, Feedback, Optionen, Anleitung'); t3r.title = 'Wischen oder tippen: Zentrale'; t3r.innerHTML = ICON.right;
-    const t4 = document.createElement('button'); t4.type = 'button'; t4.id = 'btn-td-back2'; t4.className = 'td-sw'; t4.setAttribute('aria-label', 'Zurück zu Spuren, Editor, Drums, Vocal, Mixer'); t4.title = 'Wischen oder tippen: Bereiche'; t4.innerHTML = ICON.left + dots(2);
+    const t1 = document.createElement('button'); t1.type = 'button'; t1.id = 'btn-td-tabs'; t1.className = 'td-sw'; t1.setAttribute('aria-label', 'Bereiche anzeigen: Spuren, Editor, Drums, Vocal, Mixer'); t1.title = 'Wischen oder tippen: Spuren · Editor · Drums · Vocal · Mixer'; t1.innerHTML = ICON.right + dots(1);
+    const t2 = document.createElement('button'); t2.type = 'button'; t2.id = 'btn-td-tp'; t2.className = 'td-sw'; t2.setAttribute('aria-label', 'Transport anzeigen: Play, Stopp, Loop, Klick'); t2.title = 'Wischen oder tippen: Play · Stopp · Loop · Klick'; t2.innerHTML = ICON.left + dots(2);
+    const t3r = document.createElement('button'); t3r.type = 'button'; t3r.id = 'btn-td-zt'; t3r.className = 'td-sw'; t3r.setAttribute('aria-label', 'Zentrale anzeigen: Startseite, Player, Feedback, Optionen, Anleitung'); t3r.title = 'Wischen oder tippen: Zentrale'; t3r.innerHTML = ICON.left + dots(0);
+    const t4 = document.createElement('button'); t4.type = 'button'; t4.id = 'btn-td-back2'; t4.className = 'td-sw'; t4.setAttribute('aria-label', 'Zurück zum Transport'); t4.title = 'Wischen oder tippen: Transport'; t4.innerHTML = ICON.right + dots(1);
     /* Transport-Seite wie im Player und auf der Startseite: oben die Positionsleiste, darunter Loop · Anfang · Play · Stopp · Klick */
     const seekh = document.createElement('span'); seekh.className = 'td-seekhost';
     startBtn = document.createElement('button'); startBtn.type = 'button'; startBtn.id = 'btn-td-start'; startBtn.setAttribute('aria-label', 'Zum Anfang'); startBtn.title = 'Zum Anfang';
     startBtn.addEventListener('click', () => { try { audioEngine.seek(0); } catch (_) {} });
     const stp = $('btn-stop'); if (stp && stp.parentNode === tp) tp.insertBefore(startBtn, stp); else tp.appendChild(startBtn);
-    p1.append(seekh, tp, t1); p2.append(t2, ...kids, t3r);
-    try { if (window.Zentrale) p4.append(t4, Zentrale.pane('daw')); else p4.append(t4); } catch (_) { p4.append(t4); }
-    scroller.append(p1, p2, p4); n.append(scroller);
+    p1.append(t3r, seekh, tp, t1); p2.append(t2, ...kids);
+    try { if (window.Zentrale) p4.append(Zentrale.pane('daw'), t4); else p4.append(t4); } catch (_) { p4.append(t4); }
+    scroller.append(p4, p1, p2); n.append(scroller);
     /* Punkte wie im Player und auf der Startseite: mittig unten, antippbar (die Pfeile sind in der Leiste ausgeblendet, bleiben aber im Dokument) */
     dotsEl = document.createElement('div'); dotsEl.className = 'zt-dots td-dots2'; dotsEl.setAttribute('role', 'group'); dotsEl.setAttribute('aria-label', 'Seiten der Leiste');
     const DL = { tp: 'Transport', tabs: 'Bereiche', zt: 'Zentrale' };
-    dotsEl.innerHTML = PANES.map((k, i) => '<button type="button" data-td-go="' + k + '" aria-label="' + DL[k] + '"' + (i === 0 ? ' class="on"' : '') + '></button>').join('');
+    dotsEl.innerHTML = PANES.map((k, i) => '<button type="button" data-td-go="' + k + '" aria-label="' + DL[k] + '"' + (PANES[i] === 'tp' ? ' class="on"' : '') + '></button>').join('');
     dotsEl.addEventListener('click', e => { const b = e.target.closest('[data-td-go]'); if (b) go(b.dataset.tdGo); });
     n.append(dotsEl);
     try { if (window.HmDock && HmDock.mountPane) { seekc = HmDock.mountPane(seekh, 'daw'); seekc.el.classList.add('hd-seekonly'); } } catch (_) {}
     try { if (window.Zentrale && Zentrale.settle) Zentrale.settle(scroller, onSettled); } catch (_) {}
-    t3r.addEventListener('click', () => go('zt')); t4.addEventListener('click', () => go('tabs'));
+    t3r.addEventListener('click', () => go('zt')); t4.addEventListener('click', () => go('tp'));
     scroller.addEventListener('scroll', onScroll, { passive: true });
     t1.addEventListener('click', () => go('tabs'));
     t2.addEventListener('click', () => go('tp'));
