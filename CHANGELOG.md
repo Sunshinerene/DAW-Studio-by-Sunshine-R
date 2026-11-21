@@ -2,6 +2,12 @@
 <!-- Pflege: Ganz oben einen neuen Abschnitt „## Version · Datum · Titel“ anlegen, darunter die Neuerungen als Stichpunkte.
      Der oberste Abschnitt wird (1) in die App eingebaut („Was ist neu“) und (2) bei GitHub als Release-Text veröffentlicht. -->
 
+## 1.45 · 2026-11-21 · Schnellwahl und aufgeräumte Dockbars
+- Neu: **Schnellwahl** – wische die Dockbar (in DAW, Player und Startseite) **nach oben**, dann klappt die Zentrale mit sechs großen Tasten auf: Startseite, DAW, Player, Feedback, Optionen, Anleitung. Ein kleiner Strich über der Leiste zeigt es an (antippen geht auch). Nach unten wischen, neben das Fenster tippen, Esc oder „Zurück“ schließen sie wieder.
+- Besser: **Aufgeräumte Dockbars** – die Player-Steuerung (Zufall, Zurück, Play, Weiter, Wiederholen) gibt es nur noch im Player, die DAW-Steuerung nur noch in der DAW. Die DAW-Leiste hat jetzt drei Seiten (Transport, Bereiche, Zentrale), die Player-Dockbar ebenfalls (Steuerung, Klang, Zentrale). Die Startseite zeigt weiter die Leiste dessen, was gerade läuft.
+- Neu: **„by Sunshine@R“** steht jetzt auf der Startseite unter dem Logo und in den Optionen beim Namen der App.
+- Hinweis: Das ist nur eine Änderung der Anordnung – alle Funktionen sind weiterhin da, nur eben dort, wo sie hingehören.
+
 ## 1.44 · 2026-11-21 · MP3-Export
 - Neu: **MP3-Export** – Menü → Export → Format: **MP3 128, 192 oder 320 kbit/s**. Geht für den Mix, für Bereiche und für Einzelstems (dann liegen MP3-Dateien in der ZIP). Titel, Künstler, Album, Genre, Jahr, BPM, Tonart und Cover kommen als ID3-Tag in die Datei (Schalter „Tags & Cover einbetten“). Der Encoder steckt in der App, du brauchst kein Netz und keine Zusatzdatei.
 - Besser: Das Export-Fenster zeigt beim MP3-Format die ungefähre Größe pro Minute; „Abbrechen“ wirkt jetzt auch mitten im Kodieren.

@@ -215,16 +215,16 @@ html[data-theme=liquid] .hd .hd-play{background:linear-gradient(180deg,rgba(255,
     const h = dock.offsetHeight; if (h && root.style.getPropertyValue('--hd-h') !== h + 'px') root.style.setProperty('--hd-h', h + 'px');
   }
 
-  /* ---------- Untere DAW-Leiste: Seite „Player“ ---------- */
+  /* ---------- Bausteine für Leisten (Startseite, Player, DAW-Positionsleiste) ---------- */
   const panes = new Set();
   function mountPane(host, m) { m = m === 'daw' ? 'daw' : 'player'; const c = createCtl({ pane: true }); c.fixed = m; host.appendChild(c.el); panes.add(c); c.render(m); return c; }
   function unmountPane(c) { if (!c) return; panes.delete(c); try { c.el.remove(); } catch (_) {} }
 
-  /* Wer läuft, bestimmt die Seite der unteren Leiste: Player startet → Player-Seite, DAW startet → DAW-Transport */
+  /* DAW startet → die DAW-Leiste springt auf den Transport (die Player-Steuerung gibt es nur im Player) */
   let wp = false, wd = false, first = true;
   function watch() {
     const ps = plState(), pp = !!(ps && ps.playing), dp = dawOn();
-    if (!first && window.TpDock && TpDock.state && TpDock.state().docked) { if (pp && !wp) TpDock.go('pl'); else if (dp && !wd) TpDock.go('tp'); }
+    if (!first && window.TpDock && TpDock.state && TpDock.state().docked) { if (dp && !wd) TpDock.go('tp'); }
     wp = pp; wd = dp; first = false;
   }
 

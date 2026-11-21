@@ -176,8 +176,7 @@ html.pl-open #settings-modal{z-index:var(--z-over-player)!important}
 @media (max-width:370px){#pl-root .pl-top .pl-btn{padding:0 8px}#pl-root .pl-top .pl-sq{width:38px}#pl-root .pl-top h2{font-size:15px}}
 
 /* DAW- und Zentrale-Seite der Player-Leiste (1.40) */
-#pl-root .pl-dk-daw,#pl-root .pl-dk-zt{padding:0 10px}
-#pl-root .pl-dk-daw .hd{flex:1 1 0;min-height:0}
+#pl-root .pl-dk-zt{padding:0 10px}
 #pl-root .pl-dk-zt .zt{height:100%}
 
 /* ===== 1.41: Kopfzeile im Stil des Designs, Titel mittig, „+ Dateien“ sitzt im Listenfenster ===== */

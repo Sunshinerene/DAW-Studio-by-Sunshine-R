@@ -15,15 +15,16 @@ const wavs=()=>{const FX='/tmp/zent_t';fs.rmSync(FX,{recursive:true,force:true})
 // ================= DAW (Handy)
 {const pg=await mk(384);const ev=(f,a)=>pg.evaluate(f,a);
  const d=await ev(()=>{const sc=document.querySelector('#bottom-nav .td-scroll');return {panes:sc?sc.querySelectorAll(':scope>.td-pane').length:0,zt:[...document.querySelectorAll('#bottom-nav .td-zt .zt-b')].map(b=>b.dataset.zt),cur:(document.querySelector('#bottom-nav .zt-b.on')||{}).dataset&&document.querySelector('#bottom-nav .zt-b.on').dataset.zt,sw:!!document.getElementById('btn-td-zt')&&!!document.getElementById('btn-td-back2'),dots:document.querySelectorAll('#btn-td-tp .td-dots i, #btn-td-back2 .td-dots i').length}});
- T('DAW-Leiste hat 4 Seiten (Transport · Bereiche · Player · Zentrale)',d.panes===4,d);
+ T('DAW-Leiste hat 3 Seiten (Transport · Bereiche · Zentrale) – keine Player-Seite mehr',d.panes===3,d);
  T('Zentrale in der DAW: 6 Tasten in fester Reihenfolge, „DAW“ markiert',JSON.stringify(d.zt)===JSON.stringify(['home','daw','player','fb','opts','help'])&&d.cur==='daw',d);
- T('Pfeil-Tasten zur Zentrale und zurück sind da (4 Punkte)',d.sw&&d.dots>=4,d);
- // Wischen bis zur Zentrale (3x) und zurück
+ T('Pfeil-Tasten zur Zentrale und zurück sind da (3 Punkte)',d.sw&&d.dots>=3,d);
+ // Wischen bis zur Zentrale (2x) und zurück
  await ev(()=>document.querySelector('#bottom-nav .td-scroll').scrollLeft=0);await pg.waitForTimeout(200);
- for(let i=0;i<3;i++)await swipe(pg,'#bottom-nav .td-scroll',-260);
- T('Dreimal nach links wischen → Zentrale-Seite',await ev(()=>{const s=document.querySelector('#bottom-nav .td-scroll');return Math.round(s.scrollLeft/s.clientWidth)===3&&document.getElementById('bottom-nav').dataset.pane==='zt'}));
+ for(let i=0;i<2;i++)await swipe(pg,'#bottom-nav .td-scroll',-260);
+ T('Zweimal nach links wischen → Zentrale-Seite',await ev(()=>{const s=document.querySelector('#bottom-nav .td-scroll');return Math.round(s.scrollLeft/s.clientWidth)===2&&document.getElementById('bottom-nav').dataset.pane==='zt'}));
  await ev(()=>document.getElementById('btn-td-back2').click());await pg.waitForTimeout(600);
- T('Pfeil links bringt zurück zur Player-Seite (Pfeile bleiben im Dokument bedienbar)',await ev(()=>document.getElementById('bottom-nav').dataset.pane==='pl'));
+ T('Pfeil links bringt zurück zu den Bereichen (Pfeile bleiben im Dokument bedienbar)',await ev(()=>document.getElementById('bottom-nav').dataset.pane==='tabs'));
+ T('Keine Player-Steuerung in der DAW-Leiste',await ev(()=>!document.querySelector('#bottom-nav [data-hd=shuffle],#bottom-nav [data-hd=prev],#bottom-nav [data-hd=next]')));
  await ev(()=>document.getElementById('btn-td-zt').click());await pg.waitForTimeout(600);
  T('Pfeil rechts führt zur Zentrale',await ev(()=>document.getElementById('bottom-nav').dataset.pane==='zt'));
  // alte Menüpunkte entfallen
@@ -34,8 +35,8 @@ const wavs=()=>{const FX='/tmp/zent_t';fs.rmSync(FX,{recursive:true,force:true})
  // Navigation
  await ev(()=>document.querySelector('#bottom-nav [data-zt=player]').click());await pg.waitForTimeout(500);
  T('Zentrale → Player öffnet den Player',await ev(()=>Player.isOpen()&&!Home.isOpen()&&document.documentElement.classList.contains('pl-open')));
- T('Im Player: Zentrale-Seite ist die 4. Seite; „Player“ markiert',await ev(()=>{const ids=[...document.querySelectorAll('#pl-dkscroll>.pl-dk-pane')].map(e=>e.id);return JSON.stringify(ids)===JSON.stringify(['pl-dkp-ctl','pl-dkp-snd','pl-dkp-daw','pl-dkp-zt'])&&document.querySelector('#pl-dkp-zt .zt-b.on').dataset.zt==='player'}));
- await ev(()=>{document.getElementById('pl-dkscroll').scrollLeft=3*document.getElementById('pl-dkscroll').clientWidth});await pg.waitForTimeout(300);
+ T('Im Player: Zentrale-Seite ist die 3. Seite (keine DAW-Steuerung im Player); „Player“ markiert',await ev(()=>{const ids=[...document.querySelectorAll('#pl-dkscroll>.pl-dk-pane')].map(e=>e.id);return JSON.stringify(ids)===JSON.stringify(['pl-dkp-ctl','pl-dkp-snd','pl-dkp-zt'])&&!document.querySelector('#pl-root [data-hd=loop]')&&document.querySelector('#pl-dkp-zt .zt-b.on').dataset.zt==='player'}));
+ await ev(()=>{document.getElementById('pl-dkscroll').scrollLeft=2*document.getElementById('pl-dkscroll').clientWidth});await pg.waitForTimeout(300);
  await ev(()=>document.querySelector('#pl-dkp-zt [data-zt=home]').click());await pg.waitForTimeout(700);
  T('Player-Zentrale → Startseite: Player zu, Startseite offen',await ev(()=>!Player.isOpen()&&Home.isOpen()&&document.documentElement.classList.contains('hm-open')&&!document.documentElement.classList.contains('pl-open')));
  await ev(()=>document.querySelector('#hm-dock [data-zt=daw]').click());await pg.waitForTimeout(600);
@@ -56,15 +57,14 @@ const wavs=()=>{const FX='/tmp/zent_t';fs.rmSync(FX,{recursive:true,force:true})
  await ev(()=>Player.open());await pg.waitForTimeout(500);
  const o=await ev(()=>({close:getComputedStyle(document.querySelector('#pl-root [data-pl=close]')).display,fb:getComputedStyle(document.querySelector('#pl-root [data-pl=fb]')).display,opts:getComputedStyle(document.querySelector('#pl-root [data-pl=opts]')).display,add:getComputedStyle(document.querySelector('#pl-root .pl-lh [data-pl=add]')).display,top:!!document.querySelector('#pl-root .pl-top [data-pl=add]')}));
  T('Player: „Zurück“, Feedback- und Optionen-Knopf oben entfallen, „Dateien“ sitzt im Listenfenster',o.close==='none'&&o.fb==='none'&&o.opts==='none'&&o.add!=='none'&&!o.top,o);
- T('Player-Dock: 4 Punkte, erste Seite aktiv',await ev(()=>document.querySelectorAll('#pl-dkdots button').length===4&&document.querySelector('#pl-dkdots button.on').dataset.dk==='0'));
+ T('Player-Dock: 3 Punkte, erste Seite aktiv',await ev(()=>document.querySelectorAll('#pl-dkdots button').length===3&&document.querySelector('#pl-dkdots button.on').dataset.dk==='0'));
  await swipe(pg,'#pl-dkp-ctl .pl-ctl',-260);
  T('Player-Dock lässt sich auf der Tastenreihe wischen (→ Klang)',await ev(()=>document.getElementById('pl-dkscroll').dataset.pane==='1'));
- for(const sel of ['#pl-dkp-snd .pl-chips','#pl-dkp-daw .hd-ctl','#pl-dkp-zt .zt'])if(await ev(()=>document.getElementById('pl-dkscroll').dataset.pane)!=='3'){await ev(()=>{const k=document.getElementById('pl-dkscroll');k.style.scrollBehavior='auto'});await swipe(pg,sel,-300)}
- T('…weiter bis zur Zentrale (4. Seite)',await ev(()=>document.getElementById('pl-dkscroll').dataset.pane==='3'));
+ for(const sel of ['#pl-dkp-snd .pl-chips','#pl-dkp-zt .zt'])if(await ev(()=>document.getElementById('pl-dkscroll').dataset.pane)!=='2'){await ev(()=>{const k=document.getElementById('pl-dkscroll');k.style.scrollBehavior='auto'});await swipe(pg,sel,-300)}
+ T('…weiter bis zur Zentrale (3. Seite)',await ev(()=>document.getElementById('pl-dkscroll').dataset.pane==='2'));
+ await ev(()=>document.querySelector('#pl-dkdots [data-dk="0"]').click());await pg.waitForTimeout(700);
  await ev(()=>document.querySelector('#pl-dkdots [data-dk="2"]').click());await pg.waitForTimeout(700);
- T('Punkt antippen springt zur Seite „DAW“',await ev(()=>document.getElementById('pl-dkscroll').dataset.pane==='2'));
- const lp0=await ev(()=>dawState.isLooping);await ev(()=>document.querySelector('#pl-dkp-daw [data-hd=loop]').click());await pg.waitForTimeout(300);
- T('DAW-Seite im Player steuert die DAW (Loop schaltet um)',await ev(()=>dawState.isLooping)!==lp0);
+ T('Punkt antippen springt zur Zentrale',await ev(()=>document.getElementById('pl-dkscroll').dataset.pane==='2'));
  await ev(()=>document.querySelector('#pl-dkdots [data-dk="1"]').click());await pg.waitForTimeout(600);
  await ev(()=>document.querySelector('#pl-dkp-snd [data-pl-preset=techno]').click());await pg.waitForTimeout(300);
  T('Klang-Seite: Voreinstellung wählbar',await ev(()=>Player.settings().preset==='techno'));

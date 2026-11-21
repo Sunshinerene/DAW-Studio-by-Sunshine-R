@@ -14,16 +14,16 @@ const swipe=async(pg,sel,dx)=>{const cdp=await pg.context().newCDPSession(pg);co
 
 // ---------- Punkt 5: Dockbar ----------
 let pg=await mk(384);const ev=(f,a)=>pg.evaluate(f,a);
-T('DAW-Leiste: Punkte mittig unten, 4 Stück, antippbar',await ev(()=>{const d=document.querySelector('#bottom-nav .td-dots2');if(!d)return false;const r=d.getBoundingClientRect(),n=document.getElementById('bottom-nav').getBoundingClientRect();return d.children.length===4&&Math.abs((r.left+r.right)/2-(n.left+n.right)/2)<3&&r.bottom<=n.bottom+1}));
+T('DAW-Leiste: Punkte mittig unten, 3 Stück, antippbar',await ev(()=>{const d=document.querySelector('#bottom-nav .td-dots2');if(!d)return false;const r=d.getBoundingClientRect(),n=document.getElementById('bottom-nav').getBoundingClientRect();return d.children.length===3&&Math.abs((r.left+r.right)/2-(n.left+n.right)/2)<3&&r.bottom<=n.bottom+1}));
 T('DAW-Leiste: Pfeile ausgeblendet (wie im Player), bleiben im Dokument',await ev(()=>{const a=document.getElementById('btn-td-zt');return !!a&&getComputedStyle(a).display==='none'&&!!document.getElementById('btn-td-tabs')}));
 await pg.tap('#bottom-nav [data-td-go="tabs"]');await pg.waitForTimeout(700);
 T('Punkt „Bereiche“ tippen → Bereichs-Seite, Punkt markiert',await ev(()=>{const n=document.getElementById('bottom-nav');return n.dataset.pane==='tabs'&&n.querySelector('[data-td-go="tabs"]').classList.contains('on')}));
 await pg.tap('#bottom-nav [data-td-go="tp"]');await pg.waitForTimeout(700);
 let s=await settled(pg,'#bottom-nav .td-scroll');T('DAW-Leiste steht nach Punkt-Tipp auf ganzer Seite',s.off<=2&&s.n===0,s);
 await half(pg,'#bottom-nav .td-scroll');s=await settled(pg,'#bottom-nav .td-scroll');T('DAW-Leiste: halb stehengebliebene Seite rastet von selbst ein',s.off<=2,s);
-T('DAW-Leiste: nur die aktive Seite bedienbar (inert) nach dem Einrasten',await ev(()=>{const n=document.getElementById('bottom-nav'),i=n.dataset.pane;const ps=[...n.querySelectorAll('.td-pane')];const idx=['tp','tabs','pl','zt'].indexOf(i);return ps.every((p,k)=>p.hasAttribute('inert')===(k!==idx))}));
-for(let i=0;i<3;i++)await swipe(pg,'#bottom-nav .td-scroll',-260);await pg.waitForTimeout(1100);
-s=await settled(pg,'#bottom-nav .td-scroll');T('Echtes Wischen ×3 endet auf ganzer Seite (Zentrale)',s.off<=2&&s.n===3,s);
+T('DAW-Leiste: nur die aktive Seite bedienbar (inert) nach dem Einrasten',await ev(()=>{const n=document.getElementById('bottom-nav'),i=n.dataset.pane;const ps=[...n.querySelectorAll('.td-pane')];const idx=['tp','tabs','zt'].indexOf(i);return ps.every((p,k)=>p.hasAttribute('inert')===(k!==idx))}));
+for(let i=0;i<2;i++)await swipe(pg,'#bottom-nav .td-scroll',-260);await pg.waitForTimeout(1100);
+s=await settled(pg,'#bottom-nav .td-scroll');T('Echtes Wischen ×2 endet auf ganzer Seite (Zentrale)',s.off<=2&&s.n===2,s);
 // Transport-Seite wie im Player
 await ev(()=>TpDock.go('tp',true));await pg.waitForTimeout(500);
 const o=await ev(()=>{const x=id=>{const e=document.getElementById(id);if(!e)return null;const r=e.getBoundingClientRect();return Math.round(r.left)};return ['btn-loop','btn-td-start','btn-play','btn-stop','btn-metronome'].map(x)});
@@ -36,7 +36,7 @@ T('Dockbars in DAW, Player und Startseite gleich hoch',Math.abs(hh.daw-hh.pl)<=1
 // Player + Startseite: halbe Seite rastet ein
 await ev(()=>Player.open());await pg.waitForTimeout(500);
 await half(pg,'#pl-dkscroll');s=await settled(pg,'#pl-dkscroll');T('Player-Dockbar: halb stehengebliebene Seite rastet von selbst ein',s.off<=2,s);
-T('Player-Dockbar: alle Seiten außer der aktiven inert nach dem Einrasten',await ev(()=>{const n=+document.getElementById('pl-dkscroll').dataset.pane;return ['pl-dkp-ctl','pl-dkp-snd','pl-dkp-daw','pl-dkp-zt'].every((id,i)=>document.getElementById(id).hasAttribute('inert')===(i!==n))}));
+T('Player-Dockbar: alle Seiten außer der aktiven inert nach dem Einrasten',await ev(()=>{const n=+document.getElementById('pl-dkscroll').dataset.pane;return ['pl-dkp-ctl','pl-dkp-snd','pl-dkp-zt'].every((id,i)=>document.getElementById(id).hasAttribute('inert')===(i!==n))}));
 await ev(()=>{Player.close();Home.open()});await pg.waitForTimeout(800);
 await half(pg,'#hm-dkscroll');s=await settled(pg,'#hm-dkscroll');T('Startseiten-Dockbar: halb stehengebliebene Seite rastet von selbst ein',s.off<=2,s);
 await ev(()=>Home.close());
@@ -46,7 +46,7 @@ await pg.close();
 pg=await mk(384,{'sunshine.fx':JSON.stringify({v:2,on:true,edge:'glow',full:'off',k:60,mode:'static'})});const e2=(f,a)=>pg.evaluate(f,a);
 T('Rand-Effekte: Standard „nur unten“ für Fenster',await e2(()=>FX.sides()==='b'&&document.documentElement.getAttribute('data-fx-sides')==='b'));
 T('Glühen unten: Fenster (Klang-/Spurfenster) leuchten nur unten',await e2(()=>{const w=document.querySelector('#drop-zone-wrapper > .bg-daw-panel');if(!w)return false;const sh=getComputedStyle(w,'::after').boxShadow;return /inset/.test(sh)&&!/rgba?\([^)]*\) 0px 0px 28px/.test(sh)}));
-T('Kopfleiste und untere Leiste folgen ebenfalls den Seiten (1.44: kein voller Rand mehr)',await e2(()=>{const h=document.querySelector('header.sticky'),n=document.getElementById('bottom-nav');return h.classList.contains('fx-edge')&&n.classList.contains('fx-edge')&&!/0px 0px 28px/.test(getComputedStyle(h,'::after').boxShadow)&&!/0px 0px 28px/.test(getComputedStyle(n,'::after').boxShadow)}));
+T('Kopfleiste und untere Leiste folgen ebenfalls den Seiten (1.45: kein voller Rand mehr)',await e2(()=>{const h=document.querySelector('header.sticky'),n=document.getElementById('bottom-nav');return h.classList.contains('fx-edge')&&n.classList.contains('fx-edge')&&!/0px 0px 28px/.test(getComputedStyle(h,'::after').boxShadow)&&!/0px 0px 28px/.test(getComputedStyle(n,'::after').boxShadow)}));
 await e2(()=>FX.set({edge:'beam'},false));await pg.waitForTimeout(200);
 T('Ring-Stile: Ausschnitt nur an den gewählten Seiten',await e2(()=>{const w=document.querySelector('#drop-zone-wrapper > .bg-daw-panel');const c=getComputedStyle(w,'::after').clipPath;return /polygon/.test(c)}));
 await e2(()=>FX.set({sides:'trbl'},false));await pg.waitForTimeout(100);

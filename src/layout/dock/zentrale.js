@@ -113,5 +113,72 @@
     return S;
   }
 
-  window.Zentrale = { view, go, pane, arrow, strip, settle, tiles: () => TILES.map(t => t[0]), icon: k => sv(IC[k]) };
+  /* ---------- Schnellwahl (1.45) ----------
+     Nach oben wischen (oder auf den kleinen Strich tippen) klappt über der Dockbar ein Fenster mit den sechs Zentrale-Tasten auf – egal, auf welcher Seite die Leiste gerade steht.
+     Nach unten wischen, neben das Fenster tippen, Zurück-Taste oder Esc schließt es wieder. Gilt für die DAW-Leiste (nur Handy-Layout), den Player und die Startseite.
+     Der Strich ist ein eigenes, schwebendes Element (kein Kind der Leisten – die DAW-Leiste baut ihren Inhalt selbst um). */
+  const DOCKQ = { daw: '#bottom-nav', player: '#pl-dock', home: '#hm-dock' };
+  let sheet = null, grip = null, gs = null;
+  function dockEl() {
+    const v = view(), q = DOCKQ[v], e = q && document.querySelector(q);
+    if (!e || e.hidden) return null; if (v === 'daw' && !html.classList.contains('tp-dock')) return null;
+    const r = e.getBoundingClientRect(); return r.width > 40 && r.height > 20 && r.bottom > 0 && r.top < innerHeight ? e : null;
+  }
+  const sheetOpen = () => !!(sheet && !sheet.hidden);
+  function buildSheet() {
+    sheet = document.createElement('div'); sheet.id = 'zt-sheet'; sheet.hidden = true;
+    sheet.innerHTML = '<div class="zts-bg" data-zts-close></div><div class="zts-card" role="dialog" aria-label="Schnellwahl"><i class="zts-grip" aria-hidden="true"></i><div class="zts-body"></div></div>';
+    sheet.addEventListener('click', e => { if (e.target.closest('[data-zts-close]')) { closeSheet(); return; } if (e.target.closest('.zt-b')) setTimeout(closeSheet, 0); });
+    document.body.appendChild(sheet);
+  }
+  function openSheet() {
+    const d = dockEl(); if (!d) return false; if (sheetOpen()) return true;
+    if (!sheet) buildSheet();
+    const r = d.getBoundingClientRect(), cs = getComputedStyle(d), card = sheet.querySelector('.zts-card'), body = sheet.querySelector('.zts-body');
+    body.innerHTML = ''; body.appendChild(pane(view()));
+    card.style.left = r.left + 'px'; card.style.width = r.width + 'px'; card.style.bottom = Math.max(6, innerHeight - r.top + 8) + 'px';
+    card.style.backgroundColor = cs.backgroundColor; card.style.backgroundImage = cs.backgroundImage !== 'none' ? cs.backgroundImage : ''; card.style.borderRadius = cs.borderRadius;
+    sheet.hidden = false; if (grip) grip.setAttribute('aria-expanded', 'true');
+    try { document.dispatchEvent(new CustomEvent('sunshine-zt-sheet', { detail: { open: true } })); } catch (_) {}
+    return true;
+  }
+  function closeSheet() {
+    if (!sheetOpen()) return false; sheet.hidden = true; if (grip) grip.setAttribute('aria-expanded', 'false');
+    try { document.dispatchEvent(new CustomEvent('sunshine-zt-sheet', { detail: { open: false } })); } catch (_) {}
+    return true;
+  }
+  function placeGrip() {
+    if (!grip) {
+      grip = document.createElement('button'); grip.type = 'button'; grip.id = 'zt-grip'; grip.hidden = true; grip.setAttribute('aria-haspopup', 'dialog'); grip.setAttribute('aria-expanded', 'false');
+      grip.setAttribute('aria-label', 'Schnellwahl: Startseite, DAW, Player, Feedback, Optionen, Anleitung'); grip.title = 'Nach oben wischen oder tippen'; grip.innerHTML = '<i></i>';
+      grip.addEventListener('click', () => { if (sheetOpen()) closeSheet(); else openSheet(); }); document.body.appendChild(grip);
+    }
+    const d = dockEl(); if (!d) { grip.hidden = true; return; }
+    const r = d.getBoundingClientRect(), cx = r.left + r.width / 2;
+    grip.style.left = (cx - 32) + 'px'; grip.style.top = r.top + 'px'; grip.hidden = false;
+    /* liegt ein Fenster darüber, bleibt der Strich weg */
+    grip.style.pointerEvents = 'none'; const hit = document.elementFromPoint(cx, r.top + 8); grip.style.pointerEvents = '';
+    if (!hit || !(d.contains(hit) || grip.contains(hit) || (sheet && sheet.contains(hit)))) grip.hidden = true;
+  }
+  const inDock = t => !!(t && t.closest && (t.closest('#bottom-nav,#pl-dock,#hm-dock,#zt-grip')));
+  document.addEventListener('touchstart', e => {
+    gs = null; if (e.touches.length !== 1) return; const t = e.target, p = e.touches[0];
+    if (t.closest && t.closest('#zt-sheet .zts-card')) { gs = { sheet: true, x: p.clientX, y: p.clientY }; return; }
+    if (!inDock(t) || (t.closest && t.closest('input[type=range],[data-no-zt]'))) return;
+    gs = { x: p.clientX, y: p.clientY };
+  }, { passive: true });
+  document.addEventListener('touchmove', e => {
+    if (!gs || gs.done) return; const p = e.touches[0], dx = p.clientX - gs.x, dy = p.clientY - gs.y;
+    if (gs.sheet) { if (dy > 34 && dy > 1.3 * Math.abs(dx)) { gs.done = true; closeSheet(); } return; }
+    if (dy < -26 && -dy > 1.3 * Math.abs(dx)) { gs.done = true; openSheet(); } else if (Math.abs(dx) > 18 && Math.abs(dx) > Math.abs(dy)) gs = null;
+  }, { passive: true });
+  const gend = () => { gs = null; }; document.addEventListener('touchend', gend, { passive: true }); document.addEventListener('touchcancel', gend, { passive: true });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && sheetOpen()) { e.preventDefault(); closeSheet(); } });
+  document.addEventListener('sunshine-view', () => { closeSheet(); setTimeout(placeGrip, 60); });
+  document.addEventListener('sunshine-tpdock', () => { closeSheet(); setTimeout(placeGrip, 120); });
+  window.addEventListener('resize', () => { closeSheet(); setTimeout(placeGrip, 120); });
+  try { if (window.SunTick) SunTick.every(500, placeGrip); } catch (_) {}
+  setTimeout(placeGrip, 400);
+
+  window.Zentrale = { view, go, pane, arrow, strip, settle, sheet: { open: openSheet, close: closeSheet, isOpen: sheetOpen }, tiles: () => TILES.map(t => t[0]), icon: k => sv(IC[k]) };
 })();

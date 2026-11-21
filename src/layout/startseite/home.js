@@ -180,6 +180,7 @@ html[data-theme=studio] .hm-blob,html[data-theme=classic] .hm-blob{opacity:.16}
 .hm-wm{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:4px}
 .hm-wm svg{width:64px;height:64px;filter:drop-shadow(0 0 18px var(--hm-a))}
 .hm-wm b{font-size:clamp(26px,8vw,36px);font-weight:900;letter-spacing:-.02em;background:linear-gradient(90deg,var(--hm-a),var(--hm-c));-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1}
+.hm-by{margin:2px 0 0;text-align:center;font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:none;color:var(--hm-dim)}.hm-by b{color:var(--hm-a);font-weight:800}
 .hm-wm small{font-size:11px;letter-spacing:.32em;color:var(--hm-dim);font-weight:700}
 .hm-tag{position:relative;margin:2px 0 0;font-size:13px;color:var(--hm-dim);animation:hm-up .8s .45s both}
 .hm-card{border:1px solid var(--hm-line);background:var(--hm-glass);-webkit-backdrop-filter:var(--hm-blur);backdrop-filter:var(--hm-blur);border-radius:var(--hm-r);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 12px 32px rgba(0,0,0,.25)}
@@ -370,7 +371,7 @@ html:not([data-sb=show]) .hm-scroll::-webkit-scrollbar,html:not([data-sb=show]) 
   <div class="hm-scroll"><div class="hm-wrap">
     <div class="hm-top"><button type="button" class="hm-pill" id="hm-back" hidden>← Projekt</button><button type="button" class="hm-pill" id="hm-fb">💬 Feedback</button><button type="button" class="hm-pill" id="hm-help">❓ Anleitung</button></div>
     <header class="hm-hero"><div class="hm-logo" id="hm-logo"><img src="${LOGO}" alt="Sunshine@R DAW Studio"><div class="hm-wm">${WM}<b>Sunshine@R</b><small>DAW STUDIO</small></div></div>
-      <p class="hm-tag">Stems importieren · mischen · veredeln</p></header>
+      <p class="hm-by">by <b>Sunshine@R</b></p><p class="hm-tag">Stems importieren · mischen · veredeln</p></header>
     <div id="hm-update"></div>
     <div id="hm-newbie"></div>
     <div id="hm-resume"></div>
@@ -560,7 +561,7 @@ html:not([data-sb=show]) .hm-scroll::-webkit-scrollbar,html:not([data-sb=show]) 
   const inertd = [];
   function open() {
     root.hidden = false; html.classList.remove('home-pending'); html.classList.add('hm-open');
-    [...document.body.children].forEach(el => { if (el !== root && !el.matches('script,style,#toast-container') && !el.inert) { el.inert = true; inertd.push(el); } });
+    [...document.body.children].forEach(el => { if (el !== root && !el.matches('script,style,#toast-container,#zt-sheet,#zt-grip') && !el.inert) { el.inert = true; inertd.push(el); } });
     $('hm-back').hidden = !(hasContent() || dawState.project); $('hm-auto').checked = startEnabled();
     root.querySelector('.hm-scroll').scrollTop = 0;
     root.querySelectorAll('.hm-logo,.hm-tag,.hm-cta,.hm-two,.hm-sechead').forEach(e => { e.style.animation = 'none'; void e.offsetWidth; e.style.animation = ''; });

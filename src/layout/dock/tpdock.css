@@ -25,8 +25,6 @@
   html[data-radius="sharp"] body #bottom-nav .td-tp :is(#btn-play,#btn-stop,#btn-loop,#btn-metronome,#btn-td-start){border-radius:8px!important}
   /* Player-Seite */
   #bottom-nav .td-tabs{align-items:center}
-  #bottom-nav .td-pl{gap:4px;align-items:stretch}
-  #bottom-nav .td-plh{flex:1 1 0;min-width:0;display:flex}
   #bottom-nav .td-sw-r{margin-left:auto}
   /* Mini-Leiste des Players überflüssig, wenn die Player-Seite in der unteren Leiste da ist */
   html.tp-dock #pl-mini{display:none!important}

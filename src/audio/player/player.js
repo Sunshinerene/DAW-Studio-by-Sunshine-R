@@ -561,8 +561,8 @@
       '<div class="pl-ctl"><button type="button" class="pl-ic" data-pl="shuffle" aria-label="Zufall" aria-pressed="false">' + svg('shuffle') + '</button><button type="button" class="pl-ic" data-pl="prev" aria-label="Zurück">' + svg('prev', 26) + '</button>' +
       '<button type="button" class="pl-play" data-pl="toggle" aria-label="Abspielen">' + svg('play', 30) + '</button><button type="button" class="pl-ic" data-pl="next" aria-label="Weiter">' + svg('next', 26) + '</button><button type="button" class="pl-ic" data-pl="repeat" aria-label="Wiederholen" aria-pressed="false">' + svg('repeat') + '<b id="pl-rep1" hidden>1</b></button></div></div>' +
       '<div class="pl-dk-pane pl-dk-snd" id="pl-dkp-snd" aria-label="Klang-Vorauswahl"><div class="pl-chips" id="pl-chips" role="radiogroup" aria-label="Klang-Voreinstellung"></div></div>' +
-      '<div class="pl-dk-pane pl-dk-daw" id="pl-dkp-daw" aria-label="DAW-Steuerung"></div><div class="pl-dk-pane pl-dk-zt" id="pl-dkp-zt" aria-label="Zentrale"></div></div>' +
-      '<div class="pl-dk-dots" id="pl-dkdots"><button type="button" data-dk="0" class="on" aria-label="Steuerung"></button><button type="button" data-dk="1" aria-label="Klang-Vorauswahl"></button><button type="button" data-dk="2" aria-label="DAW-Steuerung"></button><button type="button" data-dk="3" aria-label="Zentrale"></button></div></div>' +
+      '<div class="pl-dk-pane pl-dk-zt" id="pl-dkp-zt" aria-label="Zentrale"></div></div>' +
+      '<div class="pl-dk-dots" id="pl-dkdots"><button type="button" data-dk="0" class="on" aria-label="Steuerung"></button><button type="button" data-dk="1" aria-label="Klang-Vorauswahl"></button><button type="button" data-dk="2" aria-label="Zentrale"></button></div></div>' +
       '<div class="pl-rc" id="pl-rc" hidden></div>' +
       '<input type="file" id="pl-file" multiple accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.opus,.flac,.zip,application/zip" hidden>' +
       '<input type="file" id="pl-dir" webkitdirectory directory multiple hidden>';
@@ -596,10 +596,9 @@
     sk.addEventListener('change', () => { if (isFinite(au.duration)) seekTo(au.duration * sk.value / 1000); seeking = false; });
     const dks = $('pl-dkscroll'), dkd = $('pl-dkdots');
     const dkPane = () => Math.round(dks.scrollLeft / Math.max(1, dks.clientWidth));
-    const dkIds = ['pl-dkp-ctl', 'pl-dkp-snd', 'pl-dkp-daw', 'pl-dkp-zt'];
+    const dkIds = ['pl-dkp-ctl', 'pl-dkp-snd', 'pl-dkp-zt'];
     const dkPaint = rest => { const n = Math.max(0, Math.min(dkIds.length - 1, dkPane())); dkd.querySelectorAll('button').forEach((b, i) => b.classList.toggle('on', i === n)); dks.dataset.pane = String(n); if (rest !== false) dkIds.forEach((id, i) => $(id).toggleAttribute('inert', n !== i)); };
-    /* Seite „DAW“ (Playbar der DAW) und „Zentrale“ – dieselben Bausteine wie in der DAW-Leiste und auf der Startseite */
-    try { if (window.HmDock && HmDock.mountPane) root._dkDaw = HmDock.mountPane($('pl-dkp-daw'), 'daw'); } catch (_) {}
+    /* Seite „Zentrale“ – derselbe Baustein wie in der DAW-Leiste und auf der Startseite (die DAW-Steuerung gehört nicht in den Player) */
     try { if (window.Zentrale) { $('pl-dkp-zt').appendChild(Zentrale.pane('player')); document.documentElement.classList.add('zt-on'); } } catch (_) {}
     dks.addEventListener('scroll', () => { clearTimeout(dks._t); dks._t = setTimeout(() => dkPaint(false), 60); }, { passive: true });
     try { if (window.Zentrale && Zentrale.settle) Zentrale.settle(dks, () => dkPaint(true)); } catch (_) {}

@@ -7,22 +7,22 @@ let ok=0,bad=0;const T=(n,c,x)=>{if(c){ok++;console.log('PASS',n)}else{bad++;con
 (async()=>{await new Promise(r=>srv.listen(0,'127.0.0.1',r));const port=srv.address().port;const b=await chromium.launch();
 const mk=async(q,init,routeFn)=>{const ctx=await b.newContext({viewport:{width:393,height:852},isMobile:true,hasTouch:true});const pg=await ctx.newPage();pg.__errs=[];pg.on('pageerror',e=>pg.__errs.push(e.message));
  await pg.route(/^https?:\/\/(?!127\.0\.0\.1)/,r=>routeFn?routeFn(r):r.abort());
- await pg.addInitScript(i=>{try{if(!sessionStorage.__i){sessionStorage.__i=1;localStorage.setItem('sunshine.home','off');localStorage.setItem('sunshine.news','{"seen":"1.44"}');if(i)Object.keys(i).forEach(k=>localStorage.setItem(k,i[k]))}}catch(e){}},init||null);
+ await pg.addInitScript(i=>{try{if(!sessionStorage.__i){sessionStorage.__i=1;localStorage.setItem('sunshine.home','off');localStorage.setItem('sunshine.news','{"seen":"1.45"}');if(i)Object.keys(i).forEach(k=>localStorage.setItem(k,i[k]))}}catch(e){}},init||null);
  await pg.goto(`http://127.0.0.1:${port}/index_ueberarbeitet.html${q||''}`,{waitUntil:'load'});await pg.waitForTimeout(1200);return pg};
 let pg=await mk('',{'sunshine.player':'{"bg":true,"vol":1}'},null);const ev=(f,a)=>pg.evaluate(f,a);
 const cp=require('child_process');const FX='/tmp/fx129_t';fs.rmSync(FX,{recursive:true,force:true});fs.mkdirSync(FX,{recursive:true});
 const files=[['eins',300],['zwei',400]].map(([n,f])=>{cp.execSync(`ffmpeg -y -loglevel error -f lavfi -i "sine=frequency=${f}:duration=20" -c:a libmp3lame -metadata title=${n} -metadata artist=Band_A "${n}.mp3"`,{cwd:FX});return FX+'/'+n+'.mp3'});
-// --- Leiste mit vier Seiten (ab 1.40 mit Zentrale)
-const a=await ev(()=>{const n=document.getElementById('bottom-nav');return {on:n.classList.contains('td-on'),panes:n.querySelectorAll('.td-scroll>*').length,pl:!!n.querySelector('.td-pl'),sw:['btn-td-tabs','btn-td-tp','btn-td-pl','btn-td-back'].map(i=>!!document.getElementById(i)),pane:n.dataset.pane,btns:[...n.querySelectorAll('.td-pl [data-hd]')].map(b=>b.dataset.hd).join(),h:n.getBoundingClientRect().height}});
-T('DAW-Leiste hat vier Seiten (Transport, Bereiche, Player, Zentrale)',a.on&&a.panes===4&&a.pl&&a.pane==='tp',a);
-T('Player-Seite: Zufall/Zurück/Play/Weiter/Wiederholen wie im Player',a.btns==='shuffle,prev,toggle,next,repeat',a);
+// --- Leiste mit drei Seiten (ab 1.45: Transport, Bereiche, Zentrale – die Player-Steuerung gibt es nur im Player)
+const a=await ev(()=>{const n=document.getElementById('bottom-nav');return {on:n.classList.contains('td-on'),panes:n.querySelectorAll('.td-scroll>*').length,pl:!!n.querySelector('.td-pl'),sw:['btn-td-tabs','btn-td-tp','btn-td-zt','btn-td-back2'].map(i=>!!document.getElementById(i)),pane:n.dataset.pane,btns:[...n.querySelectorAll('[data-hd=shuffle],[data-hd=prev],[data-hd=next],[data-hd=repeat]')].length,h:n.getBoundingClientRect().height}});
+T('DAW-Leiste hat drei Seiten (Transport, Bereiche, Zentrale)',a.on&&a.panes===3&&!a.pl&&a.pane==='tp'&&a.sw.every(Boolean),a);
+T('Keine Player-Tasten (Zufall/Zurück/Weiter/Wiederholen) in der DAW-Leiste',a.btns===0,a);
 T('Leiste nicht höher als 110 px',a.h<=110,a);
-await ev(()=>TpDock.go('pl',true));await pg.waitForTimeout(500);
-T('Seite wechselt auf Player, andere Seiten inert',await ev(()=>{const n=document.getElementById('bottom-nav');return n.dataset.pane==='pl'&&n.querySelector('.td-tp').hasAttribute('inert')&&!n.querySelector('.td-pl').hasAttribute('inert')}));
-T('Player-Seite: Tasten im Bildschirm und ≥ 40 px',await ev(()=>[...document.querySelectorAll('#bottom-nav .td-pl [data-hd]')].every(b=>{const r=b.getBoundingClientRect();return r.height>=40&&r.left>=0&&r.right<=innerWidth})));
-await ev(()=>TpDock.go('tp',true));await pg.waitForTimeout(400);
+await ev(()=>TpDock.go('zt',true));await pg.waitForTimeout(500);
+T('Seite wechselt auf Zentrale, andere Seiten inert',await ev(()=>{const n=document.getElementById('bottom-nav');return n.dataset.pane==='zt'&&n.querySelector('.td-tp').hasAttribute('inert')&&!n.querySelector('.td-zt').hasAttribute('inert')}));
+await ev(()=>TpDock.go('pl',true));await pg.waitForTimeout(400);
+T('Unbekannte Seite (alte „pl“) fällt auf den Transport zurück',await ev(()=>document.getElementById('bottom-nav').dataset.pane==='tp'));
 // --- DAW-Tasten im gleichen Stil
-T('DAW-Tasten: Symbole per CSS-Maske, keine Beschriftung sichtbar, gleiche Höhe wie Player-Tasten',await ev(()=>{const s=id=>getComputedStyle(document.getElementById(id));const p=document.querySelector('#bottom-nav .td-pl .hd-ic');const hp=p.getBoundingClientRect().height;return ['btn-stop','btn-loop','btn-metronome'].every(i=>s(i).fontSize==='0px'&&Math.abs(document.getElementById(i).getBoundingClientRect().height-hp)<=6)}));
+T('DAW-Tasten: Symbole per CSS-Maske, keine Beschriftung sichtbar, ≥ 40 px hoch',await ev(()=>{const s=id=>getComputedStyle(document.getElementById(id));return ['btn-stop','btn-loop','btn-metronome'].every(i=>s(i).fontSize==='0px'&&document.getElementById(i).getBoundingClientRect().height>=40)}));
 // --- Auto-Umschaltung
 await ev(()=>Player.open());await pg.waitForTimeout(300);
 await pg.setInputFiles('#pl-file',files);await pg.waitForTimeout(1500);
@@ -36,7 +36,7 @@ await ev(()=>document.querySelectorAll('#pl-list .pl-row')[0].click());await pg.
 T('Player: Cover/Titel-Bereich ist fest (außerhalb des Scrollbereichs)',await ev(()=>{const f=document.getElementById('pl-fixed'),b=document.querySelector('#pl-root .pl-body');return !!f&&!!b&&!b.contains(f)&&f.getBoundingClientRect().bottom<innerHeight*0.45}));
 T('Player: Körper scrollt, Kopf bleibt',await ev(()=>{const b=document.querySelector('#pl-root .pl-body'),f=document.getElementById('pl-fixed');const t0=f.getBoundingClientRect().top;b.scrollTop=9999;return (b.scrollTop>0||b.scrollHeight<=b.clientHeight)&&Math.abs(f.getBoundingClientRect().top-t0)<1}));
 await ev(()=>Player.close());await pg.waitForTimeout(700);
-T('Player läuft → Leiste springt zur Player-Seite',await ev(()=>document.getElementById('bottom-nav').dataset.pane==='pl'),await ev(()=>document.getElementById('bottom-nav').dataset.pane));
+T('Player läuft → DAW-Leiste bleibt auf dem Transport (keine Player-Seite)',await ev(()=>document.getElementById('bottom-nav').dataset.pane==='tp'),await ev(()=>document.getElementById('bottom-nav').dataset.pane));
 T('Mini-Leiste des Players ist bei aktiver DAW-Leiste ausgeblendet',await ev(()=>{const m=document.getElementById('pl-mini');return !m||getComputedStyle(m).display==='none'||m.getBoundingClientRect().height===0}));
 await ev(()=>Player.toggle&&Player.toggle());await pg.waitForTimeout(300);
 await ev(()=>document.getElementById('btn-play').click());await pg.waitForTimeout(900);
@@ -45,7 +45,7 @@ await ev(()=>document.getElementById('btn-stop').click());
 // --- Optionen: Tasten passend + Scrollbalken
 T('Option „Tasten passend zum Leistenstil“ standardmäßig aus',await ev(()=>!TpDock.icons()&&document.documentElement.dataset.dockicons!=='on'));
 await ev(()=>{TpDock.setKind('neon');TpDock.setIcons(true)});await pg.waitForTimeout(200);
-T('Option an → data-dockicons=on und Tasten bekommen Leistenstil',await ev(()=>{const el=document.querySelector('#bottom-nav .td-pl .hd-play');return document.documentElement.dataset.dockicons==='on'&&getComputedStyle(el).borderTopWidth!=='0px'}));
+T('Option an → data-dockicons=on und Tasten bekommen Leistenstil',await ev(()=>{const el=document.getElementById('btn-play');return document.documentElement.dataset.dockicons==='on'&&getComputedStyle(el).borderTopWidth!=='0px'}));
 await ev(()=>TpDock.setIcons(false));await pg.waitForTimeout(100);
 T('Option aus → Attribut weg',await ev(()=>document.documentElement.dataset.dockicons!=='on'));
 T('Scrollbalken standardmäßig ausgeblendet',await ev(()=>{const b=document.querySelector('#pl-root .pl-body');return !TpDock.scrollbars()&&document.documentElement.dataset.sb!=='show'&&(getComputedStyle(b).scrollbarWidth==='none'||b.offsetWidth===b.clientWidth)}));

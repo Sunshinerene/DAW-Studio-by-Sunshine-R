@@ -18,12 +18,12 @@
     right: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>',
     left: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>'
   };
-  let tp = null, home = null, scroller = null, p1 = null, p2 = null, p3 = null, p4 = null, plc = null, pane = 'tp', settle = 0, dotsEl = null, seekc = null, startBtn = null;
-  const PANES = ['tp', 'tabs', 'pl', 'zt'];
+  let tp = null, home = null, scroller = null, p1 = null, p2 = null, p4 = null, pane = 'tp', settle = 0, dotsEl = null, seekc = null, startBtn = null;
+  const PANES = ['tp', 'tabs', 'zt'];
 
   const nav = () => $('bottom-nav');
   const findTp = () => { const b = $('btn-play'); return b ? b.parentElement : null; };
-  const dots = a => '<span class="td-dots" aria-hidden="true">' + [0, 1, 2, 3].map(i => '<i' + (a === i ? ' class="on"' : '') + '></i>').join('') + '</span>';
+  const dots = a => '<span class="td-dots" aria-hidden="true">' + [0, 1, 2].map(i => '<i' + (a === i ? ' class="on"' : '') + '></i>').join('') + '</span>';
 
   /* rest = false: nur Punkte/Markierung nachziehen (mitten im Wischen darf keine Seite „inert“ werden – das brach die Geste ab) */
   function mark(rest) {
@@ -31,7 +31,7 @@
     n.setAttribute('data-pane', pane);
     if (dotsEl) [...dotsEl.children].forEach((d, i) => d.classList.toggle('on', PANES[i] === pane));
     if (rest === false) return;
-    [[p1, 'tp'], [p2, 'tabs'], [p3, 'pl'], [p4, 'zt']].forEach(([p, k]) => { if (!p) return; const on = k === pane; p.toggleAttribute('inert', !on); p.setAttribute('aria-hidden', on ? 'false' : 'true'); });
+    [[p1, 'tp'], [p2, 'tabs'], [p4, 'zt']].forEach(([p, k]) => { if (!p) return; const on = k === pane; p.toggleAttribute('inert', !on); p.setAttribute('aria-hidden', on ? 'false' : 'true'); });
   }
   function go(name, instant) {
     if (!scroller) return;
@@ -74,33 +74,28 @@
     scroller = document.createElement('div'); scroller.className = 'td-scroll';
     p1 = document.createElement('div'); p1.className = 'td-pane td-tp';
     p2 = document.createElement('div'); p2.className = 'td-pane td-tabs';
-    p3 = document.createElement('div'); p3.className = 'td-pane td-pl';
     p4 = document.createElement('div'); p4.className = 'td-pane td-zt';
     const t1 = document.createElement('button'); t1.type = 'button'; t1.id = 'btn-td-tabs'; t1.className = 'td-sw'; t1.setAttribute('aria-label', 'Bereiche anzeigen: Spuren, Editor, Drums, Vocal, Mixer'); t1.title = 'Wischen oder tippen: Spuren · Editor · Drums · Vocal · Mixer'; t1.innerHTML = ICON.right + dots(0);
     const t2 = document.createElement('button'); t2.type = 'button'; t2.id = 'btn-td-tp'; t2.className = 'td-sw'; t2.setAttribute('aria-label', 'Transport anzeigen: Play, Stopp, Loop, Klick'); t2.title = 'Wischen oder tippen: Play · Stopp · Loop · Klick'; t2.innerHTML = ICON.left + dots(1);
-    const t2r = document.createElement('button'); t2r.type = 'button'; t2r.id = 'btn-td-pl'; t2r.className = 'td-sw td-sw-r'; t2r.setAttribute('aria-label', 'Player anzeigen: Zufall, Zurück, Play, Weiter, Wiederholen'); t2r.title = 'Wischen oder tippen: Player'; t2r.innerHTML = ICON.right;
-    const t3 = document.createElement('button'); t3.type = 'button'; t3.id = 'btn-td-back'; t3.className = 'td-sw'; t3.setAttribute('aria-label', 'Zurück zu Spuren, Editor, Drums, Vocal, Mixer'); t3.title = 'Wischen oder tippen: Bereiche'; t3.innerHTML = ICON.left + dots(2);
-    const plh = document.createElement('div'); plh.className = 'td-plh';
     const t3r = document.createElement('button'); t3r.type = 'button'; t3r.id = 'btn-td-zt'; t3r.className = 'td-sw td-sw-r'; t3r.setAttribute('aria-label', 'Zentrale anzeigen: Startseite, Player, Feedback, Optionen, Anleitung'); t3r.title = 'Wischen oder tippen: Zentrale'; t3r.innerHTML = ICON.right;
-    const t4 = document.createElement('button'); t4.type = 'button'; t4.id = 'btn-td-back2'; t4.className = 'td-sw'; t4.setAttribute('aria-label', 'Zurück zur Player-Steuerung'); t4.title = 'Wischen oder tippen: Player'; t4.innerHTML = ICON.left + dots(3);
+    const t4 = document.createElement('button'); t4.type = 'button'; t4.id = 'btn-td-back2'; t4.className = 'td-sw'; t4.setAttribute('aria-label', 'Zurück zu Spuren, Editor, Drums, Vocal, Mixer'); t4.title = 'Wischen oder tippen: Bereiche'; t4.innerHTML = ICON.left + dots(2);
     /* Transport-Seite wie im Player und auf der Startseite: oben die Positionsleiste, darunter Loop · Anfang · Play · Stopp · Klick */
     const seekh = document.createElement('span'); seekh.className = 'td-seekhost';
     startBtn = document.createElement('button'); startBtn.type = 'button'; startBtn.id = 'btn-td-start'; startBtn.setAttribute('aria-label', 'Zum Anfang'); startBtn.title = 'Zum Anfang';
     startBtn.addEventListener('click', () => { try { audioEngine.seek(0); } catch (_) {} });
     const stp = $('btn-stop'); if (stp && stp.parentNode === tp) tp.insertBefore(startBtn, stp); else tp.appendChild(startBtn);
-    p1.append(seekh, tp, t1); p2.append(t2, ...kids, t2r); p3.append(t3, plh, t3r);
+    p1.append(seekh, tp, t1); p2.append(t2, ...kids, t3r);
     try { if (window.Zentrale) p4.append(t4, Zentrale.pane('daw')); else p4.append(t4); } catch (_) { p4.append(t4); }
-    scroller.append(p1, p2, p3, p4); n.append(scroller);
+    scroller.append(p1, p2, p4); n.append(scroller);
     /* Punkte wie im Player und auf der Startseite: mittig unten, antippbar (die Pfeile sind in der Leiste ausgeblendet, bleiben aber im Dokument) */
     dotsEl = document.createElement('div'); dotsEl.className = 'zt-dots td-dots2'; dotsEl.setAttribute('role', 'group'); dotsEl.setAttribute('aria-label', 'Seiten der Leiste');
-    const DL = { tp: 'Transport', tabs: 'Bereiche', pl: 'Player-Steuerung', zt: 'Zentrale' };
+    const DL = { tp: 'Transport', tabs: 'Bereiche', zt: 'Zentrale' };
     dotsEl.innerHTML = PANES.map((k, i) => '<button type="button" data-td-go="' + k + '" aria-label="' + DL[k] + '"' + (i === 0 ? ' class="on"' : '') + '></button>').join('');
     dotsEl.addEventListener('click', e => { const b = e.target.closest('[data-td-go]'); if (b) go(b.dataset.tdGo); });
     n.append(dotsEl);
     try { if (window.HmDock && HmDock.mountPane) { seekc = HmDock.mountPane(seekh, 'daw'); seekc.el.classList.add('hd-seekonly'); } } catch (_) {}
-    try { if (window.HmDock && HmDock.mountPane) plc = HmDock.mountPane(plh); } catch (_) {}
     try { if (window.Zentrale && Zentrale.settle) Zentrale.settle(scroller, onSettled); } catch (_) {}
-    t2r.addEventListener('click', () => go('pl')); t3.addEventListener('click', () => go('tabs')); t3r.addEventListener('click', () => go('zt')); t4.addEventListener('click', () => go('pl'));
+    t3r.addEventListener('click', () => go('zt')); t4.addEventListener('click', () => go('tabs'));
     scroller.addEventListener('scroll', onScroll, { passive: true });
     t1.addEventListener('click', () => go('tabs'));
     t2.addEventListener('click', () => go('tp'));
@@ -115,10 +110,9 @@
     const n = nav();
     if (tp && home && home.isConnected) home.after(tp);
     if (n) { n.classList.remove('td-on'); n.removeAttribute('data-pane'); const sc = n.querySelector('.td-scroll'); if (sc) { /* Bereichs-Knöpfe zurück in die Leiste, damit die Basis sie wie gewohnt verwalten kann */ Array.from(p2 ? p2.children : []).forEach(c => { if (!c.classList.contains('td-sw')) n.appendChild(c); }); sc.remove(); } }
-    try { if (plc && window.HmDock) HmDock.unmountPane(plc); } catch (_) {} plc = null;
     try { if (seekc && window.HmDock) HmDock.unmountPane(seekc); } catch (_) {} seekc = null;
     if (startBtn) { startBtn.remove(); startBtn = null; } if (dotsEl) { dotsEl.remove(); dotsEl = null; }
-    scroller = p1 = p2 = p3 = p4 = null; html.classList.remove('tp-dock');
+    scroller = p1 = p2 = p4 = null; html.classList.remove('tp-dock');
     document.querySelectorAll('.td-brand').forEach(e => e.classList.remove('td-brand'));
     document.dispatchEvent(new CustomEvent('sunshine-tpdock', { detail: { on: false } }));
   }

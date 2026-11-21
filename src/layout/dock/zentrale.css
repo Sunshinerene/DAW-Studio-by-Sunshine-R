@@ -32,3 +32,20 @@ html.zt-on #home-root .hm-top{display:none}
 html.tp-dock #file-menu #btn-home,html.tp-dock #file-menu #btn-player,html.tp-dock #file-menu #btn-feedback,html.tp-dock #file-menu #btn-settings{display:none!important}
 html.zt-on #home-root .hm-tiles #hm-import{grid-column:1/-1}
 [data-sv-row] [data-sv].on{background:rgb(var(--daw-accent)/.2);border-color:rgb(var(--daw-accent));color:#fff}
+
+/* ===== Schnellwahl: Fenster über der Dockbar (1.45) ===== */
+/* Senkrechtes Wischen auf den Leisten gehört der Schnellwahl (nicht der Seite dahinter); waagerecht bleibt für das Blättern */
+#bottom-nav,.pl-dock,.hm-dock{touch-action:pan-x}
+#zt-grip{position:fixed;z-index:var(--z-over-player);width:64px;height:16px;padding:0;border:0;background:none;display:grid;place-items:start center;touch-action:none;-webkit-tap-highlight-color:transparent}
+#zt-grip[hidden]{display:none}
+#zt-grip i{display:block;width:36px;height:4px;margin-top:5px;border-radius:2px;background:rgba(255,255,255,.5);box-shadow:0 0 6px rgb(var(--daw-accent)/.5)}
+#zt-sheet{position:fixed;inset:0;z-index:var(--z-feedback)}
+#zt-sheet[hidden]{display:none}
+#zt-sheet .zts-bg{position:absolute;inset:0;background:rgba(0,0,0,.38)}
+#zt-sheet .zts-card{position:absolute;box-sizing:border-box;max-width:736px;padding:6px 10px 12px;border:1px solid var(--td-line,rgba(255,255,255,.2));background-color:#0e0c28;box-shadow:0 14px 36px rgba(0,0,0,.6),0 0 24px var(--td-glow,transparent);animation:zts-in .18s ease-out;touch-action:none;color:#eef1ff}
+#zt-sheet .zts-grip{display:block;width:36px;height:4px;margin:2px auto 0;border-radius:2px;background:rgba(255,255,255,.45)}
+#zt-sheet .zt{grid-template-columns:repeat(3,minmax(0,1fr));height:auto;gap:8px;padding-top:10px}
+#zt-sheet .zt-b{min-height:76px;gap:6px;font-size:12.5px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)}
+#zt-sheet .zt-b.on{background:rgb(var(--daw-accent)/.18);border-color:rgb(var(--daw-accent)/.6)}
+@keyframes zts-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){#zt-sheet .zts-card{animation:none}}

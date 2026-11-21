@@ -3,7 +3,7 @@
    false = nichts mehr zu schließen → die App geht in den Hintergrund. Im Browser ohne Wirkung. */
 (function () {
   'use strict';
-  const OVERLAYS = '#cv-root,#in-root,#pl-root,#fb-root,#bw-root,#settings-modal,#sf-picker-modal,#pattern-studio-modal,#chat-modal,#assistant-settings,#assistant-modal,#as-offer,.hm-sheet-bg,#lm-root,#ex-root,#kt-root,#bs-root,#mk-root,#ia-root,#ce-root,#nw-root,#hp-tour,#hp-man,#file-menu';
+  const OVERLAYS = '#zt-sheet,#cv-root,#in-root,#pl-root,#fb-root,#bw-root,#settings-modal,#sf-picker-modal,#pattern-studio-modal,#chat-modal,#assistant-settings,#assistant-modal,#as-offer,.hm-sheet-bg,#lm-root,#ex-root,#kt-root,#bs-root,#mk-root,#ia-root,#ce-root,#nw-root,#hp-tour,#hp-man,#file-menu';
   const shown = e => { if (!e || e.hidden || !e.isConnected) return false; const r = e.getBoundingClientRect(), c = getComputedStyle(e); return r.width > 0 && r.height > 0 && c.visibility !== 'hidden' && c.display !== 'none'; };
   const zOf = e => { let z = 0; for (let n = e; n && n !== document.body; n = n.parentElement) { const v = parseInt(getComputedStyle(n).zIndex, 10); if (!isNaN(v)) z = Math.max(z, v); } return z; };
   function topOverlay() {
